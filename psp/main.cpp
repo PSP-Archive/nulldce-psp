@@ -424,7 +424,7 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 		if (selection< 0) selection = dirs.size() - 1;
 		else if (selection>=dirs.size()) selection=0;
 
-		pspDebugScreenPrintf("Select a file with up/dn/X, /\\ means no disc,O tries usbhostfs,[] relists ./gdroms/, HOME Exits to xmb\n>>%s<<\n\nDynarec max idle = %d\n\n",dirs[selection].name.c_str(),dynarecBlockSZ);
+		pspDebugScreenPrintf("Select a file with up/dn/X, /\\ means no disc,O tries usbhostfs,[] relists ./gdroms/, HOME Exits to xmb\n>>%s<<\n\nDynarec max idle = %d\n\n",dirs[selection].name.c_str(),dynarecIdle);
 
 		u32 filec=0;
 		for (size_t i=0;i<dirs.size();i++)
