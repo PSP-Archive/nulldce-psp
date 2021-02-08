@@ -17,6 +17,8 @@ s32 maple_dma_pending=0;
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
+#define SWAP32(a) ((((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
+
 
 /*
 	Maple host controller
@@ -40,15 +42,11 @@ void maple_vblank()
 	{
 		if (SB_MDTSEL&1)
 		{
-			if (maple_ddt_pending_reset)
-			{
-				//printf("DDT vblank ; reset pending\n");
-			}
-			else
+			if (!maple_ddt_pending_reset)
 			{
 				//printf("DDT vblank\n");
+				SB_MDST = 1;
 				maple_DoDma();
-				SB_MDST = 0;
 				if ((SB_MSYS>>12)&1)
 				{
 					maple_ddt_pending_reset=true;
@@ -100,12 +98,13 @@ void maple_DoDma()
 #if debug_maple
 	printf("Maple: DoMapleDma\n");
 #endif
+	const bool swap_msb = (SB_MMSEL == 0);
 	u32 addr = SB_MDSTAR;
 	u32 xfer_count=0;
 	bool last = false;
+
 	while (last != true)
 	{
-		dmacount++;
 		u32 header_1 = ReadMem32_nommu(addr);
 		u32 header_2 = ReadMem32_nommu(addr + 4) &0x1FFFFFE0;
 
@@ -124,38 +123,51 @@ void maple_DoDma()
 				header_2&=0xFFFFFF;
 				header_2|=(3<<26);
 			}
+
 			u32* p_out=(u32*)GetMemPtr(header_2,4);
-			u32 outlen=0;
 
 			u32* p_data =(u32*) GetMemPtr(addr + 8,(plen)*sizeof(u32));
+
+			const u32 frame_header = swap_msb ? SWAP32(p_data[0]) : p_data[0];
 			
 			//Command code 
-			u32 command=p_data[0] &0xFF;
+			u32 command = frame_header & 0xFF;
 			//Recipient address 
-			u32 reci=(p_data[0] >> 8) & 0xFF;//0-5;
+			u32 reci = (frame_header >> 8) & 0xFF;//0-5;
+			//Sender address 
+			//u32 send=(p_data[0] >> 16) & 0xFF;
+			//Number of additional words in frame 
+			u32 inlen = (frame_header >> 24) & 0xFF;
+
 			u32 port=maple_GetPort(reci);
 			u32 bus=maple_GetBusId(reci);
-			//Sender address 
-			u32 send=(p_data[0] >> 16) & 0xFF;
-			//Number of additional words in frame 
-			u32 inlen=(p_data[0]>>24) & 0xFF;
-			u32 resp=0;
-			inlen*=4;
 
 			if (MapleDevices[bus][5] && MapleDevices[bus][port])
 			{
-				resp=MapleDevices[bus][port]->Dma(command,&p_data[1],inlen,&p_out[1],outlen);
+				if (swap_msb)
+				{
+					static u32 maple_in_buf[1024 / 4];
+					static u32 maple_out_buf[1024 / 4];
+					maple_in_buf[0] = frame_header;
+					for (u32 i = 1; i < inlen; i++)
+						maple_in_buf[i] = SWAP32(p_data[i]);
+					p_data = maple_in_buf;
+					p_out = maple_out_buf;
+				}
 
-				if(reci&0x20)
-					reci|=maple_GetAttachedDevices(bus);
+				u32 outlen = MapleDevices[bus][port]->RawDma(&p_data[0], inlen * 4 + 4, &p_out[0]);
 
-				verify(u8(outlen/4)*4==outlen);
-				p_out[0]=(resp<<0)|(send<<8)|(reci<<16)|((outlen/4)<<24);
-				xfer_count+=outlen+4;
+				xfer_count += outlen;
+
+				if (swap_msb)
+				{
+					u32 *final_out = (u32 *)GetMemPtr(header_2, outlen);
+					for (u32 i = 0; i < outlen / 4; i++)
+						final_out[i] = SWAP32(p_out[i]);
+				}
 			}
 			else
 			{
-				outlen=4;
 				p_out[0]=0xFFFFFFFF;
 			}
 
@@ -169,7 +181,8 @@ void maple_DoDma()
 	}
 
 	//printf("Maple XFER size %d bytes - %.2f ms\n",xfer_count,xfer_count*100.0f/(2*1024*1024/8));
-	maple_dma_pending=xfer_count*(SH4_CLOCK/(2*1024*1024/8));
+	maple_dma_pending=std::min((u64)xfer_count * (SH4_CLOCK / (2 * 1024 * 1024 / 8)), (u64)SH4_CLOCK);
+	
 }
 
 void maple_Update(u32 cycles)

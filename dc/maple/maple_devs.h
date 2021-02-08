@@ -25,6 +25,7 @@ struct maple_device
 	virtual void OnSetup(){};
 	virtual ~maple_device();
 	virtual u32 Dma(u32 Command,u32* buffer_in,u32 buffer_in_len,u32* buffer_out,u32& buffer_out_len)=0;
+	virtual u32 RawDma(u32* buffer_in, u32 buffer_in_len, u32* buffer_out) = 0;
 };
 
 maple_device* maple_Create(MapleDeviceType type);

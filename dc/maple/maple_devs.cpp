@@ -111,10 +111,8 @@ struct maple_base: maple_device
 	void wptr(const void* src,u32 len)
 	{
 		u8* src8=(u8*)src;
-
-		sceKernelDcacheWritebackInvalidateAll();
-		sceDmacMemcpy(dma_buffer_out, src8, len);
-		//sceKernelDcacheWritebackInvalidateAll();
+		while(len--)
+			w8(*src8++);
 
 		dma_count_out[0]+= len;
 
@@ -137,15 +135,12 @@ struct maple_base: maple_device
 	void rptr(const void* dst,u32 len)
 	{
 		u8* dst8=(u8*)dst;
-
-		sceKernelDcacheWritebackInvalidateAll();
-		sceDmacMemcpy(dma_buffer_out, dma_buffer_in, len);
-		dma_buffer_in += len;
-		dma_count_in = 0;
-
-		
+		while(len--)
+			*dst8++=r8();
 	}
 	u32 r_count() { return dma_count_in; }
+
+	virtual u32 dma(u32 cmd)=0;
 
 	virtual u32 Dma(u32 Command,u32* buffer_in,u32 buffer_in_len,u32* buffer_out,u32& buffer_out_len)
 	{
@@ -157,7 +152,25 @@ struct maple_base: maple_device
 
 		return dma(Command);
 	}
-	virtual u32 dma(u32 cmd)=0;
+
+	virtual u32 RawDma(u32* buffer_in, u32 buffer_in_len, u32* buffer_out)
+	{
+		u32 command=buffer_in[0] &0xFF;
+		//Recipient address
+		u32 reci = (buffer_in[0] >> 8) & 0xFF;
+		//Sender address
+		u32 send = (buffer_in[0] >> 16) & 0xFF;
+		u32 outlen = 0;
+		u32 resp = Dma(command, &buffer_in[1], buffer_in_len - 4, &buffer_out[1], outlen);
+
+		if (reci & 0x20)
+			reci |= maple_GetAttachedDevices(maple_GetBusId(reci));
+
+		//verify(u8(outlen/4)*4==outlen);
+		buffer_out[0] = (resp <<0 ) | (send << 8) | (reci << 16) | ((outlen / 4) << 24);
+
+		return outlen + 4;
+	}
 };
 
 /*
@@ -442,7 +455,7 @@ struct maple_sega_vmu: maple_base
 						w32(MFID_1_Storage);
 						if (*(u16*)&flash_data[0xFF * 512 + 0x40] != 0xFF)
 						{
-							printf(" Unformatted state: return predetermined media information\n");
+							//printf(" Unformatted state: return predetermined media information\n");
 							// Unformatted state: return predetermined media information
 							//total_size;
 							w16(0xff);
@@ -545,7 +558,7 @@ struct maple_sega_vmu: maple_base
 
 				case MFID_3_Clock:
 					{
-						if (r32()!=0 || dma_count_out[0]!=8)
+						if (r32()!=0)
 						{
 							printf("VMU: Block read: MFID_3_Clock : invalid params \n");
 							return MDRE_TransminAgain;		//invalid params
@@ -621,6 +634,25 @@ struct maple_sega_vmu: maple_base
 
 					case MFID_2_LCD:
 					{
+						/*r32();
+						rptr(lcd_data,192);
+
+						u8 white=0xff,black=0x00;
+
+						for(int y=0;y<32;++y)
+						{
+							u8* dst=lcd_data_decoded+y*48;
+							u8* src=lcd_data+6*y+5;
+							for(int x=0;x<6;++x)
+							{
+								u8 col=*src--;
+								for(int l=0;l<8;l++)
+								{
+									*dst++=col&1?black:white;
+									col>>=1;
+								}
+							}
+						}*/
 						return  MDRS_DeviceReply;//just ko
 					}
 					break;
