@@ -16,7 +16,7 @@ future update Compatibility.
 ![Game list](Pop3D.png)
 - Prince of Persia 3D : Arabian Night
 
-![Game list](Bomberman Online.png)
+![Game list](BombMan Online.png)
 - Bomberman Online
 
 # Authorship
