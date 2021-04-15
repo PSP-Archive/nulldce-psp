@@ -1,6 +1,7 @@
+
 nullDC-PSP is a Sega Dreamcast emulator for PlayStation Portable.
 
-This is an experimental release, and many games are not yet playable.
+This is an experimental release, and many games are not yet playable.future update Compatibility.
 
 # Authorship
 
