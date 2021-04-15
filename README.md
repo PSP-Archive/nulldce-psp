@@ -1,9 +1,23 @@
- ![Game list](ICON0.PNG)
+![Game list](ICON0.PNG)
 
 nullDCe-PSP is a Sega Dreamcast emulator for PlayStation Portable.
 
 This is an experimental release, and many games are not yet playable.
 future update Compatibility.
+
+# Screenshot
+
+![Game list](Sonic.png)
+- Sonic Adventure 1
+
+![Game list](Sonic2.png)
+- Sonic Adventure 2
+
+![Game list](Pop3D.png)
+- Prince of Persia 3D : Arabian Night
+
+![Game list](Bomberman Online.png)
+- Bomberman Online
 
 # Authorship
 
