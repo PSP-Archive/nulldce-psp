@@ -1,6 +1,6 @@
 nullDC-PSP is a Sega Dreamcast emulator for PlayStation Portable.
 
-This is an experimental release, and many games are not yet playable.
+This is an experimental release, and many games are not yet playable. Sound is not yet emulated.
 
 # Authorship
 
@@ -9,6 +9,8 @@ nullDC-PSP was originally developed by drk||Raziel (currently under the nickname
 # Compatibility
 
 nullDC-PSP is only compatible with 'slim' models (PSP-2000 and above). It will not boot on the original PSP-1000.
+
+See the [compatibility list](https://psp-archive.github.io/nulldce-psp/compatibility/index.html) or [add a new entry](https://github.com/PSP-Archive/nulldce-psp/issues) to the list.
 
 # Instructions
 
