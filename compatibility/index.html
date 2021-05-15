@@ -1,0 +1,141 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+		<title>Compatibility - nullDC</title>
+		<link rel="shortcut icon" href="../favicon.ico">
+		<link rel="stylesheet" type="text/css" href="../style.css">
+    </head>
+
+	<body>
+		<!-- Navigation Bar -->
+		<ul>
+				<li><a href="../index.html">Home</a></li>
+				<br>
+				<li><a class="active">Compatibility List</a></li>
+		</ul>
+		<br>
+
+		<div class="content">
+            
+            <center>
+                <img src="../logo.png">
+                <h2 style="margin-top: 2px">Dreamcast emulator for the PlayStation Portable </h2>
+				<br>
+				<hr>
+				<br>
+				<h1>Compatibility List</h1>
+				<h2>Click an Item to View more Information.</h2>
+			</center>
+            
+            <br>
+
+			<!-- Just kinda leaving this here so we can append a tag to it later.. -->
+            <div style="margin-left: 15%; margin-right: 15%" id="lists">
+			</div>
+
+			<!-- Use GitHub API to retrieve all issues, create tags for them -->
+            <script>
+                // Send GET request to try and obtain the JSON
+                var request = new XMLHttpRequest();
+                request.open('GET', 'https://api.github.com/repos/PSP-Archive/nulldce-psp/issues?per_page=100', true);
+                request.send(null);
+
+				// Just a variable to store all of our entries
+				var entries = [];
+
+                // Verify we got it
+                request.onreadystatechange = function () {
+                    if (request.readyState === 4 && request.status === 200) {
+                        var type = request.getResponseHeader('Content-Type');
+                        if (type.indexOf("text") !== 1) {
+                            var json = JSON.parse(request.responseText);
+							
+							// push results to array
+							for(var i = 0; i < json.length; i++) {
+								entries.push(json[i]);
+							}
+
+							// sort in alphabetical order
+							entries.sort((a, b) => a.title.localeCompare(b.title))
+							// send to be pushed
+							for(var i = 0; i < entries.length; i++) {
+								add_list_entry(entries[i]);
+							}
+                        }
+                    }
+                }
+
+				// push to html
+				function add_list_entry(entry) {
+					// cut if its a closed issue, most likely a duplicate or doesn't
+					// match the desired format
+					if (entry.state != "open")
+						return;
+
+					var element = document.getElementById("lists");
+
+					// Title
+					var title = document.createElement("a");
+					var title_text = document.createTextNode(entry.title); 
+					title.appendChild(title_text);
+					title.style.fontSize = "120%";
+					title.style.fontWeight = "bold";
+					title.href = entry.html_url;
+					title.style.color = "white";
+					element.appendChild(title);
+
+					// Hiphen.. lol
+					var hiphen = document.createElement("span");
+					var hiphen_text = document.createTextNode(" - ");
+					hiphen.appendChild(hiphen_text);
+					element.appendChild(hiphen);
+
+					// Playability status
+					var status_string;
+					var status = document.createElement("span");
+					var status_text;
+
+					// check to see if we're trying to list something without a tag
+					if (entry.labels[0] != undefined) {
+						status_string = entry.labels[0].name;
+					} else {
+						status_string = "Under Review";
+					}
+
+					status_text = document.createTextNode(status_string);
+						
+					switch(status_string) {
+						case "Excellent":
+							status.style.color = "#01ad10";
+							break;
+						case "Good":
+							status.style.color = "#59add1";
+							break;
+						case "Unplayable":
+							status.style.color = "#8c0000";
+							break;
+						case "Under Review":
+							status.style.color = "#fcba03";
+							break;
+						default:
+							break;
+					}
+
+					status.appendChild(status_text);
+
+					status.style.fontSize = "120%";
+					status.style.fontWeight = "bold";
+
+					status.style.scale = 2;
+
+					element.appendChild(status);
+
+					// Line brek
+					element.appendChild(document.createElement("br"));
+				}   
+            </script>   
+        </div>
+	</body>
+</html>
