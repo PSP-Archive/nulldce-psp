@@ -46,7 +46,7 @@
                 <script>
                     // Send GET request to try and obtain the JSON
                     var request = new XMLHttpRequest();
-                    request.open('GET', 'https://api.github.com/repos/DaedalusX64/daedalus/releases/latest', true);
+                    request.open('GET', 'https://api.github.com/repos/PSP-Archive/nulldce-psp/releases/latest', true);
                     request.send(null);
 
                     // Verify we got it
@@ -71,7 +71,7 @@
                     // All we do here is add the version number and the GitHub link to the page
                     function appendPage(versionNumber) {
                         var para = document.createElement("h3");
-                        var node = document.createTextNode("The latest version of DaedalusX64, " + versionNumber + ", can be downloaded here:");
+                        var node = document.createTextNode("The latest version of nullDC, " + versionNumber + ", can be downloaded here:");
                         para.appendChild(node);
                         var element = document.getElementById("verinfo");
                         element.appendChild(para);
