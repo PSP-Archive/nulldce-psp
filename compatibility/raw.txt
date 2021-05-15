@@ -1,0 +1,6215 @@
+
+  
+    
+    
+    
+  
+  
+    
+    
+	
+	
+              &nbsp;Name&nbsp;
+              &nbsp;PSP Info&nbsp;
+              &nbsp;Emu Version&nbsp;
+              &nbsp;Playable&nbsp;
+              &nbsp;Sound&nbsp;
+              &nbsp;FPS&nbsp;
+              &nbsp;Graphic Bugs&nbsp;
+              &nbsp;Notes&nbsp;
+	
+		 
+	
+			007 - The World is Not Enough (E) (M3) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			20-50
+			Minor
+			                texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			007 - The World is Not Enough (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			20-50
+			Minor to none
+			     texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			1080 Snowboarding (E) (M4) [!]
+			PSP 1001 m33-6 
+			747
+			Yes
+			Yes
+			3-6
+			Minor
+			       This game runs too slow to be playable. The graphics look really good. The Audio does work, but I would recommend that you disable it because it is too choppy to be enjoyable. The in-game map &amp; writing is not shown correctly. To help counter the speed issue, you might want to set Frameskip to 1+.
+	
+		 
+	
+			1080 Snowboarding (JU) [!]
+			phat 1.6 me 6.60 
+			747
+			Yes
+			Yes
+			3-6
+			Minor
+			 This game runs too slow to be playable. The graphics look really good. The Audio does work, but I would recommend that you disable it because it is too choppy to be enjoyable. The in-game map &amp; writing is not shown correctly. To help counter the speed issue, you might want to set Frameskip to 1+.
+	
+		 
+	
+			64 Oozumou (J) [!]
+			phat 1.6 me 6.60 
+			747
+			Menu only
+			Yes
+			6-10
+			Minor
+			  Setting Texture Update Check to Every Frame fixes the graphical problems with the text in the menu. Both Sync and Async audio work, but are choppy. The graphics in-game look good, much better than the menu. Once you begin to sumo in-game, the game will freeze, and all options i tried to bypass this freeze failed. When the game cuts out though, if you have either audio type Enabled, the sound will continue to play fullspeed. The speeds in-game are a bit slow, so set Frameskip to 1.also tried various settings but game doesnt seem to work fine...
+	
+		 
+	
+			64 Oozumou 2 (J) [!]
+			phat 1.6 me 6.60 
+			747
+			Menu
+			N
+			20-25
+			Yes
+			  Menu Works okay, black screen in game (regression),also tried various settings but game still has regression in game
+	
+		 
+	
+			64 Trump Collection - Alice no Wakuwaku Trump World (J) [!]
+			phat 1001 m33-6 
+			747 
+			Yes
+			Yes
+			30-40
+			None
+			 **Please note that you must have Dynamic loop Optimization Disabled, or else the menu will continue to replay and you will not be able to get in-game.**
+The graphics are very vivid and colorful, and the game gives off a Paper Mario type feeling. Both Sync and Async audio work quite well, and if you want to enable audio, then I'd recommend Async because I did not experience any crashes with it enabled and Async if faster than Sync. Keep audio Disabled for you are looking for more speed. Also set Frameskip to Auto. The game was running at 50%+ sync for a majority of my gameplay.
+	
+		 
+	
+			64 de Hakken!! Tamagotchi Minna de Tamagotchi World (J) [!]
+			phat 5.00 M33-6 
+			747
+			No
+			-
+			-
+			-
+			 Nothing displayed used to work in older version(dont remember exactly....)so i guess thats called a regression
+
+	
+		 
+	
+			AI Shougi 3 (J) [!]
+			phat 1.6 me 6.60 
+			747
+			Yes
+			Yes
+			60+
+			Minor
+			      Splash screen before menu is washed out. The only other graphical glitch is that the cursor does not show in-game, so this inhibits gameplay a bit. The controls are a bit hard to grasp. The game runs over fullspeed with either Sync or Async sound enabled, so you might want to turn on Limit Framerate.
+	
+		 
+	
+			AeroFighters Assault (E) (M3) [!]
+			PSP 1000 6.39pro B9 
+			725
+			Y
+			Y sync
+			6-8
+			Minor
+			TUC:disable
+Frameskip: auto 2
+Zoom: 107%
+Limit framerate: full speed
+DR: Enable
+HLE:Enable
+Audio:Sync
+
+note:
+Disable Dyanamic Loop Opt. otherwise it'll freeze on one of the opening scenes. 
+	
+		 
+	
+			AeroFighters Assault (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			6-8 In-Gam
+			Minor
+			 Disable Dyanamic Loop Optimization otherwise it'll freeze on one of the opening scenes.
+
+On training levels, it's very playable (15-25fps), but in the main game - with vast environments and fleets of allies/enemies - it crawls to a frustratingly slow average of 6fps.
+
+There are a few minor graphical errors, and in-game there is a yellow tint that sometimes finds it's way onto the screen, but it does not prevent gameplay at all. The sound works, but is better left off. I would recommend that you set Frameskip to Auto.
+	
+		 
+	
+			AeroGauge (E) (M3) [!]
+			phat 1.6 me 6.60 
+			747
+			Yes
+			Y
+			25
+			
+			   
+Game has little or no graphical glitches, the only one I can see is when its loading and at the bottom the text is scrolling, not easy to make out what it says.
+other than that the game seems to run fine
+	
+		 
+	
+			AeroGauge (J) (V1.1) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Yes
+			Y
+			25
+			Y
+			 Game has little or no graphical glitches, the only one I can see is when its loading and at the bottom the text is scrolling, not easy to make out what it says.
+
+This game is very fast and very playable.
+	
+		 
+	
+			AeroGauge (U) [!]
+			phat 1.6 me 6.60 
+			747
+			Yes
+			Yes
+			18-30+
+			None
+			 When playing you might want to set Frameskip to Auto because when you are in a Grand Prix, there is a bit of a speed decrease. You also might want to Limit the Framerate because some parts run too fast. Both Sync and Async work, but have the traditional choppiness whenever the framerate is below 100%. The graphics look very good, and I didn't notice anything bugs or glitches,which is the most best part of the game:)
+	
+		 
+	
+			Aidyn Chronicles - The First Mage (E) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 613
+			Yes
+			Y
+			6.7 - 8
+			Minor
+			   Game is slowly getting faster.
+No major visible graphics issues
+	
+		 
+	
+			Aidyn Chronicles - The First Mage (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			6-8
+			Minor
+			The graphics look great, but the game runs painfully slow. Culling and Clean Scene seems to fix most, if not all graphics issues. Both Sync and Async audio work, but are choppy, so it should remain disabled because you need to try and bore out all of the speed possible. I would definitely recommend setting Frameskip to 1+. The in-game movies actually run quite fast, and are appealing to watch with the dramatic variety of colors.
+	
+		 
+	
+			Airboarder 64 (E) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial*
+			Yes
+			9-11
+			Minor
+			  The graphics look good, and it only has a few inexact blend modes. Both Sync and Async sound work, but it is choppy and slows it down to 7 fps. The menu works near fullspeed, but it is very slow in game. Frameskip makes the game unenjoyable, but you still might want to turn it on to get a nice speed-up. The game runs on a 15fps full speed, so reaching 10fps is the equivalent to reaching 2/3 speed.
+
+*Sometimes, the rider falls through floor, but hey appear back on the map in a few seconds.
+	
+		 
+	
+			Airboarder 64 (J) [!]
+			Slim 5.50 GEN D3 
+			611
+			Yes
+			Y*
+			12
+			Y*
+			*Sound is very stuttery, but is there.
+
+*When the game starts you freefall through the level (which allows you to gain 30k points XD ), after about 5 minutes it stabilizes and you can land on the floor, this happens again though after jumping and starting another trick.
+
+This game is slow but is still playable.
+	
+		 
+	
+			Akumajou Dracula Mokushiroku - Real Action Adventure (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			10-25
+			Minor
+			The Intro boots up, but once you are about to get to the main menu, you experience a BSOD. Please note that if you do not have Dynamic Loop Optimization Disabled, the game hangs right after the Konami logo flashes. Both Sync, and Async audio do work on the intro, but it is choppy. i would recommend that you set Frameskip to Auto because the intro becomes slow at some points.
+	
+		 
+	
+			Akumajou Dracula Mokushiroku Gaiden - Legend of Cornell (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			 The game does boot, and seems like it will be able to get in-game, but decides to hang right after the Konami logo. I tried a variety of settings, but there was no way to get past.
+	
+		 
+	
+			All Star Tennis '99 (E) (M5) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Yes
+			No
+			30
+			
+			 Game is full speed, however if sound is enabled it crashes 
+	
+		 
+	
+			All Star Tennis '99 (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			Sync
+			30+
+			Minor
+			 Make sure to turn on Limit Framerate, so the game doesn't run too fast. This game runs just about perfectly. The game now plays sound, but only Sync works. Async will BSOD the game. With sound enabled, the speed is still 85-95+% sync, but it may be a good idea to turn on Frameskip to Auto 1. The speed in game with default settings is 95%+ sync, and is very enjoyable. Leave Audio Match Rate off as it cuts the speed in half.
+Recommended settings:
+Limit Framerate: Yes
+	
+		 
+	
+			All-Star Baseball '99 (E) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			 Although I tested several settings, the game still failed to boot.
+	
+		 
+	
+			All-Star Baseball '99 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game will not boot at all.
+	
+		 
+	
+			All-Star Baseball 2000 (E) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			no
+			No
+			
+			
+			 Freezes at startup 
+	
+		 
+	
+			All-Star Baseball 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			No matter what settings you put, the game will not boot up.
+	
+		 
+	
+			All-Star Baseball 2001 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			Even though the rom has been tested through several combinations of settings, it still does not boot.
+	
+		 
+	
+			Armorines - Project S.W.A.R.M. (E) [!]
+			PSP 1001 5.00M33-6 
+			713
+			No
+			N
+			N/A
+			N/A
+			 Not working
+	
+		 
+	
+			Armorines - Project S.W.A.R.M. (G) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			N/A
+			N/A
+			N/A
+			N/A
+			 Rom does not boot with any setting.
+	
+		 
+	
+			Armorines - Project S.W.A.R.M. (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			No
+			N/A
+			N/A
+			N/A
+			 I tested several combinations of settings, but the game still failed to boot.
+	
+		 
+	
+			Army Men - Air Combat (U) [!]
+			Phat 6.60 Pro-B10 
+			Alpha Rev 766
+			Yes
+			Yes
+			11-20
+			None
+			   The graphics seem to be perfect, but the game itself is very slow. It usually runs around 30%-40% sync in-game. Both Sync and Async audio work, but should be left Disabled because it is very choppy, and slows down gameplay. I would highly recommend that Frameskip be set to 1 to help the slow speeds, but this also creates laggy graphics so whatever you would rather have.
+
+
+	
+		 
+	
+			Army Men - Sarge's Heroes (E) (M3) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Y
+			Y
+			9
+			Ghosting on army man
+			 Game plays well, just needs some more FPS!!!
+
+	
+		 
+	
+			Army Men - Sarge's Heroes (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			No
+			8-18
+			Minor
+			 The amount of fps depends on how many things are being rendered on-screen. You need to have Double Display Lists Enabled, or else there is a ghosting effect. There seems to be a pale tint to the green soldiers, but does not hurt gameplay whatsoever. Both Sync and Async audio fail to play, so you can leave audio Disabled. I would recommend that you set Frameskip to 1 to help gain some speed. Other than the speed, this game is quite fun to play.
+	
+		 
+	
+			Army Men - Sarge's Heroes 2 (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			Yes
+			8-16
+			None
+			 The fps varies greatly during gameplay, and is directly proportional to the amount of objects being rendered on the screen. The graphics look perfect. Both Sync and Async audio do work, but they're very choppy and unpleasant. If you want to enable audio, then Async audio would be better because it only costs about 1fps. You might need to set Frameskip to 1 to try to gain a bit more speed, but graphics become jumpy and laggish.
+	
+		 
+	
+			Asteroids Hyper 64 (U) [!]
+			PSP Go 6.60 PRO C2 
+			R1878
+			Yes
+			Y (A-Sync)
+			20-30
+			None
+			 The game averages about 10 FPS on the intro, around 30 FPS on the menu, and about 30 during play.Both Async and Sync work. Async is more stable and sounds better whilst Sync tends to slow the game down and sound worse. Enable Auto Frame Skip, Dynamic Recompilation, Double Optimisation, Clean Scene and Double Display Lists. Disable HLE, Memory Optimisation, Loop Optimisation. Over all the game runs smooth with Async sound with possibly a few frame drops in the menu and slow intro which finishes in a few seconds. Apart from that this is a great game to play being one of the best working ones for the DaedalusX64.
+	
+		 
+	
+			Automobili Lamborghini (E) [!]
+			Phat 6.60 ME 1.8 
+			Alpha Rev 757
+			Y
+			*Y Async
+			25-30
+			Minor
+			All in all, this game runs very good, it achieves around 75-80% consistently.
+Recommended settings to use are:-
+TUC: Disabled,
+Frameskip: Disabled, (I would recommend leaving this disabled as it becomes unplayable otherwise),
+Zoom: 107%,
+Limit framerate: Full Speed,
+Audio: Async, (*With audio enabled, for best speed).
+
+
+
+	
+		 
+	
+			Automobili Lamborghini (U) [!]
+			PSP Go 6.60 PRO C2 
+			R1878
+			Yes
+			A-Sync
+			30-40
+			Very Minor
+			  The game averages around 50-55 in intro, 45-50 in menu and 30-40 in game.Both Async and Sync work. Async is more stable and sounds better whilst Sync tends to slow the game down and sound worse. Enable Frameskip Auto 2, Dynamic Recompilation, HLE, Dynarec Memory Optimistation, Dynarec Loop Optimistation, Dynarec Doubles Optimistation, Clean Scene and Double Display Lists. Disable Texture Update Check. Overall the game runs smooth and sounds good with Async. With the only issues being occasional frame drops in games and a graphical bug in which the count down for the start of the race lags behind the game and sound. Apart from that this is a great game to play being one of the best working ones for the DaedalusX64.
+	
+		 
+	
+			Bakuretsu Muteki Bangai-O (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			45-55
+			Major
+			Texture Resizing seems to be causing rom issues. Textures will show if Bomberman is loaded first but it still looks corrupted. Both Sync and Async audio work for a split second, but it crashes the game, and if you get back to the DaedalusX64 menu, the sound can still be heard.
+	
+		 
+	
+			Bakushou Jinsei 64 - Mezase! Resort Ou (J) [!]
+			Slim 5.50 GEN D3 
+			Alpha 631
+			Yes
+			No
+			15-20
+			Minor
+			The graphics actually look quite appealing, but in-game, some of the backgrounds are missing at some points during gameplay. Neither Async, nor Sync works, so leave them disabled. Set Frameskip to 1 to speed up the game a bit.  Sometimes the game hangs a bit, so there is a bit of instability during gameplay.
+	
+		 
+	
+			Banjo-Kazooie (E) (M3) [!]
+			psp slim 6.60 ME-1.6 
+			747
+			Yes
+			yes
+			15-25
+			Minor
+			       texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled run well little slow but not bad
+	
+		 
+	
+			Banjo-Kazooie (U) [!]
+			PSP 3001 6.20 PRO-B1 
+			rev 1878
+			Y
+			Y
+			20-27
+			Some
+			 Texture Update Check: Every frame
+High Emulation Level (HLE): Disabled
+Dynamic memory Optimisation: Disabled
+Dynamic Loop Optimisation: Disabled
+Dynamic Double Optimisation: Enabled
+Clean scene: Enabled
+
+The 16:9 screen mode option works sucessfuly in this game.
+
+NOTE: Lots of bugs got fixed in this rev. Thanks devs :)
+
+NOTE: Probably applies to other versions
+	
+		 
+	
+			Banjo-Tooie (A) [!]
+			Phat 5.50 Prome 4 
+			Rev 707
+			N
+			N
+			25-35
+			Yes
+			  The game wont boot, even with a save state the game will crash when you take one step. This was a disappointment to me, not being able to play this game.
+	
+		 
+	
+			Banjo-Tooie (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			No
+			Y
+			2.2
+			Y
+			   With frameskip 2
+Menus running fine (Main=15-25 FPS) (Ingame=36 FPS) but ingame it drops down to 2.2 FPS
+
+In the Intro the Rare logo is half invisible.
+Banjos shadow is like a specular mirror.
+
+It's too slow ingame to be playable.
+	
+		 
+	
+			Banjo-Tooie (U) [!]
+			psp 3000 6.20 PROB10 
+			rev 1861
+			Y (slow)
+			Y (slow)
+			2-6
+			minor
+			  with a recent update it boots and is playable but is extremely slow
+salve said: "The reason is so slow is because it flushes the dynarec cache very often, pretty much is running on interpreter mode (very slow!)"
+
+here are the settings I used to get it up to 2-6 fps (default gets .5 -1)
+
+Global: 4:3 unscaled improces fps ALOT
+preferences:
+Texture updace check: disabled
+Frameskip: your preference 0-2 smother vs faster
+Limit Framerate: no
+Dynamic Recompilation: Enabled
+HLE: Disabled
+Audio: Disabled (works but extremely slow)
+Advanced:
+Dyn memory Opt: disabled(causes instant crash)
+  "    loop      "   :Enabled
+  "    doubles  "  : enabled
+Clean scene: enabled
+DD lists: enabled
+
+NOTE: this probably applies to other versions of the game
+	
+		 
+	
+			Bass Hunter 64 (E) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			12-22
+			Minor
+			The graphics of this game look excellent, and there are only a few graphical problems here and there. Both Sync and Async audio work, but leave it Disabled because the game is a bit slow. Set Frameskip to 1 for speed purposes. Overall, this is a fun game to play, and doesn't feel as slow as it actually is. You might also want to use the Zoom functionality to bring the picture closer to fullscreen. I would recommend somewhere around 115%.
+	
+		 
+	
+			Bassmasters 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game seemed as though it might boot, but then it just stays stuck on a black screen.
+	
+		 
+	
+			Batman Beyond - Return of the Joker (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			Yes
+			36-45
+			Minor
+			    This game looks really good, and even though the speeds are not blazing fast, the game feels fast and is tolerable. I would recommend that you set Frameskip to Auto for a speed boost, and make sure to set Texture Update Check to Every Frame, so the text will become visible. Both Sync and Async audio work, but Async sounds a lot less choppy and robs less fps, so if you want audio, Async is the way to go.
+Decent speeds without sound.
+
+
+	
+		 
+	
+			Batman of the Future - Return of the Joker (E) (M3) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			32-40
+			no
+			   work well
+texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			BattleTanx (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Yes
+			Y 
+			10-15
+			minor
+			It does not boot, unless you have a savestate
+
+savestate:
+http://forums.daedalusx64.com/download/file.php?id=2885
+	
+		 
+	
+			BattleTanx - Global Assault (E) (M3) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			YES
+			Y (Async)
+			9~13*
+			Minor
+			Game is playable only graphic bug is with "health meter" who is not changing showing damage.
+
+Settings:
+Texture update: every frame (turning off give about 0.5~1 Fps)
+Dynamic Recompilation: On
+High Level Emulation: On
+Sound:Off / Asynchronous: 9~12 Fps/ Synchronosu:8~10 Fps
+Memory Access Optimization: On
+clean scene: On
+Dynamic Loop Optimization: On
+* without sound
+	
+		 
+	
+			BattleTanx - Global Assault (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Menu
+			Yes
+			10-12 
+			Minor
+			 The game will not boot without a savestate 
+the game work fine
+
+savestate:
+http://forums.daedalusx64.com/download/file.php?id=2887
+	
+		 
+	
+			Battlezone - Rise of the Black Dogs (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Partial
+			No
+			15-22
+			Major
+			 Async audio causes a BSOD upon boot, and with Sync Enabled, it won't boot, so make sure to leave audio Disabled. The graphics look terrible, and in-game, the background is black. You must have Dynamic Loop Optimization Disabled, or else it gets stuck at the Expansion Pak check. You also need to Enable Clean Scene or else all of the graphics flicker and have a trail. You might want to also set Frameskip to 1 for better speed, and although the speeds are low, it feels pretty fast.
+	
+		 
+	
+			Beetle Adventure Racing! (E) (M3) [!]
+			PSP 1001 6.20 proB6 
+			717
+			Yes
+			Yes
+			20-50
+			Major
+			work fine in menu
+slow in game
+	
+		 
+	
+			Beetle Adventure Racing! (J) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Yes
+			Yes
+			8 - 10
+			Major
+			  Loads a large 32768 byte 512*128 4bpp texture at start (RDPStatemanager.cpp(210))
+Video Buffer Full at 131072 bytes
+Unknown blender 0c08 - :In * 0 + In * 1 || 3010 - :Fog * AIn + Mem * 1-A (assuming cars)
+
+Sound is crackly
+
+
+	
+		 
+	
+			Beetle Adventure Racing! (U) (M3) [!]
+			Phat 6.60 Pro-B10 
+			Alpha Rev 766
+			Yes
+			Yes*
+			11-20
+			Minor
+			 The game boots up ok, logo's all display correctly &amp; at full speed now, 
+It seems like most of the blends have been fixed, but there might be another or two. The speeds have improved to the point of this game becoming fun.
+Try these recommended settings..... 
+TUC: Disabled, FS: 1, Zoom 110%
+LimitFR: Full Speed, 
+Audio: Disabled, (*Sync or Async both work at the expense of speed),
+All other settings at default
+ 
+	
+		 
+	
+			Big Mountain 2000 (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			No
+			17-22
+			Minor
+			 Neither Sync, nor Async audio will work at all, so leave them Disabled. The overall graphics look really good. The game runs at a decent speed, but you might want to consider setting Frameskip to Auto because it is not fullspeed. This is actually a fun game to play.
+	
+		 
+	
+			Bio F.R.E.A.K.S. (E) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Menu
+			Yes
+			
+			Major
+			    Reports Video Buffer is full (allocates 262144 bytes RAM) (thats 256KB) so something is wrong there)
+
+Loads to black screen with two dotted lines
+	
+		 
+	
+			Bio F.R.E.A.K.S. (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			Yes
+			14-17
+			Minor
+			 Make sure to Disable Dynamic Loop Optimization or else the game will freeze before you get to the menu. There are a few graphical problems with the menu and the HUD, most likely due to the lack of framebuffer support, but nothing that could get in the way of gameplay. Set Texture Update Check to Every Frame to fix text. The speeds are fast in the menu, and decent during gameplay, but you might want to set Frameskip to Auto. The audio does work in this game, but is quite choppy. Sync works, but is choppy. Enabling Async audio causes this game to run at fullspeed, but the sound is still choppy, so if you want to Enable Async and turn down your PSP volume, that would give you a major speed boost.
+	
+		 
+	
+			Biohazard 2 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			No
+			N/A
+			N/A
+			The game does boot now, but nothing is rendered on-screen. Maybe a regression? Neither Sync, nor Async audio work.
+	
+		 
+	
+			Blast Corps (E) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			No
+			N/A
+			N/A
+			N/A
+			 Game strat 
+few seconds after 
+BSOD
+	
+		 
+	
+			Blast Corps (U) (V1.0) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			No
+			N/A
+			N/A
+			N/A
+			 The game crashes instantly after the N64 logo, and causes a BSOD. It is possible to get in-game with a savestate, but the game instantly crashes.
+	
+		 
+	
+			Blast Corps (U) (V1.1) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			No
+			Y sync
+			N/A
+			N/A
+			     The game freezes on the rareware sign, sound is choppy but works.
+	
+		 
+	
+			Blast Dozer (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game crashes the Emulator immediately after the N64 logo.
+	
+		 
+	
+			Blues Brothers 2000 (E) (M6) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			Yes
+			Yes
+			13 - 24
+			
+			 texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Blues Brothers 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			15-20
+			None
+			 Make sure to not Enable Async audio when loading the game because it causes the game to freeze slightly after it boots. Sync audio works quite well, but I would recommend to leave it disabled for speed purposes. The graphics look amazing, and I did not notice any graphical problems, but there may be some further into the game. The game is a bit slow, and the overall speed depends on how many objects are on the screen at any one moment. Set Frameskip to 1 for a speed increase. 
+	
+		 
+	
+			Body Harvest (E) (M3) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Yes
+			Y
+			15-60
+			minor
+			 game work fine 
+	
+		 
+	
+			Body Harvest (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Yes
+			Y
+			15-60
+			minor
+			 work fine
+	
+		 
+	
+			Bokujou Monogatari 2 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			18-23
+			Minor
+			The graphics look really good in this game. Make sure to set Texture Update Check to Every Frame to make the text become visible and stop overwriting itself. The speed is good, and make this a very playable title. Although it is fast at most points in the game, it is not full speed, so you may want to set Frameskip to Auto. Both Sync and Async audio work, but they are a bit choppy, so leave Disabled.
+	
+		 
+	
+			Bomberman 64 (E) [!]
+			PSP 1000 5.00M33-6 
+			713
+			No
+			Yes/Sync
+			25-30
+			Major
+			   black/blue/white screen in game 
+	
+		 
+	
+			Bomberman 64 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Menu
+			Yes
+			30-50
+			Major
+			Most graphics are not rendered at all in this game. The only graphics that can be seen are the intro and text, whether it be in-game or in the menu. The text in the menu seems to stretch itself, but can be fixed by setting Texture Update Check to Every Frame. The speeds in both the menu and the game are quite fast, but Frameskip should still be set to Auto. Both Sync and Async audio work without too much choppiness, so it is your choice if you want to Enable it or not. You can go in-game, but no graphics are rendered except for text, and if you have sound Enabled, that can be heard.
+	
+		 
+	
+			Bomberman 64 - The Second Attack! (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			13-17
+			Moderate
+			  The logo's &amp; menus do not appear, but the intro now shows somewhat, just keep pressing A or Start until you start the game. In-game, there are slight graphic glitches, including explosions that do not show correctly and in-game writing is not being shown, apart from that game looks good. Some of the graphical problems can effect gameplay, but not too much. The speeds are quite fast, but set Frameskip to Auto. Both Sync and Async audio work, but Sync audio sounds better.
+
+-Needs S2DEX to show the menus and writing. 
+	
+		 
+	
+			Bomberman Hero (E) [!]
+			PSP 1000 5.00M33-6 
+			Beta 3 677
+			partial
+			Yes/Sync
+			25- 40
+			Major
+			 Bomberman falls through the floor when entering first stage in battle room.
+
+Sound is okay, just needs more sync. 
+	
+		 
+	
+			Bomberman Hero (U) [!]
+			Slim 5.00 M33-6 vita 
+			Alpha 777
+			N
+			Y
+			26-52 35
+			Major
+			   
+
+settings used on vita: 
+dynamic recompilation: enabled
+dynarec memory optimisation: enabled
+dynarec loop optimisation: disabled
+dyarec doubles optimisation: enabled
+dynamic loop optimisation: enabled
+  * disabling breaks this game
+clean scene: enabled                      
+double display lists: enabled             
+video rate match: no
+fog emulation: enabled
+texture update check: none
+frameskip: 5
+audio:synchronous
+
+
+
+
+
+
+
+	
+		 
+	
+			Bottom of the 9th (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			15-25
+			Minor
+			There are virtually no graphical errors that I could see. Both Sync and Async sound work, but Sync sounds better. You may want to leave sound disabled because sometimes the speeds in-game drop. Whenever you are pitching, the speeds are quite fast, but when you switch to the outfield view, the speeds drop a bit. Set Frameskip to Auto to help this a bit.
+	
+		 
+	
+			Brunswick Circuit Pro Bowling (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			Yes sync
+			8-20
+			Major
+			 Do not enable either Sync or Async sound because doing so will crash the game and cause a BSOD. The graphics of this game are terrible. Many thing are faded, disappear, or just don't look right. The speeds are very slow, so set Frameskip to Auto or 1.
+
+	
+		 
+	
+			Buck Bumble (E) (M5) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Y
+			Y**
+			25+
+			Moderate
+			Seems a bit dark ingame
+Audio: **Async, FS: 1 or 2
+
+
+	
+		 
+	
+			Buck Bumble (J) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Y
+			Y**
+			25
+			Minor
+			Seems a bit dark ingame
+Audio: **Async, FS: 1 or 2
+
+	
+		 
+	
+			Buck Bumble (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			20-30
+			None
+			This is one of the best games to play on DaedalusX64. The graphics are great, the speed is more than needed, and the sound is not choppy. Turn on Frame Limiter because the speeds often exceed 100% sync, but also set Frameskip to Auto because sometimes the speed dips a little. I did not notice any graphical problems at all during my playtime. If you want to enable audio, Async is a bit faster than Sync.
+
+	
+		 
+	
+			Bug's Life, A (E) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			Y
+			25 (full s
+			major
+			 Doesn't boot  whitout a savestate
+
+savestate:
+http://forums.daedalusx64.com/download/file.php?id=2896
+
+major graphic problems
+
+	
+		 
+	
+			Bug's Life, A (F) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			N
+			
+			
+			 Doesn't boot whitout savestate
+see Bug's Life, A (E) [!] 
+
+	
+		 
+	
+			Bug's Life, A (G) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			
+			
+			
+			  Doesn't boot whitout savestate
+see Bug's Life, A (E) [!] 
+
+	
+		 
+	
+			Bug's Life, A (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			  Doesn't boot whitout savestate
+see Bug's Life, A (E) [!] 
+
+	
+		 
+	
+			Bug's Life, A (U) [a1][!]
+			PSP 1001 6.39 PRO B9 
+			755
+			NO
+			N
+			0
+			Doesnt start up
+			   I have tried everything possible to get the game working. the fps does pop up, and it says its syncing 100%, but its not actually doing anything. So for now, this game is unplayable.  
+	
+		 
+	
+			Bust-A-Move '99 (U) [!]
+			Slim 6.35 HEn 
+			Beta 3 Update
+			Yes
+			Yes
+			60+
+			Minor
+			    ?* with the Beta 3 Update.
+
+This game is definitely a must play. The game is fullspeed, even with sound enabled. I would recommend that you set Frame Limiter to Yes to slow down the game a bit. Both Async and Sync audio work, so whichever one you would like to play with is up to you. The graphics look just about like the game is being played on the original hardware. Not only is it pretty much perfectly emulated, it is also an addicting, fun game to play. You also might want to think about setting Frameskip to Auto because it doesn't hurt to have it on, but that's totally up to you.
+
+Has some graphical issues with puzzle mode.
+
+*This game runs at least 90% speed (during majority of gameplay) with very minor glitches and sound enabled.
+	
+		 
+	
+			Bust-A-Move 2 - Arcade Edition (E) [!]
+			Fat 5.50 Gen-D3 
+			Alpha 560
+			Y
+			Y
+			49-50
+			Minor*
+			This game runs &amp; looks perfect, but for 2 graphic problems, one is the bubble shooter texture is corrupted, and when entering your initials in the high score table, the colouring is wrong, apart from those.......runs perfectly.
+
+Settings used are...........
+FS: 2, Limit FR: Yes,
+Audio: Sync (Async causes weird slowdowns),
+Controller: Dpad (I recommend using the Dpad as the analogue nub is way too sensitive).
+Advanced Options used are............
+DyncLoopOpt: Enabled
+	
+		 
+	
+			Bust-A-Move 2 - Arcade Edition (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			60+
+			Minor
+			 The game plays excellent. It is fullspeed, practically graphically bug-free, and the sound is perfect. Both Sync and Async audio work fullspeed, so whichever one you would prefer is okay. Make sure to set Limit Framerate to Yes because sometimes the speeds can become overwhelming. Although the game is fullspeed with sound, you might experience framerate drops, so you might want to consider setting Frameskip to Auto, just in case. The graphics look good, and I did not see any bugs anywhere, but they may be further in the game.
+	
+		 
+	
+			Bust-A-Move 3 DX (E) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			60+
+			Minor
+			 The only graphical problem I saw was a little miscoloration of some of the text, other than that, the graphics are flawless. This game runs faster than fullspeed, so turn on Frame Limiter, and if you want to Enable sound, either Sync or Async will work without choppiness. If you do Enable sound, you may want to set Frameskip to Auto because the game will become just below fullspeed, and Auto should give it the minor boost it needs.
+
+	
+		 
+	
+			California Speed (U) [!]
+			Phat 6.60 Pro C2 
+			Rev 1878
+			Yes
+			Y *Async
+			15-19
+			Minor
+			   The graphics look great, but the Baja truck is Miscolored, set frameskip to auto 1 to help speed it up in-game, game does run at over 60% at all times with Async audio enabled.
+Recommended settings used are:-
+TUC: Disabled, FS: Auto 1,
+Limit framerate: off(menus run fast but helps improve speed in game),
+Audio: Async, use Sync audio for best sound but slows down game
+	
+		 
+	
+			Carmageddon 64 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			7-10
+			Moderate
+			 The Logo's all show correctly, as does the title screen, the in-game graphics seem at first very good, but there are a lot of inexact blends showing up. The environment, car, and parts of the car often flicker and disappear. Both Sync and Async audio work, but are extremely choppy, so leave it Disabled. The game is a bit slow in-game, so set Frameskip to 1.
+	
+		 
+	
+			Castlevania (E) (M3) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Menu
+			Y*
+			11
+			minor
+			Dynamic Recompilation Disabled to boot the rom
+Just before you are about to get in-game, as the cutscenes come to an end, the game freezes
+	
+		 
+	
+			Castlevania (U) (V1.0) [!]
+			PSP 3000 
+			755
+			Menu
+			Yes
+			8-15
+			Moderate
+			    You must have Dynamic Recompilation Disabled to pass a freeze that occurs right before the menu loads up, but when you reach the menu, it is safe to Enable it again. The menu graphics don't look too great, and there are quite a few bugs that can be seen. The cutscene graphics look much better. Just before you are about to get in-game, as the cutscenes come to an end, the game freezes, and no matter what setting I try, I was not able to get past it. Both Sync and Async audio work, but leave sound Disabled because it is choppy and unenjoyable, not to mention you will not loose any speed from having it Enabled. The speeds are a bit slow during the cutscenes and in the menu, so set Frameskip to 1 for a speed boost.
+	
+		 
+	
+			Castlevania (U) (V1.2) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Menu
+			No sound
+			10-15
+			minor
+			Dynamic Recompilation Disabled to boot the rom
+
+	
+		 
+	
+			Castlevania - Legacy of Darkness (E) (M3) [!]
+			PSP-1000/6.39 Pro B8 
+			16 bit Revision 719
+			Partial
+			N
+			N/A
+			
+			Game starts up but crashes after 5 seconds.
+	
+		 
+	
+			Castlevania - Legacy of Darkness (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial
+			No
+			6-15
+			Moderate
+			You must Disable Dynamic Recompilation to run this game, or you can use this savestate (http://www.megaupload.com/?d=MGUA3MA3) to skip the Dynamic Recompilation freeze point. Once you get to the menu, you can Enable Dynamic Recompilation again because that is where most of DaedalusX64's speed comes from. The game is a bit slow, so set Frameskip to 1. The menu has a bunch of graphical problems, and there are a few invisible textures. The text is also jumbled if you do not set Texture Update Check to Every Frame, so do so. Both Sync and Async audio work, but leave them Disabled because they are very choppy. Upon entering a new game, the game will experience a BSOD and crash, so this game is still unplayable.
+	
+		 
+	
+			Centre Court Tennis (E) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			 Upon boot, the game instantly causes a BSOD, and crashes the emulator.
+	
+		 
+	
+			Chameleon Twist (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			25-30fps
+			None
+			Synchronous Audio works, but lags the game. When Asynchronous Audio is selected, the game doesn't boot. Audio Disabled is the most preferable. ( if Async enabled ingame, music continues to play but game freezes) The game runs a bit above 100% sync, so you might want to turn on Limit Framerate. If you do decide to turn on audio, also set Frameskip to Auto. The graphics in-game are very vivid, and appealing to look at.
+	
+		 
+	
+			Chameleon Twist 2 (E) [!]
+			slim 5.00m33 
+			3
+			No
+			N
+			N/A
+			N/A
+			     Doesnt Boot
+	
+		 
+	
+			Chameleon Twist 2 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha beta 3
+			Yes
+			Yes
+			22-30
+			N/A
+			Graphics are perfect.
+The speeds in-game are really good, but you still might want to set Frameskip to Auto.
+Sounds works good in this game, but can be choppy when there's alot of enemies on screen.
+	
+		 
+	
+			Charlie Blast's Territory (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Menu
+			Yes
+			20+
+			None
+			You must have Dynamic Loop Optimization Disabled, or else whenever you select Puzzle Mode, the game will freeze. Async audio crashes the game, so if you want to Enable audio, then select Sync. The game is fast enough to have Sync audio enabled without any choppiness. The game runs above fullspeed at all times during the menu, so turn on Frame Limiter to slow it down. Enabling Sync audio also slows it down to about the right speed, but Frame Limiter is accurate. There are no graphical problems in the menu. The only thing wrong with this game is that upon entering a game, it crashes to a white screen.
+	
+		 
+	
+			Chopper Attack (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			23-30
+			Minor
+			The graphics look really good both in-game and the menu. The speed of the game in the menu is blazing fast, and in-game it falls just short of fullspeed. Make sure to turn on Limit Framerate and set Frameskip to Auto. Although this game does have enough speed to run the audio well, it sounds very choppy and is unenjoyable. Both Sync and Async audio work. You might want to consider switching the Controller to DPad and Buttons Inverted because the controls are very awkward, and this helps just a bit.
+	
+		 
+	
+			Chou Snobow Kids (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial
+			Yes
+			20-30
+			Minor
+			The game looks amazing, but there are a few graphical issues such as some text color and a few flickering/disappearing textures. I thought I would be able to get in-game without a hitch, but whenever you select Story Mode or whatever it is called, I do not understand Japanese, it goes to either create or load a game note, and is unable to do so, so a box of text appears and I am guessing it is saying something about the MemPak not being able to be read. You can still play a tutorial if you select the second option in the main menu. The game is really fast, but can slow to speeds just below fullspeed, so turn on Limit Framerate and set Frameskip to Auto. Both Sync and Async audio work well, so if you want to Enable sound, go ahead. I would recommend Async because it is faster. I'm sure if you had a savestate to get past the MemPak issue, you could probably get in-game.
+	
+		 
+	
+			City-Tour GP - Zennihon GT Senshuken (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			 This game fails to boot no matter what settings you choose.
+	
+		 
+	
+			Clay Fighter - Sculptor's Cut (U) [!]
+			Slim 5.50 Gen-D3 
+			rev 717
+			Yes
+			Yes
+			20-25
+			Minor
+			fs=2
+audio synchronous
+limit framerate= full speed
+
+	
+		 
+	
+			Clay Fighter 63 1-3 (U) [!]
+			Slim 5.50 Gen-D3 
+			rev 717
+			Yes
+			Yes
+			16-22
+			Minor
+			 fs=2
+audio synchronous
+limit framerate= full speed
+	
+		 
+	
+			Command &amp; Conquer (E) [!]
+			Slim 6.20 HeN 
+			Beta 3 Update
+			N
+			N
+			25-35
+			Yes
+			  The game will load up sometimes but you can't enter a game without your PSP crashing.
+	
+		 
+	
+			Command &amp; Conquer (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			N
+			Y
+			5
+			Major
+			  The game is very slow and there are many graphical issues as S2DEX is not fully implemented yet.
+
+Until S2DEX is further implemented, stick with rev 460 or higher.
+
+Playability is to be determined by tolerance.
+Settings used are as follows:
+TexUpdCheck: Every 15 frames
+FS: 1
+HLE: Disabled (Will not go in game unless disabled)
+Increase VI Event: Enabled
+DDLists: Enabled
+	
+		 
+	
+			Conker's Bad Fur Day (E) [!]
+			psp slim 6.60 ME-1.6 
+			747
+			Partial
+			yes sync
+			16 - 23
+			Moderate
+			               texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Conker's Bad Fur Day (U) [!]
+			PSP 1001 m33-6 
+			747
+			yes
+			sync 
+			10-14
+			moderate
+			                      It gets in game and it freezes during the intro 
+some levels work with savestate fixeados audio and controls respond now if savestates download from here
+http://forums.daedalusx64.com/viewtopic.php?f=1&t;=3156&start;=195
+here the game complete by parts full http://forums.daedalusx64.com/viewtopic.php?f=1&t;=3156&start;=195
+[Conker's Bad Fur Day]
+NumberOfGroups=8
+chito&Salvy; Speedhack,1=0,810CC318-4030, version usa is much faster
+
+chito&Salvy; Speedhack,1=0,810CC318-3FF0, version usa is a little faster
+	
+		 
+	
+			Cruis'n Exotica (U) [!]
+			6.39 OFW 
+			R747
+			Yes
+			Y , all so
+			When racin
+			Y
+			
+My settings are all by default so I didn't change/enable/disable anything.
+
+Game logos on startup with sound, seem choppy but load decent and logos seem a bit choppy
+
+Menus: Without sound 75-80 FPS (dang!)
+With Asynch sound: 19-20 FPS (very clear, not choppy)
+With Synch sound: 19-21 FPS (seems more clear than Asynch) (I'm using this for sound)
+
+Cursor to see selection, seems a bit screwed up but it is visible
+
+Track selection under challenge, freestyle, exotica mode: Can't seem to see tracks selected except by name because of silver thing blocking it. (Applies to all sounds)
+
+Options menu: can't see a thing (nothing is visible except cursor)
+
+Automatic/Manual selection: Choppy when selecting what you want in terms of transmission since when you select manual then go back to automatic it overlaps text, but can tell what transmission selected by circular green thing
+
+Car selection: black box seems to block what you ware see car you want, cars look choppy sometimes but give it 30 secs and it will be ok
+
+FPS is still holding a 19-22 rate with no slowdown or music chopping.
+
+Actual gameplay: some graphical errors, things seem to flickering like trees and such, road seems green at times (maybe it's because I selected the Korea track?) FPS dipped to 12 but it shoots 15-17, sound is choppy when passing through checkpoints
+
+Overall:
+it's definitely playable if you don't care about the interface being a bit choppy
+
+in terms of the Daedalus color code you guys use, I'd probably put this as a Green, for it's playablity but still needs working a bit,
+
+So here you guys go, have fun.
+
+UPDATED 2/1/2012
+	
+		 
+	
+			Cruis'n USA (U) (V1.0) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			Menu
+			Y
+			25
+			minor
+			The game don't boot without savestate 
+savestate: http://forums.daedalusx64.com/download/file.php?id=2898
+
+Crash after press ok
+
+	
+		 
+	
+			Cruis'n USA (U) (V1.2) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			Y
+			Y
+			5 - 9
+			Moderate
+			  You need this SaveState - otherwise the game freezes on the intro screen. Runs a bit slowly, has (very few!) background texture errors, cars can be seen through hills, and sometimes cars change color, but overall plays and looks great. The game crashes after completing a race on the USA-map screen. All races are unlocked in the savestate (they cannot be unlocked through Daedalus since it crashes after each race).
+	
+		 
+	
+			Cruis'n World (U) [!]
+			Fat 5.50 Gen-D3 
+			Rev 707
+			Y
+			Y
+			12 - 15
+			None
+			  Texture Update: Disabled, Frameskip: 1, Zoom 100%, Limit Framerate: No, Dynamic Recompilation: Enabled, Dynamic Stack Optimisation: Disabled, HLE: Enabled, Audio: Disabled, Clean Scene: Disabled, Dynamic Loop Optimisation: Disabled, Double Display Lists: Enabled, Disable FP Usage Check: No, TMEM Emulation: Disabled, Audio Rate Match: No, Fog: No.
+
+Turn off in-game HUD settings under Options -&gt; Screen Settings. Could speed it up a couple of FPS. HLE is the biggest saver, with it disabled your lucky to reach 10FPS at any part of the game, enabled you'll hit 30FPS in menus and 14FPS in a race.
+	
+		 
+	
+			Custom Robo (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			30-45
+			Minor
+			You must have HLE disabled, or else the game will crash upon entering the game. The graphics look good, and the only thing I see is a few cases of overlapping textures. The speed in-game is great, and really depends on where you are. Set Frameskip to Auto for a minor speed increase. Both Sync and Async audio work, but are a little choppy. It is up to you if you want to Disable it or not, but I would recommend Async because it is a few fps faster.
+	
+		 
+	
+			CyberTiger (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes Sync
+			10-20
+			Minor
+			You must have Dynamic Loop Optimization Disabled or else the game will freeze just before getting in-game. Async sound crashes the game, so make sure not to Enable it. Sync sound works though. There are not as many graphical problems as there used to be, but it's not flawless. Tiger's face still looks a bit jumbled up. The game is a bit slow, but is not too slow for this kind of game. I would recommend that you set Frameskip to Auto-1, pretty much the same thing, to speed the game up a little.
+	
+		 
+	
+			Dance Dance Revolution - Disney Dancing Museum (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			It instantly boots to a BSOD.
+	
+		 
+	
+			Dark Rift (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 556
+			No
+			Sync
+			37 - 55
+			Moderate
+			  Most of the game's graphics are shown perfectly except the players which makes it unplayable
+Default settings
+	
+		 
+	
+			Deadly Arts (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y
+			23
+			Y
+			  A few graphics bugs here and there not really major, Async and sync sound works but is choppy
+	
+		 
+	
+			Densha de Go! 64 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game crashes upon booting up.
+	
+		 
+	
+			Destruction Derby 64 (U) [!]
+			Slim 5.50 GEN-B2 
+			Alpha 556
+			Yes
+			Y
+			6-12
+			Moderate
+			  Many minor visual glitches in menu and in game.
+Opponents seem to randomly be going the opposite direction of the race.
+	
+		 
+	
+			Diddy Kong Racing (U) (M2) (V1.0) [!]
+			Slim 5.50 GEN-D3 
+			daedalusx64rev726
+			yes
+			Y
+			26-35
+			minor
+			 rev 726 funtion 
+	
+		 
+	
+			Diddy Kong Racing (U) (M2) (V1.1) [!]
+			3001 6.60 Pro C2  
+			rev 1878
+			Yes
+			Yes
+			17fps
+			Minor
+			TUC: Disabled
+Texture Update Check: Every Frame
+Frameskip: Disabled
+Dynamic Recompailer: Enabled
+HLE: Enabled
+Memory Aceess Optimisation: Enabled
+Clean Scene: Enabled
+Two other speed ups: Enabled
+	
+		 
+	
+			Disney's Donald Duck - Goin' Quackers (U) [!]
+			PSP2000 5.00 M33-6 
+			783
+			Yes, from 
+			not tested
+			15-25
+			Minor
+			 Use Video rate match enabled to speed up the animation. Great looking game. Load times are a bit long.
+	
+		 
+	
+			Disney's Tarzan (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			Yes
+			No
+			25+
+			minor
+			 texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Disney's Tarzan (U) [!]
+			Slim 5.50 gen 3 
+			Alpha 545
+			Yes
+			Y
+			22-30
+			Minor
+			The game is overall fun and looks good except Vines are invisable so you have to guess where to jump and every animal wants to stick to tarzan
+	
+		 
+	
+			Donald Duck - Quack Attack (E) [!]
+			5.00 m33-6 
+			Alpha 556
+			Partial*
+			Y**
+			10-20
+			Major***
+			 *Only with Async turned on.
+**Very Choppy
+***No texts, and some others major graphic problems
+	
+		 
+	
+			Donkey Kong 64 (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Yes
+			Y
+			14-19
+			N/A
+			 It's too fast in the cutscenes but a bit slow ingame.
+	
+		 
+	
+			Donkey Kong 64 (U) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Sync or no
+			15-21 fps
+			Major
+			Frameskip: Auto 1(Optional) or Disabled
+Dynarec Loop Optimisation = Disabled (Recommended)
+Clear N64 depth buffer = Enabled (removes the camera shaking)
+Texture Update Check = Every Frame (fixes most of the graphical glitches)
+High Level Emulation = On (Recommended, gives the game a nice speed up)
+Controller: Default Z+L Swap
+	
+		 
+	
+			Donkey Kong 64 - Kiosk (U) [!]
+			Slim 6.39 Pro B 
+			Alpha 711
+			No
+			N/A
+			N/A
+			N/A
+			   I was able to boot the game, but right after the N64 logo, the game experienced a BSOD. You might be able to get in-game with a savestate, but there is a great possibility that the game will crash or become very unstable.
+	
+		 
+	
+			Doom 64 (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			8-16
+			Minor
+			     texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+DO NOT USE ASYNC FOR AUDIO GAME WILL CRASH
+
+PLEASE NOTE THIS GAME RUNS SLOW
+	
+		 
+	
+			Doom 64 (U) [!]
+			phat 1001 m33-6 
+			747
+			Y
+			Y
+			20-30
+			Minor
+			     Game runs near perfectly.
+Sound isnt so bad , depends on where you are (Game will not boot with async but once game is booted async can be enabled)but still asynch isnt perferred cause it may cause a crash 
+Map causes glitching while open.(Enable Clean Scene to fix)
+Sync 47-61
+Sync% is really high even at low framerate :)
+Auto frameskip, but seems to be the same with no frameskip so if you want to leave that you can just leave it how it is 
+	
+		 
+	
+			Doraemon - Mittsu no Seireiseki (J) [!]
+			Slim 5.00m33-6 
+			613
+			Yes
+			Y
+			35 - 40
+			Blends
+			  Game runs well, needs some blends.
+Text not displaying correctly
+	
+		 
+	
+			Doraemon 2 - Hikari no Shinden (J) [!]
+			Slim 5.00m33-6 
+			rev 543
+			Y
+			Y
+			20-23
+			Minor*
+			*Menu and some textures looks like color-inverted.
+	
+		 
+	
+			Doraemon 3 - Nobi Dai no Machi SOS! (J) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			Yes
+			Y
+			15
+			Y
+			  you fall through the concrete when you go outside..
+	
+		 
+	
+			Doubutsu no Mori (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial
+			No
+			5-10
+			Major
+			    Runs painfully slow and crashes as soon as you're asked to enter your name.  Most textures throughout the introduction are a solid black.
+The game has a blue tint and most things are shadowed and not very visible. However, Your character can be seen. There are tons of random crash points, so the game is still very unstable.
+
+The graphics will become visible by enabling Basic TMEM Emulation, although they are still rendered wrong. You need a savestate to get in game, but it is pretty much unplayable due to so many bugs. The sound does not work at all.
+Recommended Settings:
+Frameskip: Auto
+Basic TMEM Emulation: Enabled
+
+http://www.forums.daedalusx64.com/viewtopic.php?f=9&t;=2484
+	
+		 
+	
+			Dr. Mario 64 (U) [!]
+			Phat 5.00 M33-6 
+			Alpha 629
+			No
+			Y
+			20
+			Major
+			   Goes in game, but very glitchy (requires framebuffer)
+Make sure to enable "Disable N64 FP Usage Check", otherwise the game will crash after the menu screen (Rev 488)... Lost this computability in 629 (crashes at menu) please refer to R488 to fix this issue, (I tested r488 and it worked)
+	
+		 
+	
+			Dual Heroes (E) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y*
+			24-25
+			Moderate
+			    The menus and intro look messed up, but once you get in game the graphics look great, except the lines of the ring look white.
+Overall great speed and sound is almost perfect 
+	
+		 
+	
+			Dual Heroes (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y
+			25-30
+			Minor
+			 Graphics are great with a few minor bugs. The logo on the start up is kind of messed up. The start menu does not show but if you press "select" on the psp and leave the menu back to emulation it shows up perfectly. Moving text drags across the screen, Texture update fix's this but oddly you can turn it on then go back to emulation then turn texture update off, and the text still will not drag. Async and Sync sound works. Async does not work as well as Sync sound. Async sound is very choppy. Sync sound is almost flawless throughout the game!
+Only time sync is any amount of choppy is during fights and it?s not that noticeable. This game is very playable at near or full speed with almost no graphic glitches!
+
+	
+		 
+	
+			Duck Dodgers Starring Daffy Duck (U) [!]
+			Slim 5.00 m33-6 
+			rev 556
+			Yes
+			Yes
+			15-25
+			Few
+			  Game appears to run well with very few graphical problems. The only thing it really needs is a speed-up. Frame skip may need to be set to 2 at certain points in the game.
+	
+		 
+	
+			Duke Nukem - ZER0 H0UR (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			14-17
+			Minor
+			texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Duke Nukem - ZER0 H0UR (U) [!]
+			Slim 5.00 M33-6 
+			Alpha 556
+			Y
+			Y*
+			9 - 17
+			Minor
+			      Game looks perfect, but *sound is choppy, so is advisable to disable it. FS: 2, Audio: Async, (Disable for slight speed increase). There are some minor glitches such as spots on the ground in the game. This game has a shaky screen so enable Double Display to fix it.
+	
+		 
+	
+			Duke Nukem 64 (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			9-12
+			Minor
+			   texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+title takes a few seconds to load    runs slow
+Graphics look great,Highly recommend not using sound. Missing HUD parts
+	
+		 
+	
+			Duke Nukem 64 (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			12-13
+			Minor
+			  texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+
+title takes a few seconds to load    runs slow
+Graphics look great,Highly recommend not using sound. Missing HUD parts
+	
+		 
+	
+			ECW Hardcore Revolution (U) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Yes
+			Async
+			18 - 24
+			Some
+			    Requires Async Sound to boot
+Few graphics glitches, possibly fixable with a blendmode or two
+Unhandled alpha - not a simple term: blend(Env,Prim,Texel0)
+
+Settings:
+Double Display Lists - Stops the flickering
+	
+		 
+	
+			Earthworm Jim 3D (U) [!]
+			PSP2000 5.00 M33-6 
+			747
+			Y
+			Syncronous
+			32-60+
+			Minor**
+			Use Video rate match enabled to speed up animation
+sound=synchronous
+	
+		 
+	
+			Elmo's Letter Adventure (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 613
+			Y
+			Y
+			26
+			Minor
+			async and sync sound is great
+	
+		 
+	
+			Elmo's Number Journey (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 613
+			Y
+			Y
+			26
+			Minor
+			  Use Sync Sound over Async 
+	
+		 
+	
+			Excitebike 64 (U) [!]
+			Slim 5.50 Gen D3 
+			Alpha 613
+			Menu
+			N**
+			30+
+			N
+			 After menu it freezes.
+	
+		 
+	
+			Excitebike 64 - Kiosk (U) [!]
+			psp slim 5.00m33 
+			rev 467
+			no
+			y
+			unknown
+			
+			it boots fine
+ the game shows 2 beginning pics then stops loading not playable
+u can use savestate to get into menu but then u need another game save to get into season for more info: http://forums.daedalusx64.com/viewtopic.php?f=9&t;=2186&p;=26254#p26254
+	
+		 
+	
+			Extreme-G (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			Yes
+			no
+			10-15
+			minor
+			  texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Extreme-G (U) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Y
+			Y
+			10 - 17
+			Minor
+			 Graphics wise, there seems to not be any problems, Sound crackles more than it should for the sync% (just under 50%) but works.
+Because of the fast nature of the game, it doesn't visually appear to be running slow, at least if you don't turn the frameskip too high.
+Software clipping is required.
+Settings used on this game:
+Audio: Async or Sync (Disable for a smoother game)
+Advanced settings are:
+Clean Scene: Enabled
+Increase VI Event: Enabled
+	
+		 
+	
+			Extreme-G XG2 (E) [!]
+			Phat 500m33-6 
+			Beta 3 rev 725+
+			Partial
+			N
+			19
+			Major
+			Screen goes in and out of black clipping.
+Whole screen will disappear then reappear.
+All settings tried, blend issue?
+	
+		 
+	
+			Extreme-G XG2 (U) [!]
+			Slim 5.00 m33-6 
+			Alpha 570
+			yes
+			Y
+			11 - 12
+			Minor-Moderate
+			  
+In-Game: the map dissolves in and out leaving the background-only on most of the screen in many areas. this bug is unique in the sense that it's symptoms are similar to Software Clipping (off), yet it's unrelated.
+(EDIT) remove z fighting fixes the gray randomly covering the track but causes depth issues like if you have it turned on in starfox.
+Sound is very choppy for the sync
+	
+		 
+	
+			F-1 Pole Position 64 (U) [!]
+			Slim 5.00 M33 
+			Alpha 790
+			Y
+			Y
+			25
+			Minor
+			   Async and Sync sound works but is very choppy
+
+*Use Dynarec Doubles Optimisation to avoid ground issues
+	
+		 
+	
+			F-1 World Grand Prix (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Yes
+			Y
+			15-16
+			Yes
+			 It runs good but many graphic problems. (Dark textures)
+	
+		 
+	
+			F-1 World Grand Prix (U) [!]
+			Slim 5.50 Gen D3 
+			Alpha 556
+			Y
+			Y*
+			10
+			Minor
+			   The game seems to have less glitches than it did in older Alpha's.The game has a shaky screen sometimes so enable Double Display.
+	
+		 
+	
+			F-1 World Grand Prix II (E) (M4) [!]
+			Fat 5.50 Gen-D3 
+			Alpha 558
+			Y
+			Y*
+			7 -18
+			Minor
+			  Logo's &amp; intro show correctly, but when it gets to the replay's playing, parts of the cars are invisible, when on the main title screen, the track scenery is all one colour, the same colour as the car on track, in game quite a few Inexact blends are on the buildings &amp; road verges, if the track is wet then the spray causes grey blocks to appear (more Inexact blends).
+Speed is much improved seems to run on average 50+ sync  with audio.
+Settings used on this game..........
+TextUpdCheck: 15 Frames,
+FS: 1, LimitFR: Yes,
+HLE: Disabled (Must be set to disabled as it freezes game),
+Audio: *Sync (Async slows game speed right down).
+Advanced options are..........
+DyncLoopOpt: Enabled.
+	
+		 
+	
+			F-ZERO X (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Y
+			Y
+			30-35
+			Minor
+			  Default settings
+
+Space ships aren't right colored.
+	
+		 
+	
+			F-ZERO X (J) [!]
+			Slim 5.00 m33-6 
+			Beta 3
+			Y
+			Sync/Async
+			35-60/60
+			Minor
+			TUC: disabled
+FS: auto 2
+ZOOM: 115%
+FRAMELIMIT: yes
+HLE: disabled
+MEM ACCESS: enabled
+AUDIO: async/sync
+CONTROLS default Z+L swap
+	
+		 
+	
+			F-ZERO X (U) [!]
+			3001 6.60 Pro C 
+			r1681
+			Yes
+			Sync
+			52-60
+			Some
+			   Game runs great in Time Trial (full speed even with sound), but in GP the game runs about 50-52fps. Problem is that there's lots of bugs. (I send some on the Graphical Flaws forum)  
+TUC: Every Frame
+ZOOM: 115%
+HLE: Enabled
+MEM ACCESS: Enabled
+AUDIO: Sync or Disabled (Enable if on Time Trial)
+CONTROLS: Default Z+L Swap (Recommended)
+
+The 16:9 screen mode option messes the camera view while in a race. (Enable it is NOT recomended)
+	
+		 
+	
+			FIFA - Road to World Cup 98 (U) [!]
+			Fat 5.00 M33-6 
+			Alpha 556
+			Y
+			Y*
+			11 - 15
+			Moderate
+			Stops at Loading Screen and nothing more
+	
+		 
+	
+			FIFA 99 (E) (M8) [!]
+			Brite 6.20 PRO-B4 
+			Beta 3
+			No
+			N
+			-
+			-
+			Game dosent even boot
+
+Tried various settings, shame too.
+	
+		 
+	
+			FIFA 99 (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			Menu
+			Y*
+			17 - 24
+			
+			  The logo's show ok, as do the menu's, but as soon as you start the match it freezes up.
+Audio: Async or Sync.
+	
+		 
+	
+			FIFA Soccer 64 (U) (M3) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Menu
+			N
+			
+			
+			  When you select start match it freezes
+	
+		 
+	
+			Famista 64 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 636
+			Yes
+			Yes
+			50-60+
+			Moderate
+			  The game runs at an exceptional speed, almost fullspeed, but you should still set Frameskip to Auto and Frame Limit to Yes. Both Async and Sync audio work well, but I would recommend Sync because Async is very choppy. The only thing that is wrong with the game is that when you get up to bat, the graphics begin to freak out and a blue flashing screen appears. Enabling Clean Scene stops the trailing and flickering, but it causes everything but the player and the pitcher to turn black. You can continue playing and this only occurs when you're up to bat.
+	
+		 
+	
+			Fighter Destiny 2 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			N
+			Y
+			15
+			Yes
+			 When you start a fight you cannot see the fighters so it can be considered as unplayable.Async and Sync sound works but it is not very good.
+	
+		 
+	
+			Fighter's Destiny (E) [!]
+			PS Vita 
+			790
+			Yes
+			Y (Sync)
+			25/25
+			
+			 fullspeed with sound. 16/9 compatible but 2d background won't work properly. 
+Video: http://www.youtube.com/watch?v=Ad0Zs5tUHW4&list;=UUHzp2boq6-JI2PPbjXHz30w&index;=1
+TUC: Every2
+Frameskip: disabled
+Limit framerate: fullspeed
+Dynamic Recompilation: enabled
+HLE: enabled
+Dynamic memory optimisation enabled
+Dynamic loop optimisation enabled
+Dynamic doubles optimisation enabled
+clean scene enabled
+double display list enabled
+	
+		 
+	
+			Fighter's Destiny (U) [!]
+			Slim 5.50 GEN D3 
+			Slim 556
+			Y
+			Y*
+			19 - 30
+			None
+			   A vast improvement in this title, everything looks &amp; sounds perfect.
+This title is recommended as it runs nearly perfect in every way.
+Settings used on this game:
+FS: 2, Audio: Sync(*Async freezes game or disable audio for smoother gameplay), This game requires DDLists: Enabled (To stop slight shaking), Controller: Dpad and Buttons.
+	
+		 
+	
+			Fighting Force 64 (U) [!]
+			Slim 5.00 m33-6 
+			Beta 3
+			Yes
+			N
+			10 in game
+			Minor
+			  FS: disabled or 1
+HLE: disabled
+MEM ACCESS: enabled for 1-2 fps speed up
+LOOP OPT: disabled
+the framerate is extremely stable in this game
+the only issue i encountered was that the pause menu may bsod sometimes
+sound doesnt seem to be working anymore
+	
+		 
+	
+			Fire Electric Pen (J) [!]
+			PSP 1001 6.20 pro B6 
+			716
+			N
+			Y
+			N/A
+			N/A
+			    Does not boot, I tried multiple savestates. I could only get a black screen or a frozen image. But on the savestates sound was playing and it was perfect async/sync.
+	
+		 
+	
+			Flying Dragon (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Partial
+			Y
+			12-27
+			Moderate
+			    There are graphical glitches that form over your characters that make it hard to play. Very good fps even with Async.
+	
+		 
+	
+			Forsaken 64 (E) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y*
+			25-30**
+			None
+			 Game runs near perfectly.
+SFX is ok, its recommended to turn the music volume to zero in the games options screen.
+**Most of the time its possible to get 30fps, only when there's a lot on screen that it drops a little.
+The Control is awful, because strafe is not really possible.
+Here is a custom control for this game made by "TangoFox4":forsaken.ini.zip
+Settings used are..........
+FS: 1, Limit FR: No,
+Audio: *Async (If sync is used then sound becomes choppy),
+Advanced options are........
+Increase VI event: Enabled,
+DDLists: Enabled.
+	
+		 
+	
+			Forsaken 64 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y
+			30
+			None
+			 Both async and sync sound is choppy.it runs fine without sound enabled
+	
+		 
+	
+			Fox Sports College Hoops '99 (U) [!]
+			Slim 5.00 m33-6 
+			rev 556
+			No
+			Yes
+			5-7
+			Yes
+			  Game menu's start out at 100% sync with sound, but after that frame rate drops to about 7fps, and once in-game, players aren't displayed at all. Also, I couldn't get past the ball drop at the beginning of the game. A freeze-up never occurred though.
+	
+		 
+	
+			Fushigi no Dungeon - Fuurai no Shiren 2 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			20-30
+			Minor
+			          The game is a must play on DaedalusX64, and a great dungeon crawler RPG. The only major graphical issue I see is that the pause menu is jumbled up, from the lack of framebuffer support, but does not hinder gameplay at all. You might want to turn on Clean Scene to fix a few "trails". Even though the game is in Japanese, the gameplay is easy to figure out. You might want to consider setting to controller to DPad because the controls are a bit awkward. The sound is great, but I recommend Async for faster speed, although Sync does work as well. With sound the game averages 100-130% sync, and without sound 115-150% sync. Although it is quite fast, it slows at some parts, so set Frameskip to Auto, and Limit the Framerate as well because speeds can become a bit excessive.
+	
+		 
+	
+			G.A.S.P!! Fighter's NEXTream (E) [!]
+			Fat 5.50 Gen-D3 
+			Alpha 488
+			Y
+			Y*
+			15-26
+			Minor
+			 Logo's &amp; menu's render correctly, but the intro will not, in-game graphics are on the whole good, just a few glitches here &amp; there in the scenery (background), the power bars don't show at all, and replays render totally wrong, *audio is good in places, but sounds terrible in-game.
+Settings used are.........
+FS: 2, Audio: Sync (Async seems to cause problems),
+Controller: Dpad &amp; Buttons.
+Advanced options are............
+Clean Scene: Enabled,
+Increase VI event: Enabled,
+DDLists: Enabled.
+	
+		 
+	
+			GT 64 - Championship Edition (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			Y
+			N/a
+			N/a
+			The game don't boot without savestate
+
+black screen 
+but we can heard choppy sound
+	
+		 
+	
+			GameShark Pro V3.3 (Unl) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			No
+			N/A
+			N/A
+			 The game fails to boot at all, even to a black screen, and goes straight back to the main menu. Also this title displays incorrectly in the main menu.
+
+BSOD
+	
+		 
+	
+			Gauntlet Legends (E) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			N
+			N/A
+			N/A
+			BSOD
+default setting
+	
+		 
+	
+			Gauntlet Legends (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			   The game instantly crashes, and experiences a BSOD, causing you to go back to the XMB. 
+	
+		 
+	
+			Gex 3 - Deep Cover Gecko (U) [!]
+			Slim 5.0 M33 
+			rev736
+			Yes
+			Yes
+			20+
+			minor
+			    This game is almost perfect, graphically. The speeds are great in this game, and does not lose that much speed when multiple objects are on the screen. Both Sync and Async audio work quite nicely, but should remain Disabled if you don't want to lose any speed. Set Frameskip to Auto for a nice speed increase.
+For more info :
+http://forums.daedalusx64.com/viewtopic.php?f=9&t;=2402
+	
+		 
+	
+			Gex 64 - Enter the Gecko (E) [!]
+			Fat 5.50 Gen-D3 
+			Alpha 558
+			Partial
+			Y
+			14-30
+			Minor*
+			Logo's &amp; menu's show ok, speed on the whole is very good, but the more on screen the slower the speed becomes, but can reach its full speed, graphics wise *Gex himself &amp; other objects / characters are not being rendered correctly only when he jumps, but the rest of the game seems to look perfect, sound seems to be slightly slow.
+Settings used are...........
+FS: 1, Limit FR: Enabled,
+Audio: Sync (Async sounds choppy, but the speed is better with this enabled).
+Advanced options are...........
+Disable N64 FP Usage Check: Yes.
+Please Note.........
+I believe this and the TWINE issue are similar (Wally)
+	
+		 
+	
+			Gex 64 - Enter the Gecko (U) [!]
+			Slim 5.00 m33-6 
+			Beta 3
+			Yes
+			Y
+			30-42+
+			Minor*
+			  Game is running full speed! Gex's body is fixed and the game is definitely playable but has a some graphics errors and the audio is really bad on asynchronous but the game is faster with it on. I beat the first level full speed it was allot of fun
+FPS range 32-42+ ( with Asynchronous but the audio is really bad with it set to asynchronous
+FPS range  23-30  (with synchronous on great audio)
+
+PSP Slim 5.00m33-6
+best settings (for me):
+Texture update - every-frame
+frameskip - Auto 1
+Limit framerate - No (recommended yes because gameplay gets a little too fast with asynchronous on but its funner when fast!)
+Dynamic recompilation - enabled
+Dynamic Stack Optimization - enabled
+High Level Emulation - enabled
+Memory Access Optimization - enabled
+Audio -Asynchronous( recommended to put on Synchronous's almost perfect but the game is slower by a bit)
+advance:
+clean scene enabled
+	
+		 
+	
+			Glover (E) (M3) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Yes
+			Y
+			15-20
+			Y
+			It could happen that the eyes and the mouth of Glover become purple.
+
+It runs slower than it should.
+	
+		 
+	
+			Glover (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			13-15
+			Minor
+			The only noticeable graphical impairment is the red sky, other than that, the game looks awesome. The speeds are quite fast because although the fps are low, the fps needed for a fullspeed game are 20. Both Sync and Async work well, but it can be a bit choppy at times. Set Frameskip to Auto to combat some of the lag. The game works quite well, and feels very fast while playing.
+	
+		 
+	
+			Goemon's Great Adventure (U) [!]
+			Phat 6.60 ME-1.8 
+			Rev. 755
+			Yes
+			Yes Async
+			20-45
+			Minor
+			  Game runs very fast in most places and there are very little graphical glitches. The game slows down a bit when in a level, but that's to be expected. It's still VERY playable. Be sure to disable Dynamic Recompilation to avoid the game loading a black screen when entering levels.
+	
+		 
+	
+			Golden Nugget 64 (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			Y
+			N
+			8/12*
+			Minor
+			 It didnt start with sync or asyn sound enabled.
+Graphics are perfect !
+This a weird case, *having loop op enable gives a 4fps speed up but causes many side effects, I recommend to disable Dynamic Loop Opt, even though it takes a couple of fps away...
+	
+		 
+	
+			GoldenEye 007 (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			12-15
+			Minor
+			  texture update disabled frame frameskip auto 1 high emulation enabled audio disabled      
+clean scene disabled dynamic loop enabled video match rate enabled  zoom 110% 
+ 
+use rom buffer instead of cache only for psp slim or higher
+
+in small areas or hall ways you get good fps in large areas fps will drop alot some blends are off 
+	
+		 
+	
+			GoldenEye 007 (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			12-15
+			Minor
+			     texture update disabled frame frameskip auto 1 high emulation enabled audio disabled      clean scene disabled dynamic loop enabled video match rate enabled 
+
+use rom buffer instead of cache only for psp slim or higher
+
+in small areas or hall ways you get good fps in large areas fps will drop alot   some blends are off 
+	
+		 
+	
+			Hamster Monogatari 64 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			18-20
+			Major
+			 The graphical issues with this game are so significant that the game is deemed unplayable, and this is due to the lack of framebuffer support. If you are determined to try to play this game, about 10 minutes of button mashing should get you in-game, but I have never made it past the very beginning of gameplay. With Async audio enabled, the results are just a bit slower than having it disabled, but Sync runs at the usual slow pace, although both do work. For the best results disable audio for a slight speed increase. You also might want to set Frameskip to Auto. Despite the graphics not working, the speed runs at a decent rate.
+	
+		 
+	
+			Hanafuda 64 - Tenshi no Yakusoku (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game instantly crashes.
+	
+		 
+	
+			Harvest Moon 64 (U) [!]
+			Phat 6.39 ME-5 
+			Rev 733
+			Yes
+			Yes
+			15-25
+			Minor
+			  This is one of my favorite games on the Nintendo 64 and I cannot wait for this to run 100% speed! A lot of the graphical bugs from the last few versions are fixed. It looks really pretty now and frame rate is acceptable, however audio is very choppy.
+
+Set Frameskip to Auto 1 and put Texture Update Check to Every Frame if you want to play.
+
+Game slows down a couple of FPS when you enable Audio, and Audio is too choppy to be enjoyable. Game slows down when loading, but when it isn't loading it runs at low to mid 20's.
+	
+		 
+	
+			Hercules - The Legendary Journeys (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes Sync
+			5-10
+			Minor
+			The speed of this game really depends on if you are in the menu or in-game. The speeds in the menu are more than satisfactory, but once you get in-game, the speeds are horrendous, so you will need to set Frameskip to at least 1. The sound does work, but Async causes the game to pause, but if you switch to Sync or disable it, then you are able to continue playing without a crash. Sync sound works quite well, but should remain disabled to get all of the speed you can out of the game. The graphics look quite good in the game, and I didn't notice any graphical bugs that could hinder gameplay.
+	
+		 
+	
+			Hexen (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			12-30
+			Minor
+			Upon booting up the game, the menus run quite fast and look excellent. When selecting a new game, the game takes a while to load, and after a few moments, you must press X to get in-game. The graphics look good, except that you are unable too see your weapon at all. It is still easy to tell that you are damaging an enemy, but seeing where you were swinging might be nice. The speeds of this game definitely depend on many factors, such as how many enemies are on screen, what direction you are heading, or where you are looking. Set Frameskip to Auto to gain more speed when needed. The game feels a lot like Doom, but with a melee weapon instead of firearms. Both Sync and Async audio work quite well, depending on the speed at any one moment, and can go from clear to choppy in an instant, so it is your choice whether to Disable it or not. I would recommend Async if you want it enabled.
+	
+		 
+	
+			Hey You, Pikachu! (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial
+			No
+			20-30
+			Moderate
+			  You must Disable Dynamic Loop Optimization or else the intro will continue to loop over and over. The screen has black all around it, so you might want to consider Zooming in to about 115%. The sound does not work at all for this game. I saw quite a bit of graphical bugs during my short time playing, but it's not atrocious. The speeds are decent in-game, but still set Frameskip to Auto because the fps fluctuates quite a bit. This game is definitely unplayable because the lack of microphone support, and you can only get so far before being asked to plug in the mic. 
+	
+		 
+	
+			Hot Wheels Turbo Racing (U) [!]
+			Fat 5.50 Gen-D3 
+			Alpha 562
+			Y
+			Y
+			8-26
+			Minor
+			  Game loads up good, but after it asks you if you want to start a save file the screen is just black with sound until you hit a button. The main menu needs to be constantly updated to stop it from turning into a mess on screen, In-game graphics seem to be pretty good, I don't notice any graphic bugs while racing, speed varies alot in this game, on the outdoor area's it can run to the 26 fps, but in a tunnel it drops to as low as 8 fps.
+Settings used on this game are............
+TextUpdCheck: 2 Frames,
+FS: 2 (To stop main menu from getting messed up, set this to same as TextUpdCheck),
+LimitFR: Yes,
+Audio: Async or disabled (Sync sound slows game down, not recommended). 
+Advanced Options are...........
+Clean Scene: Enabled (Must be enabled for menu's),
+ 
+	
+		 
+	
+			Human Grand Prix - New Generation (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Partial
+			Yes
+			18-25
+			Moderate
+			You must have Texture Update Check set to Every Frame or else the text seems to become jumbled and blends together. The speeds are decent in-game, but you still need to set Frameskip to Auto for more speed. The menus look decent, but at some times they become black and hard to navigate. In-game, the cars seem to be flying on the straightaways, and you often run into invisible walls the inhibit gameplay quite a bit. These invisible walls are hard to navigate, so good luck. Both Sync and Async audio work, and they sound quite good for the speed. I would still recommend that you leave audio disabled for speed purposes.
+	
+		 
+	
+			Hybrid Heaven (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			10-12
+			Moderate
+			The graphics look okay, but the menu options seem to be a bit out of place. The characters seems to jerk around, sometimes disappear and fall over, and sometimes have trails, but no option will fix this. I tried enabling both Texture Update Check and Clean Scene, but neither of these fixed the issue. Other than these issues, the graphics look good. Both Sync and Async audio do work, but they both just emit an annoying, high-pitched whine, so leave the sound Disabled. The speeds in-game are very slow, so set Frameskip to 1 to combat the speed issues. I was able to get far into the game without any crahsing, so you probably will not experience any random crashes.
+	
+		 
+	
+			Hydro Thunder (E) [!]
+			Phat 500m33-6 
+			Beta 3 rev 725+
+			Partial
+			N*
+			19.1
+			Minor
+			Feels really slow controls are laggy.
+	
+		 
+	
+			Hydro Thunder (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			No
+			12-18
+			Minor
+			 Neither Sync, nor Async will work at all, so leave the audio Disabled. The graphics look quite amazing, and i didn't see very many graphical bugs. The environment of the game is very appealing, and uses a variety of vibrant colors to draw the players eyes to the screen. The speeds aren't unbearably slow, but could use a boost, so set Frameskip to Auto. The menus look great, and are easy to navigate.
+	
+		 
+	
+			Iggy's Reckin' Balls (E) [!]
+			Slim 5.50 GEN D3 
+			Daedalus 557
+			Yes
+			Async
+			4 - 8
+			Minor
+			Full Menus are not visible, can not see objects other than players ingame.
+** REQUIRES ASYNC TO BOOT
+	
+		 
+	
+			Iggy's Reckin' Balls (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes Async
+			5-10
+			Minor
+			You must have Async Enabled to boot the game! The good thing about having Async sound enabled, is that it is perfect, absolutely no crackling at all, so leave it on at all times. Sync sound or Disabling audio causes the game to crash. The graphics look quite good, and I did not notice certain bugs that I had in times past. The only thing that affects gameplay, is the speed. The speed in-game is a bit unbearable, but setting Frameskip to 1 will give you a few extra fps.
+	
+		 
+	
+			In-Fisherman Bass Hunter 64 (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 556
+			Y
+			Y
+			15 - 20
+			Minor
+			  Game runs pretty good it starts up fine. Only bug in menu that I can see is when you are selecting what map you want to fish on (Map that show's flickers a lot. In-game graphic glitches that I can see are when are cast your line it opens up another screen showing it in the water. This screen flickers a lot. Async and Sync sound both work but are very choppy. Sync sound works better than Async. This game is playable with minor graphic glitches.
+	
+		 
+	
+			Indiana Jones and the Infernal Machine (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			 The game instantly boots to a BSOD.
+
+	
+		 
+	
+			Indy Racing 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			8-12
+			Minor
+			There are a few minor graphical glitches, such as whenever you get in-game, the menu can be seen behind the screen. To help remove the menu, you might want to set Zoom to around 115%. The cars look good, but there are a few other graphical bugs throughout the game. Both Sync and Async audio work, but Async causes the fps to fluctuate wildly, not reflecting actual speeds of course. I would recommend that you leave the sound Disabled because the speed in-game can get very slow. Set Frameskip to 1 to help with the speeds. One glitch that could deem this game unstable is that if you stop accelerating and slow down your car enough, the game will freeze.
+	
+		 
+	
+			International Superstar Soccer '98 (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			Alpha Rev 790
+			Y
+			Y*
+			16-25
+			Menu's &amp; Shirts (Mi
+			           Logo's &amp; intro show ok, as does the main menu, but the colours in the background do not look right, in game the graphics of the players on the whole are now coloured correctly, but just a small area of the shirts are not shown correctly!
+The power bars don't show at all, neither does the timer circle, there are only two in-exact blends showing in the goal nets, the game seems to be running quite fast now, sadly most of the writing in the sub-menu's are not shown correctly including the substitutions screen which makes it, not possible to change players.
+Settings used in this game are...........
+FS: Disabled (Any other setting sends this game into Jerkyville),
+Limit FR: Yes,
+High Level Emulation: Disabled (Will not boot up if enabled),
+Audio: Sync*, (Async causes the odd crash or freeze.),
+Advanced Options used are...........
+Dyn Mem Opt: Enabled,
+Dyn Loop Opt: Enabled,
+Dyn Doub Opt: Enabled,
+Double Display Lists: Enabled,
+Video Rate Match: Yes
+Tip: Turn Off Force Linear Filter in Global Settings to improve speed of game. 
+	
+		 
+	
+			International Superstar Soccer 2000 (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			Alpha Rev 790
+			Y
+			Y*
+			16-26
+			Menu's &amp; Shirts (Mi
+			 Logo's &amp; intro play great, but menu's in this game are not showing very well, writing is missing, colours are incorrect, but it is possible to get to the team selection screens &amp; onto a actual football(Soccer) match, in game the only graphics not looking right are the players shirts, but apart from that, gameplay itself is slower than in ISS '98 in places.
+Settings used in this game are...........
+TUC: Every Frame,
+FS: Disabled (This &amp; audio disabled give the best speed boost),
+Limit FR: Yes,
+Audio: Sync (Async crashes emulation, its recommended to disable this for the most speed).
+High Level Emulation: Disabled (Will not boot up if enabled)
+Advanced Options are..........
+Dyn Mem Opt: Enabled
+Dyn Loop Opt: Enabled
+Dyn Doub Opt: Enabled
+Double Display Lists: Enabled
+Video Rate Match: Yes
+Tip: Turn Off Force Linear Filter in Global Settings to improve speed of game. 
+	
+		 
+	
+			International Superstar Soccer 64 (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			Alpha Rev 790
+			Y
+			Y*
+			17-25
+			Minor
+			 This game is very playable. In game it plays impressively at 80-100 percent sync, requires a texture check for the logo's to display correctly, but sadly hardly any writing in the menu's show at all, so very difficult to change anything.
+Tip.....While in actual match, press 'Start' and scroll down to camera, press 'X' push left on analogue nub, to change 'Height&lt; H(igh)' &amp; 'Zoom&lt; F(ar)', once set then press 'X' again then scroll back up to Game Cont for best speed &amp; Fun, Fun, Fun.
+Recommended settings for this game are.....
+TUC: Every Frame,
+FS: Disabled (As speed is as near to full speed now)
+LimitFR: Full Speed (Please to say this is now required)
+Audio: Async, (*Audio sounds better if you use Sync, but at the cost of a few fps of game speed).
+HLE: Enabled,
+Advanced Options are.....
+Dyn Mem Opt: Enabled,
+Dyn Loop Opt: Enabled,
+Dyn Doub Opt: Enabled,
+Double Display Lists: Enabled,
+Video Rate Match: Yes.
+Audio rate match: No.
+Savestates:
+[URL]http://forums.daedalusx64.com/viewtopic.php?f=52&t;=2278[/URL]
+
+
+
+
+
+	
+		 
+	
+			International Track &amp; Field 2000 (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Yes
+			Y sync
+			15-30
+			minor
+			  controller : Dpad
+	
+		 
+	
+			International Track &amp; Field Summer Games (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			Yes
+			yes Sync
+			15-35
+			minor
+			  texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Jeopardy! (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 514
+			Menu
+			Y
+			11
+			N/a
+			 When you reach at the menu screen nothing happens even if you press all the buttons press,sound is not that bad
+	
+		 
+	
+			Jeremy McGrath Supercross 2000 (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			N/A
+			N/A
+			N/A
+			 The game did begin to boot
+	
+		 
+	
+			Jet Force Gemini (E) (M4) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			Partial
+			yes Sync
+			19-25
+			yes
+			     clean scene enabled texture update check everyframe frameskip auto 1 high level emulation disabled  dynamic loop disabled  audio sync 
+
+note i found the game crashes at ship landing scene and inside the main ship same as Europe version   i am moving this to unplayable due to the crashing  also blends are off
+
+if you disable dynamic recompilation the game is playable note that you get like 4 to 10 fps  and its really slow
+	
+		 
+	
+			Jet Force Gemini (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			partial
+			yes Sync
+			19-25
+			yes
+			    clean scene enabled texture update check everyframe frameskip auto 1 high level emulation disabled  dynamic loop disabled  audio sync 
+
+note i found the game crashes at ship landing scene and inside the main ship same as Europe version   i am moving this to unplayable due to the crashing  also blends are off
+
+if you disable dynamic recompilation the game is playable note that you get like 4 to 10 fps  and its really slow
+	
+		 
+	
+			Jet Force Gemini - Kiosk (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			partial
+			yes Sync
+			19-25
+			yes
+			    clean scene enabled texture update check everyframe frameskip auto 1 high level emulation disabled  dynamic loop disabled  audio sync 
+
+note i found the game crashes at ship landing scene and inside the main ship same as Europe version   i am moving this to unplayable due to the crashing  also blends are off
+
+if you disable dynamic recompilation the game is playable note that you get like 4 to 10 fps  and its really slow
+	
+		 
+	
+			John Romero's Daikatana (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Y
+			Y
+			20 - 26
+			Minor
+			 The game starts up fine everything appears okay. The start menu look great didn?t notice anything. Intro to single play in-game kind of displays part of a different screen when it changes scenes. In-gameplay seems great I did not notice any bugs besides the bars going across the middle of the screen. Async and sync sound works but very choppy. This game is very playable at about 60-70% speed.
+	
+		 
+	
+			Ken Griffey Jr.'s Slugfest (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			  The game boots up, then crashes instantly.
+even with a savestate
+	
+		 
+	
+			Killer Instinct Gold (E) [!]
+			5.50prometheus4 
+			rev747
+			yes
+			synch
+			20/25
+			moderate graphic pro
+			  every frame
+auto2
+fullspeed
+hle&gt;enable
+synch
+advanceoptions
+high memory accces disable
+
+	
+		 
+	
+			Killer Instinct Gold (U) (V1.2) [!]
+			Slim 5.50 GEN D3 
+			rev747
+			Partial
+			Y (AS &amp; S)
+			10
+			Major
+			         http://forums.daedalusx64.com/download/file.php?id=2265
+http://forums.daedalusx64.com/download/file.php?id=2266
+both this version and the europe version have major graphic problems which make the game unplayable actually and the gam is really slow
+	
+		 
+	
+			Kira to Kaiketsu! 64 Tanteidan (J) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			No
+			
+			
+			
+			Logo shows up then freezes 
+	
+		 
+	
+			Kirby 64 - The Crystal Shards (E) [!]
+			PSP 1001 6.39 PROB-9 
+			747
+			Y
+			Y
+			25 - 30
+			no/minor
+			                   The N64 sign when game starts up doesn't display correctly, the menu's are really messed up, but are clear enough to proceed, there is a vast improvement in the graphics, speed of game is good, but depends on whats on screen, so varies a lot.
+settings used on this game are........
+
+TextUpdCheck: 15 Frames,
+ FS: auto1 or auto2,
+zoom: 106%
+Audio: Sync (Async may cause freezes)
+Controller: Dpad (Most important this).
+
+
+
+	
+		 
+	
+			Kirby 64 - The Crystal Shards (U) [!]
+			PSP 1001 m33-6 
+			747
+			Y
+			Y sync
+			25 - 30
+			Minor
+			                                         There's a few moderate graphic glitches, but nothing that would render the game unplayable. Speed may vary depending on the amount of items in the screen, but generally is full speed or close to full speed even with sound enabled.
+FS: 1 or 2.
+Audio: Sync (Async may cause freezes)
+Controller: Dpad (Otherwise you won't be able to move).
+the game is near full speed but the game has a ''kirby freezing problem'' where kirby freezes but the enemies still move and the music still plays,and if you get hit kirby moves again then freezes after a couple of seconds....
+	
+		 
+	
+			Knife Edge - Nose Gunner (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Y
+			Y
+			25-30
+			Minor
+			 Game runs well when not being spoken to.
+Texture Update / Double Display needs to be enabled to stop flickering.
+	
+		 
+	
+			Knockout Kings 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 636
+			No
+			Yes
+			20-30
+			N/A
+			 Upon selecting the second players memory pak, the game experiences a BSOD.
+	
+		 
+	
+			Kobe Bryant's NBA Courtside (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			The game does not boot at all no matter the settings chosen.
+	
+		 
+	
+			Kuiki Uhabi Suigou (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 558
+			Menu
+			Yes Sync
+			10-19
+			Minor
+			   The game feels like it is going to be playable, but when you select to start the game in the main menu, it resets itself. No matter the preferences selected this prohibits you from going in game. Async audio freezes the rom, so if you choose to play sound, make sure to select Sync. The game runs at about 45-70% sync, but I see no graphical issues in the main menu. Make sure not to enable Increase IV Event because it slows down the game by 6-7 fps.
+Recommended Settings:
+Fs: 2
+
+	
+		 
+	
+			LEGO Racers (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha beta 3 rev 717
+			Y
+			Y
+			16-30
+			Minor
+			        Characters are not displayed correctly on the main menu, but in-game graphics look great and you get generally around 20-30 FPS with sound disabled and 16-26 with it enabled, there seems to be a vast improvement in speed in game overall, but depends on which track you are racing on, and how much is on screen.
+Sadly other racers still disappear as they move away from your car.
+Settings used are...........
+TextUpdCheck: 30 Frames, FS: auto1
+Audio: Sync (Async does work, but the game goes at crazy speeds).
+[LEGO Racers]
+NumberOfGroups=1
+chito&Salvy; Speedhack,1=0,8009ACBE-0011, increases twice perfect SPEED
+	
+		 
+	
+			Last Legion UX (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 545
+			Y
+			Y
+			24-30
+			Moderate*
+			Speed is really good, it's almost fullspeed, just controls take a bit to get used to it.
+	
+		 
+	
+			Legend of Zelda, The - Majora's Mask (E) (M4) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			Yes
+			yes Sync
+			N/A
+			
+			   texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Legend of Zelda, The - Majora's Mask (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			20 - 25
+			Minor
+			  texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (E) (GC Version) [!]
+			Brite 6.20 PRO-B5 
+			Rev 707
+			Yes
+			Y
+			10-18 
+			some.
+			         The game runs really well, but can be really slow in some parts like Kokiri Forest ( 6 9 FPS ), Hyrule is probably fastest ( 12-18 FPS ), but is good.
+
+Recommended Setting
+
+Texture Update Check  //  Every Frame
+Frameskip                  //   2
+High Level Emulation    //   Off
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (E) (V1.0) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			Yes
+			yes Sync
+			12-23
+			Minor
+			   texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (E) (V1.1) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			8-27
+			Minor
+			         beginning of the game bridge part can be slow in small areas good fps game run slow
+
+i tryied using video match rate it may help im not sure because game is slow
+
+texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (U) (V1.0) [!]
+			3001/6.37 
+			rev 722
+			Yes
+			Y
+			10-20
+			Minor
+			                 - Set Texture Update Check to Every 3 Frames, to me seems to be a good texture update setting, allows you to view text with a .5 to 1 frame speed up.
+- Auto Frameskip is recommended.
+- Recommended without sound. Fps usually spikes way up inside small places or dungeons, then you can use sound.
+- Still some freezing points but can be gotten around if you try to get past enough times.
+REMEMBER: Kokiri Forest (and near it) is generally the slowest area in the game.
+
+
+[The Legend of Zelda - Ocarina of Time (v1.0)]
+NumberOfGroups=1
+Press L For Turbo Boost,4=0,D01C84B5-0020,801DB258-0041,D01C84B5-0020,801DB25A-4000,"Press L for turbo boost; release to return to normal",
+
+
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (U) (V1.1) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Yes (Sync)
+			17fps
+			Minor
+			   Texture Update Check: Every Frame
+Frameskip: Disabled
+Dynamic Recompailer: Enabled
+HLE: Enabled
+Memory Aceess Optimisation: Enabled
+Clean Scene: Enabled
+Two other speed ups: Enabled
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time (U) (V1.2) [!]
+			3001 6.60 Pro-C2  
+			r1878
+			Yes
+			Y Sync
+			17fps
+			Minor
+			     Texture Update Check: Every Frame
+Frameskip: Disabled
+Dynamic Recompailer: Enabled
+HLE: Enabled
+Memory Aceess Optimisation: Enabled
+Clean Scene: Enabled
+Two other speed ups: Enabled
+
+This is is compatible to play in 16:9 mode. (Works) 
+
+NOTE: Kokiri Forest is the slowest area in the game. 
+	
+		 
+	
+			Legend of Zelda, The - Ocarina of Time - Master Quest (E) [!]
+			Slim 5.50 GEN-B2 nd  
+			Alpha 755
+			Y
+			Partial
+			8-16
+			Minor
+			        Set Texture Update Check to at least 30 to read text.
+Disable HLE : Otherwise random freezes occur frequently.
+Sound: Disabled
+I tested comparing to LoZ 1.0, while its rumored the GC versions run slightly faster, I can confirm this one runs slightly slower than 1.0. Starting house ran about 3-4 FPS slower. Starting village ran about half a FPS slower.for this game just use Dynamic recoliation,none of the other stuff seems to speed this up
+	
+		 
+	
+			Lode Runner 3-D (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 579
+			Y
+			Y
+			10-20
+			Minor
+			   Game starts up fine the start menu looks great only thing I noticed is it does not highlight what was selection is on the menu. In-game graphics look great I didn't notice anything until you go into a stage. Stage graphics look great. Async and sync sound both work but are choppy. This game is playable at about 50-60% speed.
+
+Recommended settings:
+TUC: Every 10 Frames
+FS: 1
+*Make sure to set Disable N64 FP Usage Check to no, or else the game will not work.
+
+Game is squashed to the left half the screen. ** regression
+	
+		 
+	
+			Looney Tunes - Duck Dodgers (E) [!]
+			PSP 1001 6.39 PROB9 
+			747
+			Y
+			Y sync/asy
+			4 -14
+			Minor
+			the average speed is good
+after select your perso
+the game crash 
+BSOD
+	
+		 
+	
+			Lylat Wars (E) (M3) [!]
+			PS Vita 
+			790
+			Yes
+			Y
+			25/25
+			
+			 fullspeed without sound. 16/9 compatible. fps decrease with sound.
+TUC: Every2
+Frameskip: disabled
+Limit framerate: fullspeed
+Dynamic Recompilation: enabled
+HLE: enabled
+Dynamic memory optimisation enabled
+Dynamic loop optimisation enabled
+Dynamic doubles optimisation enabled
+clean scene enabled
+double display list enabled
+	
+		 
+	
+			MRC - Multi Racing Championship (E) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Yes
+			Y
+			24-28
+			None
+			 Frameskip auto 2
+game run at full speed :) (with sync audio)
+
+
+	
+		 
+	
+			MRC - Multi Racing Championship (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Y
+			Y sync
+			25-30
+			N/A
+			  This game runs &amp; looks very good, the graphics look perfect, maybe the odd clipping problem while racing, but nothing to write home about.
+Settings used on this game are..............
+
+FS: auto 2 (If set to 2 then game becomes faster but at the expense of jerky movement),
+Limit FR: Yes,
+HLE: enabled 
+Audio: Sync (Async crashes emulation, disable for best speed).
+
+
+	
+		 
+	
+			Mace - The Dark Age (U) [!]
+			Slim 5.50 Gen-D3 
+			rev718
+			si
+			yes synch
+			10 /12
+			moderate
+			  savestate solutions problem exactly of project controls dpad and botons inverted
+	
+		 
+	
+			Madden Football 64 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			N
+			N
+			5-10
+			N/A
+			 Game boots up but once it goes past the EA games logo it just shows a black screen. Also there was supposed to be sound during that short period and I did not hear anything.
+	
+		 
+	
+			Madden NFL 2000 (U) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			No
+			No
+			21
+			Yes
+			EA Sports logo appears and if you press start another one appears.. then the game screws up
+
+This game screws the emulator menus up.
+	
+		 
+	
+			Madden NFL 2001 (U) [!]
+			Slim 5.00 m33-6 
+			Rev 558
+			No
+			No
+			27
+			Yes
+			  Same as Madden 2000.
+	
+		 
+	
+			Madden NFL 2002 (U) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			No
+			No
+			26
+			Yes
+			  Same problems as Madden 2000.
+	
+		 
+	
+			Madden NFL 99 (U) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			No
+			No
+			28
+			Yes
+			  Game starts up and runs great, but eventually gets stuck on the opening screen.
+	
+		 
+	
+			Magical Tetris Challenge (U) [!]
+			Slim 5.50 GEN-C 
+			Alpha 556
+			Y
+			Y
+			46 - 60
+			
+			Works well.
+TexUpdCheck: Every Frame, Audio: Async, Controller: Dpad.
+	
+		 
+	
+			Mahjong 64 (J) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Menu
+			
+			7
+			Few
+			 Slow, and can't figure out menu. 
+	
+		 
+	
+			Mahjong Master (J) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Yes
+			Yes
+			60
+			Minor
+			 Very fast. 
+	
+		 
+	
+			Major League Baseball Featuring Ken Griffey Jr. (U) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			  The game seems that it might boot, but instantly crashes.
+even with a savestate
+	
+		 
+	
+			Mario Golf (E) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			N
+			Y
+			*25 **10-2
+			Major
+			   (MAJOR SLOWDOWN AND GLITCHES SINCE BETA 2) *Menu **In-game Crashes when you are about to swing, needs savestate to bypass this point. ALTHOUGH the game is fully playable only if you choose metal mario as your character. Courses are completely white, Trees have a wierd multiplying effect, characters missing eyes, and it has a small flickering issue.
+	
+		 
+	
+			Mario Golf (U) [!]
+			Slim 6.39 ME-8 
+			Alpha 719
+			Intro
+			Yes
+			12-20
+			N/A
+			   As soon as the game prepares to go into the main menu, it crashes the PSP. Every combination of options I tried would not get the game past the intro. Maybe a savestate can pass it?
+	
+		 
+	
+			Mario Kart 64 (E) (V1.0) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			20-24
+			Minor
+			         texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  no need for Async audio 
+game runs great 
+
+	
+		 
+	
+			Mario Kart 64 (E) (V1.1) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Y
+			Y
+			15-25
+			Minor
+			                           Framerate depends on how many objects are on the screen, but it never drops below 15 with everything set to the default.
+
+16-25FPS with Frameskip:auto 2.
+Enabling Texture Update to 20 or lower can fix some graphical bugs, at the cost of 1-3FPS. Recommended at 15 or lower if used.
+ synchronous audio Recommended
+
+this version fast of the usa version no recomended
+*TimeTrials runs full speed(29-30FPS) with async audio and Texture Update at 15. 
+	
+		 
+	
+			Mario Kart 64 (U) [!]
+			3001 6.60 Pro C  
+			rev 1878
+			Yes
+			Y Sync
+			26-30
+			Minor
+			Texture Update: Every Frame
+Enable every speed up.
+Sound: Sync or Disabled (Async will freeze game)
+
+The 16:9 screen mode option works with some bugs in this game.
+
+	
+		 
+	
+			Mario Party (E) (M3) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			Yes
+			yes Sync
+			20-30
+			minor
+			   texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled  {force linear Filter: Yes}
+
+
+ found some in game text gets cut off
+	
+		 
+	
+			Mario Party (U) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Yes
+			15-25
+			Minor
+			  Texture Update Check= Every frames
+Frameskip= Disable or Auto 1
+High Emu Level= Enabled
+Sound=Disabled*
+Memory Access Optimisation=Enabled
+Clean Scene= Enabled
+Dynamic Loop Optimisation= Enabled
+
+NOTE: Somehow this is the slowest Mario Party series game from the N64 (When you play it on Daedalusx64)
+
+	
+		 
+	
+			Mario Party 2 (E) (M5) [!]
+			PSP 1001 5.00M33-6 
+			713
+			Yes
+			Y  Sync
+			20-25
+			minor
+			 for better texture
+Force linear filter Yes
+	
+		 
+	
+			Mario Party 2 (U) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Y
+			20-30
+			Major 
+			 Texture Update Check= Every frames
+Frameskip= Disable or Auto 1
+High Emu Level= Enabled
+Sound= Sync or async (less stable though)
+Memory Access Optimisation=Enabled
+Clean Scene= Disabled
+Dynamic Loop Optimisation= Enabled
+
+
+	
+		 
+	
+			Mario Party 3 (E) (M4) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			16-23
+			Minor
+			  texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  
+
+DO NOT USE ASYNC CAN CAUSE CRASH
+
+	
+		 
+	
+			Mario Party 3 (U) [!]
+			3001 CFW 6.60 Pro C2 
+			rev 1878
+			Yes
+			Y Sync
+			24-27fps
+			Minor
+			Texture Update Check= Every frames
+Frameskip= Disable or Auto 1
+High Emu Level= Enabled
+Sound=Disabled*
+Memory Access Optimisation=Enabled
+Clean Scene= Disabled
+Dynamic Loop Optimisation= Enabled
+
+*Disable frame limit, if you wanna activate sound.
+ 
+
+	
+		 
+	
+			Mario Tennis (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Menu
+			Y
+			15-17
+			Yes
+			It goes to the press start screen.The left upper corner haven't got a texture?!
+After press start it chrashes (Runs out of RAM).
+	
+		 
+	
+			Mario Tennis (U) [!]
+			3001 6.60 Pro-C 
+			rev 1861
+			Partial
+			Yes
+			20fps
+			A bit
+			 Dynamic Recompilation now works so the game has become more playable.
+
+But the game crashes when enter to the main menu.
+
+Considering from the intro, the speed of the game is pretty good (lowest:18fps ~ highest:30fps 
+	
+		 
+	
+			Mario no Photopie (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			N/A
+			N/A
+			N/A
+			 The game seems like it's trying to load something because the Memory Access Indicator flashes for a few moments, but nothing loads at all and the game crashes.
+	
+		 
+	
+			Mega Man 64 (U) [!]
+			Slim 5.50 GEN D3,fat 
+			Alpha 558,613
+			Y
+			Y
+			20-30*
+			Minor
+			               Has some minor graphic issues, async and sync sound works great !
+Fps vary, with sound disable it maintains between 25-30 depending how many enemies are on-screen.
+
+Even with sound enabled, speed is great.
+
+Recommended settings by killedbykenny:
+
+filter: nearest
+clean scene: disabled
+sound: asynchronous
+
+613:(fat 5.00 m33)
+first level: treasure chest graphics have improved as well as the reaver bot on the ceiling.
+	
+		 
+	
+			Mia Hamm Soccer 64 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			N
+			Y
+			50-60
+			Y
+			 The screen stays black, if you turn on sound you can hear it but it is very choppy.
+	
+		 
+	
+			Mickey's Speedway USA (U) [!]
+			Phat 6.60 ME-1.6 
+			Alpha 757
+			Y
+			Y*
+			16 - 30
+			Minor
+			I am pleased to say this game works very well, and seems to run fast enough to be fun to play now!!!
+In places the speed seems to slow when collecting power-ups, sometimes down to 7 fps
+Settings used are..........
+TextUpdCheck: Disabled, FS: Auto 1,
+Limit Framerate: Full Speed, 
+Audio: *Sync (when race finishes using Async audio, it causes a freeze in the game).
+Disable audio for best speed.
+
+
+ 
+	
+		 
+	
+			Micro Machines 64 Turbo (U) [!]
+			Slim 5.50 Gen D-3 
+			Alpha 549
+			Yes
+			Y
+			20-30*
+			Minor
+			 *w/o sound, it's near fullspeed.
+Looks good and runs very playable.
+	
+		 
+	
+			Mike Piazza's Strike Zone (U) [!]
+			PSP 1000 6.39Pro B9 
+			736
+			Yes
+			Yes sync
+			25-30
+			Minor
+			 Game runs great even with sound. There is a slight flickering problem with team logos/jerseys, but nothing serious.
+
+missing a lot of background textures
+	
+		 
+	
+			Milo's Astro Lanes (U) [!]
+			slim 5.00 m33-6 
+			Alpha 55
+			No
+			Y*
+			10-22**
+			Major***
+			  Game has Decent Framerate. Sound is a little choppy but works with sync.
+
+**Disable Loop Opt
+	
+		 
+	
+			Mischief Makers (E) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Y
+			Y sync
+			40-50
+			none
+			work great
+
+controller: Dpad
+TUC : every 8 frames 
+	
+		 
+	
+			Mischief Makers (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Y
+			Y sync
+			40-50
+			none
+			work great 
+
+controller: Dpad
+TUC: Every 8 frames
+	
+		 
+	
+			Mission Impossible (E) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			12-15
+			Minor
+			  texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+
+found some bad texture blends and game runs little slow but seems to be fully playable
+	
+		 
+	
+			Mission Impossible (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			12-15
+			Minor
+			      texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+
+found some bad texture blends and game runs little slow but seems to be fully playable
+	
+		 
+	
+			Monaco Grand Prix (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 545
+			Y
+			Y
+			3-8
+			Minor
+			  when changing camera view, your car becomes invisible, apart from the skid marks left from the tires, there seems to be no steering wheel at all in the cockpit view.
+extremly slow makes it unplayabe to any extent
+
+	
+		 
+	
+			Monopoly (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Y
+			Y
+			5 - 7
+			Minor*
+			  Logo's &amp; menu's look good. In-game graphics look fine, apart from a few images on the playboard itself (waterworks / community chest ETC ETC) The game seems to be fully  playable but it is very slow. Despite the low framerate the Sync is still at 40-46% during gameplay.
+
+Settings used on this game are........
+FS: 2, LimitFR: No,
+Audio: Async or Sync (recommended to disable this).
+
+	
+		 
+	
+			Monster Truck Madness 64 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 556
+			Y
+			Y
+			10-15
+			Major
+			 Game boots up, Parts of maps are not displayed. I only got a chance to test Sync sound and it seemed to work pretty good. Game is playable with some major graphic glitches.
+	
+		 
+	
+			Morita Shougi 64 (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 558
+			Yes
+			Yes Async
+			6-13
+			Minor
+			 The game seems to freeze at random times during gameplay, so make sure to save frequently. The game is not too fast as it averages 10 fps, about 33% sync. As I can see there are no graphical issues that can be easily noticed. Both Async and Sync audio work, but Async is recommended because it is a bit more speedy than Sync. Remember to keep audio disabled for a slight speed increase. Make sure to disable Increase IV Event as it robs 4-5 fps from the game.
+Recommended Settings:
+Fs: 2
+
+	
+		 
+	
+			Mortal Kombat 4 (U) [!]
+			Slim 6.35Pro-6.20hen 
+			Beta 3
+			Y
+			Y
+			26-30/60
+			minor
+			  Hud still missing. well hope the hud bug
+can be solved soon with that bug the game is a little unplayable
+	
+		 
+	
+			Mortal Kombat Mythologies - Sub-Zero (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Yes
+			Y
+			20 - 23
+			None So Far
+			       Games looks great and is playable. Should work great when the CPU is moved. 
+	
+		 
+	
+			Mortal Kombat Trilogy (U) (V1.2) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			Yes
+			N
+			20 - 25
+			Yes
+			  Runs great but the fighters are black.
+	
+		 
+	
+			Ms. Pac-Man - Maze Madness (U) [!]
+			PSP 1001 6.39 PRO B9 
+			755
+			N
+			N/A
+			N/A
+			N/A
+			 Nothing at all is shown just stays black after start emulation is clicked.
+even with a savestate
+	
+		 
+	
+			Mystical Ninja Starring Goemon (U) [!]
+			Slim 6.20PRO-B7 
+			Alpha 718
+			Yes
+			(Y) (sync)
+			8-30
+			moderate
+			great changes since rev 5xx with sound enabled fps are between 8-30 but still got a lot of bugs and some moderate graphical issues :/ anyway now the game boots :D
+	
+		 
+	
+			NASCAR 2000 (U) [!]
+			Slim 5.50 GEN D3 
+			rev 558
+			Yes
+			No
+			11 - 17
+			Yes
+			  The cars on the map are a bit blurred.
+Objects only appear when you approach them
+No sound
+	
+		 
+	
+			NASCAR 99 (U) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			Yes
+			Yes
+			11-17
+			Few
+			  Same problems as Nascar 2000 only the sound works on this version. 
+	
+		 
+	
+			NBA Hangtime (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Yes
+			Y
+			2-15
+			Minor
+			  This game looks great, but very slow.
+	
+		 
+	
+			NBA Jam 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Rev 579
+			No
+			N/A
+			N/A
+			N/A
+			 Use this savestate: http://www.sendspace.com/file/0d52ir It works good, but it runs slow. I was not able to get this game to boot without a savestate.
+	
+		 
+	
+			NBA Live 99 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			Y
+			Y
+			10-15
+			minor
+			 the game work slow
+some graphic problem
+	
+		 
+	
+			NBA Showtime - NBA on NBC (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Menu
+			N
+			40-60
+			major
+			  The Game freezes at the loading screen after you choose your team. In the demo, it had many glitches on the players. 
+
+controller: Dpad
+	
+		 
+	
+			NFL Blitz (U) [!]
+			Slim 5.50 GEN D3 
+			Rev 558
+			Y
+			Y
+			10-15
+			Y
+			  Texture on the field dont display properly.Sound is choppy
+	
+		 
+	
+			NHL 99 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 558
+			Menu
+			Yes Sync
+			12-15
+			Not in menu
+			The game only allows you to go to the menu, and won't actually advance to the game play. The game freezes instantly if you choose play now, and allows you to get a bit further if you choose advanced settings, then freezes before you actually get in-game. Sync audio is much faster than Async (both work). I did not see any major graphical problems in the menu, but I'm not to sure about in-game. Disable Increase IV Event because it slows down Emulation by 6-7 fps.
+Recommended Settings:
+Fs: 2
+	
+		 
+	
+			Nagano Winter Olympics '98 (U) [!]
+			Slim 5.50 GEN D3 
+			Alpha 558
+			Y
+			Y
+			10 - 20
+			Minor
+			Something doesn't seem right about the menu.
+
+Tested Ski Jump and seems the skiier lies on their side all the time? 
+	
+		 
+	
+			Namco Museum 64 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			N
+			-
+			-
+			black screen
+don't boot even with a savestate
+	
+		 
+	
+			Neon Genesis Evangelion (J) [!]
+			Slim 5.50 GEN-B3 
+			Alpha 545
+			Y
+			Y
+			14-20
+			Moderate*
+			  it is very playable despite a few graphical bugs in the menu text . i managed to play it for a few minutes before it froze i recommend  no sound because sound increases the chance of freezing
+	
+		 
+	
+			New Tetris, The (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 579
+			Menu
+			Yes
+			30 Minimum
+			Minor
+			  Graphics run pretty well, sound is decent, but sort of choppy sometimes. Sync audio works, but Async crashes the game. This game would be almost perfect, but in game, the blocks appear to the right of the box and they rise instead of fall. It runs extremely fast with a 30fps minimum.
+Recommended Setting:
+FS:1
+TUC: Every Frame fixes invisible blocks.
+	
+		 
+	
+			Nightmare Creatures (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			Rev 790
+			Y
+			Y
+			20-30
+			Only Audio
+			 Has improved in speed a lot &amp; it shows, graphics seem to look perfect, runs smoother &amp; is a fun game to play!!!
+
+Recommended settings to use are:~
+
+Limit Framerate: Full Speed
+Dyn Rec: Enabled
+H.L.E: Enabled
+Audio: Sync (Async causes a freeze)
+Dyn Mem Opt: Enabled
+Dyn Loop Opt: Enabled
+Dyn Doub Opt: Enabled
+DD Lists: Enabled
+Video Rate Match: Yes
+	
+		 
+	
+			Nuclear Strike 64 (U) [!]
+			Phat 6.60 ME-1.4 
+			Rev 746
+			Yes
+			Y / Sync*
+			12-20
+			Minor
+			 *Music &amp; Sound Effects now work using Sync audio, but sound choppy.
+Playable but the FPS drops according to whats on screen
+Graphically everything looks good apart from writing not looking quite right.
+Recommended settings are:
+TUC: Every Frame, FS: Auto 1, Audio: Sync.
+
+Please Note: Do NOT switch on Audio Rate Match. 
+
+ 
+	
+		 
+	
+			Nushi Tsuri 64 - Shiokaze ni Notte (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 558
+			No
+			No
+			N/A
+			N/A
+			This game does not boot.
+	
+		 
+	
+			Off Road Challenge (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 579
+			Yes
+			Yes
+			5-10
+			None
+			 Menu runs at 25-30 FPS and 5-10 FPS in-game. Graphics seem great I played a few races did not notice anything. Sound works on both Async and Sync but very choppy. Frameskip 1-2 is recommended. The game seems perfectly playable but very slow.
+	
+		 
+	
+			Ogre Battle 64 - Person of Lordly Caliber (U) [!]
+			Slim 5.00 m33-4 
+			Beta 3
+			Yes
+			Yes
+			19-30
+			Moderate
+			  Many graphical glitches. A lot of characters have a white background to them. Framerate is pretty good compared to other games. The game froze on me once while someone was talking, but other than that the game is playable depending on the player.
+
+Use these settings if you wish to play:
+Texture Update Check: Every Frame
+Frameskip: Auto 1
+	
+		 
+	
+			Onegai Monsters (J) [!]
+			psp 3001 pro b 
+			Rev 755
+			yes
+			Y
+			17-22Fps
+			Minor
+			24 fps in menu worked well when i got to first cut scene. it was very slow but text is fast and clear this is a fun game but it is in japanese so sorry for english players. Enjoy:)
+        -Trozzul
+preferences
+Texture update check            Every frame
+Framskip                                 Auto 2
+Dynamic recomplition             Enabled
+
+	
+		 
+	
+			Paper Mario (E) (M4) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			23-34
+			Minor
+			   texture update check every frame frameskip auto 1 high emulation enabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Paper Mario (U) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Y Sync
+			17-30
+			Minor 
+			Texture Update Check= Every Frame
+Frameskip= No frameskip (makes game too glitchy) 
+High emulation= Enabled 
+Audio= Disabled      
+Memory Access Optimsation= Disabled
+Clean scene= Enabled 
+Dynamic loop= Enabled
+Other speed ups = Enabled
+
+
+
+When you are in battle the game goes 85-100%.(25-30fps average) But when you're walking, the game goes 50%-85%.(15-24fps average) 
+
+TIP: When making an action command (jump, walk, hammer etc.), it suddenly just slows down the game by so much. What you can do is that for example: if you walk, you keep on walking so that the game will stay in good speed but even though you stop or do anything else the game will go down by 15fps!
+	
+		 
+	
+			Paperboy (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 579
+			Yes
+			Yes
+			20-40
+			Minor
+			  Game starts up fine, graphics are pretty good I don't notice anything in-game except a few images show no color. This game is very playable. 
+(follow the bellow tip)
+Enable Async audio, which will give 50-80% speed up!
+Settings : 
+FrameSkip : Disabled, 
+Limit Framerate : 
+Enabled, Async Audio.
+Framerate is really low but sync% is 90-120% ! ( Using the above method )
+Sound is really bad, I recommend to turned down your PSP volume.
+This will eventually crash the game.
+
+	
+		 
+	
+			Penny Racers (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 579
+			Yes
+			Yes
+			10-15
+			None
+			 This game runs great! I don't notice any bad graphic glitches. The sound on the menu is PERFECT with sync sound. In-game graphics look great, async and sync sound both work but is choppy in-game. Async sound is choppy at the menu while sync sound is flawless. 
+Recommended Settings:
+FS: 1
+Audio: Disabled for a speed increase.
+	
+		 
+	
+			Perfect Dark (E) (M5) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			yes
+			yes Sync
+			10-25
+			Minor
+			    Frameskip auto 1 (optional)
+High emulation disabled
+Audio disabled (for best speed)
+Clean scene enabled
+Dynamic loop disabled
+Video rate match enabled (makes it less sluggish)
+
+use rom buffer instead of cache only for psp slim or higher
+
+Runs slow and may crash at random points
+	
+		 
+	
+			Perfect Dark (U) (V1.1) [!]
+			psp 3000 
+			alpha
+			Yes
+			yes Sync
+			15-20
+			Minor
+			    Frameskip auto 1 (optional)
+High emulation disabled
+Audio disabled (for best speed)
+Clean scene enabled
+Dynamic loop disabled
+Video rate match enabled (makes it less sluggish)
+
+use rom buffer instead of cache only for psp slim or higher
+
+Runs slow and may crash at random points
+
+* Game crashes on starting cutscenes with PHAT(?).
+	
+		 
+	
+			Pilotwings 64 (E) (M3) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			20-40
+			minor
+			   texture update check every frame frameskip auto 1 high emulation disabled audio disabled      clean scene enabled dynamic loop disabled
+	
+		 
+	
+			Pilotwings 64 (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Y
+			Y sync
+			20-30
+			Minor
+			    Game starts up fine but sound is REALLY choppy. There are white bars around the screen.
+	
+		 
+	
+			Pocket Monsters Stadium (J) [!]
+			phat 5.00m33-6 
+			beta 3 update
+			yes
+			No
+			30-60
+			minor
+			  Finally this game boot!
+have minor graphics errors,like some text or some images
+there is a slow down sometimes,but the game reach also 80 fps
+need some correction
+my settings
+linear filter(you can disable it if you want)
+frameskip auto 2
+dynamic recompilation
+dynamic stack optimization
+memory access optimization
+dynamic loop optimization
+double display list
+fog emulation(you can disable it)
+	
+		 
+	
+			Pocket Monsters Stadium 2 (J) [!]
+			phat 5.00m33-6 
+			beta 3 update
+			yes
+			no
+			10-25
+			minor
+			    see pokemon stadium 2 (F)
+	
+		 
+	
+			Pocket Monsters Stadium GS (J) [!]
+			phat 5.00m33-6 
+			beta 3 update
+			yes
+			no
+			10-23
+			minor
+			 see pokemon stadium 2 (F)
+	
+		 
+	
+			Pokemon Puzzle League (U) [!]
+			Phat5.00 m33-6 
+			766
+			no
+			Y - w/Sync
+			1-60
+			minor
+			  game doesnt boot need a savesate to enter game and once in game by using a project 64 savestate you can only move with the directional buttons and the others dont seem to work......(salvy is looking for a fix for this issue)
+	
+		 
+	
+			Pokemon Snap (U) [!]
+			3001 6.20 THEN 
+			Rev 755
+			Yes
+			Sync
+			15-30
+			Minor
+			your able to play with sync audio(or off for better fps) the solution of the camera is at this link.=http://forums.daedalusx64.com/viewtopic.php?f=1&t;=3156&p;=39926#p39926
+http://www.youtube.com/watch?v=uOonUPY8AiI video for camera solution 
+the solution is to rename a savegame for example = Pokemon Snap (S) [!]. ss so Pokemon Snap (S) [!]. game runs very well when i changed some of the settings but they dont change alot of the graphic and fps errors probably not able to be fixed until newer Revs enjoy.
+             -Trozzul 
+
+	
+		 
+	
+			Pokemon Stadium (E) (V1.1) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			19-27
+			Moderate
+			   texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  
+  DONT USE ASYNC FOR AUDIO MAY CAUSE CRASH OR VERY CHOPPY AUDIO
+	
+		 
+	
+			Pokemon Stadium (U) [!]
+			3001 6.60 Pro C 
+			r1861
+			Y
+			Y Sync
+			25fps-30
+			Minor
+			Texture Update Check: Every Frame
+Frameskip: Auto 1
+Dynamic Recompliation: Enabled
+HLE: Enabled
+Memory Access Optimisation: Enabled
+Clean Scene: Disabled
+Dynamic Loop Optimisation: Enabled
+Double Display Lists: Enabled
+Video Rate Match: No
+
+*To see crashes that happens in this game go to: 
+http://forums.daedalusx64.com/viewtopic.php?p=45781#p45781
+	
+		 
+	
+			Pokemon Stadium - Kiosk (U) (V1.1) [!]
+			Go 6.20 Pro-B6 
+			rev 716
+			yes
+			no
+			20-86
+			minor
+			       it is nearly perfect,regard graphics,and works fine
+but psp phat crash with "out fo memory" error
+my settings:
+linear filter(you can disable it if you want)
+frameskip auto 1
+dynamic recompilation
+dynamic stack optimization
+memory access optimization
+dynamic loop optimization
+double display list
+fog emulation(you can disable it)
+
+you can achieve 86 FPS in main menu by disabling sound,just like Pokemon Stadium (U)[!]
+	
+		 
+	
+			Pokemon Stadium 2 (E) [!]
+			Fat 5.00m33-6 
+			beta 3 update
+			Y
+			no
+			10-25
+			Minor*
+			see pokemon stadium 2 (F)
+	
+		 
+	
+			Pokemon Stadium 2 (F) [!]
+			psp 3001 6.20 pro-b 
+			rev 755
+			yes
+			sync
+			30 - 46 Fp
+			minor
+			  This game runs very well in menu and battles incredible Fps . turning on async make the sound very clear and probably the best iv heard. this game is the best game iv run on daedalus so far recomened there are some grahpic issues but this game is very well played. Enjoy :)
+      -Trozzul
+(beta 3 psp phat home button cause crash not sure if fixed please somone with phat test out for others) 
+high level emulation         disable
+texture update check      disable
+frameskip                       auto 2
+dynamic recompilation      enabled (warning keep this on, Crashes game)
+memory access optimisation disabled
+fog emulation enabled (you can disable)
+
+	
+		 
+	
+			Pokemon Stadium 2 (G) [!]
+			Slim 6.60 
+			Rev790
+			yes
+			yes
+			10-23
+			minor
+			after you beat the first trainer the psp freezes...i tryed it 2-3times and everytime the psp freezes :(
+	
+		 
+	
+			Pokemon Stadium 2 (S) [!]
+			phat 5.00m33-6 
+			beta 3 update
+			yes
+			no
+			10-25
+			minor
+			  see pokemon stadium 2(F)
+	
+		 
+	
+			Pokemon Stadium 2 (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			Alpha Rev 783
+			Yes
+			Yes*
+			8-30
+			Minor
+			   First off, on starting up all logo's &amp; main screen display correctly, next the main menu with the 3 options, seem to be the only menu that do not look correct, as "Corn" mentioned is due to lack of framebuffer effects, also seem to be a couple of inexact blends in places.
+Recommended settings for best results:
+
+TUC: Every Frame, (Makes no difference to the glitches in game sadly).
+Frameskip: Auto 1, Limit Framerate: Yes,
+High Level Emu: Disabled, (Seems to crash emulation if enabled).
+Audio: *Async, (Only enable if you can stand jerky gameplay, but does sound excellent).
+Controller: Default, (Press 'O' &amp; Dpad directions to move cursor in menu's).
+Dyn Mem Opt: Enabled,
+Dyn Loop Opt: Enabled,
+Dyn Doubles Opt: Enabled,
+Clean Scene: Disabled,
+D.D Lists: Enabled,
+Video Rate Match: Yes,
+Audio Rate Match: No.
+
+	
+		 
+	
+			Polaris SnoCross (U) [!]
+			PSP 1001 5.00M33-6 
+			755
+			Menu
+			Y
+			45
+			minor
+			the game don't boot without savestate
+savestate: http://forums.daedalusx64.com/download/file.php?id=2903
+BSOD
+	
+		 
+	
+			Power Rangers - Lightspeed Rescue (U) [!]
+			PSP 3001 Brite 6.60  
+			777
+			No
+			No
+			-
+			-
+			This game doesn't seems to boot.
+	
+		 
+	
+			Powerpuff Girls, The - Chemical X-Traction (U) [!]
+			PSP 1001 6.39 PROB9 
+			747
+			Y
+			Y
+			50
+			Minor
+			   Game boots correctly now, if not make sure N64 FP Usage is set to "Yes"
+Menus and Logos look perfect
+
+Frameskip: auto 2
+
+	
+		 
+	
+			Quake 64 (E) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Menu
+			Y sync
+			20
+			major
+			  you can select rumblePak
+	
+		 
+	
+			Quake 64 (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Menu
+			Y
+			20
+			Major
+			 Game starts up fine, but once you get in-game there are a bunch of graphic bugs! Such as being able to see a lot of objects through walls. Lighting is not properly displayed. Some objects don?t even show up at all until you get really close to them! Your weapons don?t show too often. Textures look really bad when you get close or sometimes they look bad all the time. Some lettering is glitchy. Async and sync sound both work but are very choppy. This game is playable with some major graphic glitches.
+	
+		 
+	
+			Quake II (E) [!]
+			PSP 1001 m33-6 
+			747
+			Y
+			Y
+			20*
+			minor
+			      The Logo's &amp; menu show, but are not shown correctly and overlay each other resulting in a mess on screen, the in game graphics look ok in the walls, but the enemies &amp; weapons &amp; other objects are just white with no textures, i find that this game seems to freeze a lot though. FS: 2, Audio: Sync (Would recommend disabling audio for faster gameplay)
+
+*with HLE enable , but daedalus can freeze
+	
+		 
+	
+			Quake II (U) [!]
+			PSP 1000 6.39Pro B9 
+			725
+			Y
+			Y sync
+			20
+			minor
+			   Menus show ok but are slow.
+Sound is very choppy.
+	
+		 
+	
+			Quest 64 (U) [!]
+			Slim 5.50 Prome-4 
+			r721
+			Yes
+			Yes
+			20-30
+			Spell textures
+			Game runs smoothly, with occasional slowdowns in battle. 
+Sync sound works well, slightly choppy at times.
+	
+		 
+	
+			RR64 - Ridge Racer 64 (E) [!]
+			PS Vita 
+			790
+			Yes
+			Y (Sync)
+			25/25
+			
+			very good, almost fullspeed (25fps=pal original) with sound, mainly some frame drop at the beginning of the race. 16/9 compatible and work well apart from tachymeter. Bug in rear mirror, i suggest to hide it(it will improve fps too, use C in race); disable Tach and map in options-Display.
+
+Frameskip: disabled
+Limit framerate: fullspeed
+Dynamic Recompilation: enabled
+HLE: enabled
+Dynamic memory optimisation enabled
+Dynamic loop optimisation enabled
+Dynamic doubles optimisation enabled
+clean scene enabled
+double display list enabled
+Audio rate Match Yes
+	
+		 
+	
+			RR64 - Ridge Racer 64 (U) [!]
+			Fat 6.60 PRO-C 
+			Alpha Rev 790
+			Yes
+			Yes
+			25 - 30
+			Minor*
+			        Runs very well, the speed seems to be improving with each new revision, in fact so much so, its only on average 5 fps, from top speed while in game, but you do lose speed depending on what's on screen at times.
+When using Sync audio in game, music &amp; effects sound perfect, that is until the replay starts LOL :o)
+Make sure to set Viewport size: 16:9 stretch (480x272) - Cures tachometer problem,
+there also seems to be a couple of problems viewing the rear view mirror while in car, and the map while driving is not shown correctly.
+Top Tip (Thanks kakarotto)
+Turn off the following 2 options for a big boost in speed -
+Dpad Left - turn off/on mirror while in car view
+Dpad Right - turn off/on map (But can also be turned on/off in options in main menu)
+Recommended settings are:-
+TUC: Disabled, FS: Disabled, 
+Zoom 110%, LimitFR: Full Speed,
+Dyn Rec: Enabled, HLE: Enabled,
+Audio: Sync or Async (Sync is recommended as audio sounds perfect),
+Dyn Mem Opt: Enabled,
+Dyn Loop Opt: Enabled,
+Dyn Doubles Opt: Enabled,
+Clean Scene: Disabled,
+D.D Lists: Enabled,
+Video &amp; Audio Rate Match: Both Enabled.
+	
+		 
+	
+			Rally Challenge 2000 (U) [!]
+			Fat 5.00 M33 + Pro 4 
+			Alpha 638
+			Y
+			Y*
+			11-19
+			Minor**
+			          This games logo's show correctly, the game goes into demonstration mode of all the cars in game, if you press X on this screen the game looks like it has frozen, but give it 10 sec's or so and the main title screen appears, there seems to be only **one problem that i could see, and that's the top left hand corner of the screen in demo &amp; when in game. 
+Recommended settings to use are:
+FS: 1 (2 or more makes game jerky),
+Audio: Sync (*Async seems to still cause problems, Disable for a Speed Up),
+DyncLoopOpt: Disabled,
+Disable N64 FP Usage Check: Yes
+Tip.....Change Texture Filter to "Force Nearest Filter" in Global Settings &amp; when racing change to 3rd person view in car, makes game run the fastest.
+
+	
+		 
+	
+			Rampage - World Tour (E) [!]
+			PSP 1000 6.39Pro B9 
+			736
+			Y
+			Y sync
+			50
+			minor
+			  the game work nearly perfect with sound
+
+TUC:disable
+Frameskip: auto 2
+Zoom: 107%
+Limit framerate: full speed
+DR: Enable
+HLE:Enable
+Audio:Sync
+	
+		 
+	
+			Rampage - World Tour (U) [!]
+			PSP 1000 6.39Pro B9 
+			736
+			Y
+			Y sync
+			60
+			Minor
+			            game settings:
+TUC:disable
+Frameskip: auto 2
+Zoom: 107%
+Limit framerate: full speed
+DR: Enable
+HLE:Enable
+Audio:Sync
+64 bit mode(vi add disabled): game runs flawlessly. sync slows down to 50 percent after a building is destroyed but framerate picks up immediately afterward
+
+	
+		 
+	
+			Rampage 2 - Universal Tour (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 579
+			Yes
+			Yes
+			50-60
+			Minor
+			 Perfect emulation. Without sound, the game runs full speed, but with sound the games runs around 48-60 fps.
+I did not notice any graphical bugs at all during my time playing it.
+Settings : FrameSkip : 1
+Linear Filter (highly recommended !!)
+Note : Sync audio seems to work better than Async.
+	
+		 
+	
+			Rat Attack (E) (M6) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			No
+			N
+			N
+			
+			 freeze at variable identified: 24%  
+doesn't boot even with a savestate
+	
+		 
+	
+			Rat Attack (U) (M6) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			N
+			N
+			0
+			N/A
+			   Does not boot 
+even with a savestate
+
+	
+		 
+	
+			Rayman 2 - The Great Escape (E) (M5) [!]
+			PSP 3000 PRO B10 
+			766
+			yes
+			Y sync/asy
+			15-25
+			minor
+			  After waiting, the game will show 'cutscenes' of the game playing itself. Just keep pushing start to skip cutscenes unil you reach Main menu
+Use Video rate match enabled to speed up animation
+TUC: OFF!
+audio: asynchronos &gt;audio is perfet speed 
+audio &amp; video rate match : Yes 
+Rayman's attack are now displayed correctly
+
+
+	
+		 
+	
+			Rayman 2 - The Great Escape (U) (M5) [!]
+			PSP2000 5.00 M33-6 
+			747
+			Partial
+			Y
+			20-30
+			Minor to Moderate
+			 Settings:
+Use Video rate match enabled to speed up animation
+Memory access optimization: enabled
+
+audio:asynchronous
+
+None of rayman's attacks are displayed correctly
+Use 32bit graphics (boot Daedalus while pressing (o) button) to remove dark silhouette around transparent sprites.
+	
+		 
+	
+			Razor Freestyle Scooter (U) [!]
+			PSP 1001 PRO B9 
+			755
+			Y
+			Y
+			60 Menu/ 2
+			minor
+			The seems to be playable
+but freeze 3 sec after strating the competition
+	
+		 
+	
+			Re-Volt (E) (M4) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			N
+			N
+			0
+			N/A
+			 Same as the USA version, doesn't boot.
+even with a savestate
+	
+		 
+	
+			Re-Volt (U) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			 The game does not boot.
+freeze at variable identified: 14%
+	
+		 
+	
+			Ready 2 Rumble Boxing (U) [!]
+			PSP 1001 6.39 PROB9 
+			747
+			Yes
+			Yes
+			12-15
+			minor
+			  Everything looks and runs good except for a few stretched letters/images throughout the game.
+TUC: every frame
+	
+		 
+	
+			Resident Evil 2 (E) (M2) [!]
+			PSP 1001 5.00M33-6 
+			716
+			No
+			No
+			21
+			N/A
+			  The game seems to boot, but just stays on a black screen while the fps changes.
+	
+		 
+	
+			Resident Evil 2 (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			No
+			No
+			10
+			N/A
+			    It seems to boot, but just displays a black screen while the fps changes.
+BSOD
+	
+		 
+	
+			Road Rash 64 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 556
+			Y
+			N
+			8-15
+			Minor
+			 Logos, Menu, and In-game graphics look perfect, but in fact the riders and the map itself are inexact blends  the only graphics issue are on the trees that have alpha transparency issues.
+Make sure to enable Increase VI Event in the Advanced Options to prevent shaking.
+Note: for regression testing, this game is only playable on 2 revs: 459 and 460. otherwise, use rev551 or newer.
+Audio: Freezes with Sync or Async, so leave it disabled.
+	
+		 
+	
+			Rocket - Robot on Wheels (U) [!]
+			Slim 5.00 M33-6 
+			Beta3
+			Yes
+			-
+			20
+			minor(if any)
+			 Make sure to turn Dynamic Loop Optimization OFF before starting the game.
+Graphics is as good and the game runs pretty smooth. 
+	
+		 
+	
+			Rugrats - Scavenger Hunt (U) [!]
+			Slim 6.35Pro-6.20hen 
+			Beta 3 16-bits
+			Y
+			Y
+			20
+			minor
+			  Perfect emulation, but in the beta 3 the menus doesn't show correctly (only happen if you have enbled the auto 1 frameskip) but the 
+speed with sound is perfect hope you can fix the bugs team daedalus
+	
+		 
+	
+			Rugrats in Paris - The Movie (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 585
+			Yes
+			No
+			8-11
+			Minor
+			This game looks amazing, and i only noticed one minor graphic bug. The audio does not work at all with either Async or Sync. The game is ridiculously slow in the menu, but speeds up to about 50% sync during gameplay.
+Recommended Settings:
+Frameskip: 1
+	
+		 
+	
+			Rush 2 - Extreme Racing USA (U) [!]
+			PSP 1001 Fat 6.60 C2 
+			rev 1909
+			Y
+			Y or N
+			14-20(with
+			Some
+			  I am pleased to say this game works very well, and seems to run fast enough to be fun to play now!!! Nice job Devs!
+
+I would recommend these settings:
+Texture Update- Off
+FSkip- Auto 1
+Limit Framerate- Full Speed(or off if using Sync audio)
+DRecomp- On
+HLE- Off
+Audio- None or Sync
+Controller- Default Z+L Swap
+
+Adv Options
+Dynarec Memory Opt.- On
+Dynarec Doubles Opt.- On
+Clean Scene-Off
+Double Display Lists- On
+Disable audio for best speed
+	
+		 
+	
+			S.C.A.R.S. (U) [!]
+			PSP 1001 6.20 pro B6 
+			716
+			Y
+			N*
+			25 -60
+			Major
+			 The logo's &amp; main menu show correctly, the selection screens seem to be ok, apart from the car selection screen, which displays all wrong graphics on the cars themselves.
+In-game the tracks and cars are not displayed correctly, at the start of the races, the cars &amp; tracks show ok, until they move, and everything disappears, there are a few inexact blends showing in places, including main title screen.
+Settings used in this title are:
+FS: 2, Audio: Disabled (Sound doesn't work at all with Async or Sync).
+
+	
+		 
+	
+			San Francisco Rush - Extreme Racing (E) [!]
+			PS Vita 
+			790
+			Yes
+			Y
+			22-25/25
+			mainly in menu
+			Reccomended: almost fullspeed without sound. 16/9 compatible. fps decrease with sound.
+TUC: Every2
+Frameskip: disabled
+Limit framerate: fullspeed
+Dynamic Recompilation: enabled
+HLE: enabled
+Dynamic memory optimisation enabled
+Dynamic loop optimisation enabled
+Dynamic doubles optimisation enabled
+clean scene enabled
+double display list enabled
+Fog can be enabled to avoid pop-up
+	
+		 
+	
+			San Francisco Rush - Extreme Racing (U) [!]
+			Fat 5.00 M33-6 
+			Alpha 419
+			Y
+			Y*
+			9 - 12
+			Moderate
+			First thing you notice is the title screen is not displayed properly, all other menu's seem to look ok, in game the only noticeable graphic problem are the colouring of the cars themselves. FS: 1, Audio: Async, (*I found disabling the audio actually slows the game down a touch, strange that?????). 
+	
+		 
+	
+			San Francisco Rush 2049 (U) [!]
+			Phat(Fat) ~ 6.60 PRO 
+			rev 1878
+			Y
+			N
+			13-30
+			Minor
+			      First off the logo's &amp; all selection screens look correct(except when selecting a track, when adjusting the wind, there is no flag) , all graphics look perfect in &amp; out of game(except the Taillights don't go off). No sound though
+There are huge speed differences in play modes:
+In Practice mode: fps 25-30 (Full Speed)
+In Race mode: fps 13-20 (With Frameskip set to Auto 1 then fps: 17-24) 
+
+I would recommend these settings:~
+
+Frameskip: Auto 1(gives the game a nice speed up)
+Limit FrameRate: Full Speed
+Dyn Rec: Enabled
+H.L.E: Disabled (Must be disabled to get past 'Press Start' Intro screen)
+Audio: Disabled (Regardless of setting, the Audio Does not work AT ALL)
+Dyn Mem Opt: Enabled
+Dyn Loop Opt: Enabled
+Dyn Doub Opt: Enabled
+DD Lists: Enabled
+Video Rate Match: Yes.
+	
+		 
+	
+			Scooby-Doo! - Classic Creep Capers (E) [!]
+			Slim 6.35Pro-6.20hen 
+			Beta 3 16-bits
+			Yes
+			Y
+			20-25
+			none
+			  Always the vbls stays at 49/50 with sound it's reaching the perfect emulation but still got some slowdowns in the speed my settings are these:
+Force nearest filter
+Preferences: 
+texture update check - every 5 frames or every frame.
+frameskip: auto 1
+HLE: enabled
+memory acces optimization: enabled
+audio: synchronous 
+Advanced Options
+clean scene: disabled(makes the emulation slowdown)
+dynamic loop optimization: enabled
+Double display lists: enabled
+W/moonyagami666
+	
+		 
+	
+			Scooby-Doo! - Classic Creep Capers (U) [!]
+			Slim 6.35Pro-6.20hen 
+			Beta 3 16-bits
+			Y
+			Y
+			26-30
+			none
+			the game is very playable the sound sometimes gets a little chopy but still at 53-58 vlbs
+force nearest filter
+preferences:
+Texture update check: every 5 frames
+frameskip: auto 1
+HLE: enabled
+memory access optimizaton: enabled
+audio: synchronous
+Advanced Options:
+clean scene: Disabled
+Dynamic loop optimization: enabled
+W/moonyagami666
+double display lists: enabled
+	
+		 
+	
+			Shadow Man (U) [!]
+			Phat 5.50 Gen-D3 
+			Alpha 566
+			Y
+			Y*
+			7-21**
+			Minor
+			   Game will not start unless *Async sound is enabled. If you try to change to sync or disable, the game will not start. This game is showing a lot better speed getting up to 21 fps, which this game has not reached before,  when the screen with the mask is reached it seems to freeze, but just takes a long time to continue, meanwhile the sound continues on. Audio seems perfect including music, movement in game is very jerky, especially when there are a lot on screen, and it slows the game down to its minimum 7fps, then suddenly it can speed up, resulting in the jerky movement i mentioned before.
+Settings used on this game are..........
+TextUpdCheck: Every 20 Frames, FS: 1,
+Audio: Async (Please note - Do NOT change type of audio or disable).
+Advanced options are........
+Increase VI event: Enabled, 
+DDList: Enabled (to reduce the amount of jerky movement).
+Tip.......**When in game go to options and change from Hi-Res to Lo-Res, to speed up game or in Global settings change texture filter to "Force Nearest Filter".
+
+make sure limit framerate is on or otherwise you are going to have 3000% sync and the game will be rendured unplayable
+
+	
+		 
+	
+			Shadowgate 64 - Trials of the Four Towers (U) [!]
+			Slim 5.50 gen D3 
+			Alpha 560
+			Y
+			Y
+			10-12
+			Minor
+			    Async sound recommended
+ The only part that is abit slow is the intro but in game it runs at full speed mostly.
+Settings E version is the same
+	
+		 
+	
+			Sim City 2000 (J) [!]
+			slim 5.50 GEN-D3 
+			Alpha 514
+			Y
+			N/A
+			10-15
+			minor
+			Game runs very well. It actually runs too fast so make sure to set frameskip as 0 and set limit framerate to yes
+	
+		 
+	
+			Snowboard Kids (U) [!]
+			Slim 5.00 m33-6 
+			Rev. 429
+			Yes
+			Y
+			8 - 18
+			Moderate
+			Enable texture update check to view the menu properly (Recommended 5). Graphical issues with the menu text coloring and course floor textures (Snow).
+	
+		 
+	
+			Snowboard Kids 2 (U) [!]
+			3001, OFW 6.30 
+			777
+			yes
+			y
+			45-50
+			minor
+			 The game play pretty great, can be a bit slow when there more players on screen. the sound works but it's choppy and lag the game so i always never turn it on. the floor graphic do sometime pops up (seen in Wendy's house). there is a glitch where when you pick your person to play as in the story mode, you go back to the title screen which is weird (i press the A button, not the B button) and need to be fix.
+	
+		 
+	
+			South Park (U) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			N
+			N/A
+			N/A
+			N/A
+			    Game doesn't boot.
+even with a savestate
+	
+		 
+	
+			South Park - Chef's Luv Shack (U) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			N
+			N/A
+			N/A
+			N/A
+			   Doesn't boot, I tried several settings..
+even with a savestate
+	
+		 
+	
+			South Park Rally (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Y
+			Y*
+			10-15
+			Moderate**
+			   ** Menus and logos look really good, but once in game there's several glitches, for one the sky isn't render, there's a minor ghosting problem in objects( Clean scene takes care of most ghosting ).
+
+*Sound is really glitchy, better have it off.
+
+Aside from those issues, game is really playable, only the low frame rate takes away the fun of this game [Make sure to have FrameSkip 1 or 2]
+	
+		 
+	
+			Space Invaders (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			Yes
+			40-60
+			Minor
+			  Game starts up fine, start menu looks fine. When you get in-game background does not show properly unless you enabled Texture update. When you explode or get a shield the image does not show right. Async and sync sound both work but are very choppy. This game is playable with minor graphic glitches.
+MemPack
+	
+		 
+	
+			Space Station Silicon Valley (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			Y*
+			15-20
+			Minor to Moderate
+			 Some textures that are currently not displayed correctly but don't hurt game play.
+
+*Sync works better than Async. Sound is still quite glitchy.
+	
+		 
+	
+			Spider-Man (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			yes sync
+			17-30
+			Minor
+			      Runs really good, graphics look almost perfect, HUD is visible now, but one major problem is that there's no arrow showing the direction to go in game (thanks go to "alexg1989" for reporting that).
+Settings used are...........
+FS: auto2, Audio: Disabled (audio doesn't work at all).
+Advanced options are.........
+Clean Scene : Enabled (correct a couple of glitches),
+Increase VI event: Enabled.
+Global settings..........
+Texture Filter: Force Linear Filter.
+	
+		 
+	
+			Star Fox 64 (U) (V1.0) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			no
+			23-30
+			Minor
+			   texture update check everyframe frameskip auto 1 high emulation disabled audio disabled clean scene enabled 
+DO NOT USE ASYNC FOR AUDIO IT CRASHES THE GAME 
+use no audio for smother game play
+	
+		 
+	
+			Star Fox 64 (U) (V1.1) [!]
+			psp slim 6.60 ME-1.6 
+			rev 747
+			yes
+			yes Sync
+			
+			Minor
+			      texture update check everyframe frameskip auto 1 high emulation disabled audio disabled clean scene enabled 
+DO NOT USE ASYNC FOR AUDIO IT CRASHES THE GAME 
+use no audio for smother game play
+	
+		 
+	
+			Star Soldier - Vanishing Earth (U) [!]
+			Slim 500 M-33 
+			736
+			Y
+			Y
+			28-30
+			None
+			Runs full speed, even with (async) sound. Graphics look great and only issue is a BSOD just after the text printing in the intro which can be bypassed with mashing start button until ship selection shows up or use of a SS.
+	
+		 
+	
+			Star Wars - Rogue Squadron (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			N
+			N/A
+			N/A
+			 Fps shows on screen then turns off PSP using default settings.
+	
+		 
+	
+			Star Wars - Shadows of the Empire (E) [!]
+			psp slim 6.60 ME-1.6 
+			747
+			yes
+			no
+			12-13
+			Minor
+			            Takes few secs boot, 3d Effects on title screen work now
+ i get 12-13 fps and 22%-24% sync
+ texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  
+
+DO NOT USE AUDIO GAME WILL BE TOO SLOW
+	
+		 
+	
+			Star Wars Episode I - Battle for Naboo (U) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			N
+			0
+			
+			BSOD
+	
+		 
+	
+			Star Wars Episode I - Racer (U) [!]
+			Slim 6.39 Pro B 
+			Alpha 711
+			Partial
+			Y
+			10-20
+			Major
+			     Dynamic Loop Optimization must be off or game will freeze.
+Enable Double Display Lists or video will skip backwards every couple seconds.
+Many things such as vehicles and menu items, don't show. You can keep pressing "A" at the start of the game to enter a race at least. Buttons will have to be pressed for a second or two to work. While boosting the game does some weird stuff with the borders of the screen.
+
+I would recommend leaving the sound off to boost what little framerate you can get from it. Otherwise the sound is extremely choppy. All in all the game runs very slowly (only about 25% speed). 
+	
+		 
+	
+			StarCraft 64 (E) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			N
+			0
+			
+			Doesn't boot/load
+even with a savestate
+	
+		 
+	
+			StarCraft 64 (U) [!]
+			Slim 5.50 GEN-D3 
+			Alpha 541
+			Partial
+			N
+			20-25
+			Plently
+			     The game is currently being tested again to see if it could be made working. So far able to open menu with SaveState, but crashes after opening SaveState. The audio should be disabled, HLE should be disabled, and framskip to Auto 2. See MHFsilver for more info on game.
+	
+		 
+	
+			Starshot - Space Circus Fever (U) [!]
+			Slim 5.00 M33-6 
+			Alpha 429
+			Y
+			Y
+			10-15
+			Major
+			 The game starts up but has problem's showing images with transparent backgrounds such as smoke. The background in the space area does not show. The cursor on in-game menu is very glitchy looking. In-game graphics are really bad! Lots of textures show up completely wrong and look very glitchy. This game is very jerky if do not enable Double display (Enable double display for best results). Double display helps it out a lot when it comes to jerkiness! Async and sync sound both work but are very choppy. This game is playable but with some major graphic glitches.
+	
+		 
+	
+			Stunt Racer 64 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			N
+			N/A
+			N/A
+			Game will not start up all I see is the FPS for a few seconds then the FPS freezes. There is no sound played during this time. I tried multiple settings.
+Rq: freeze on PJ64 too
+	
+		 
+	
+			Super Mario 64 (E) (M3) [!]
+			Brite 6.20 PRO-B5 
+			Alpha 707
+			Yes
+			Y
+			20-28 FPS
+			
+			   The game works great, but not as good as (U) version, highest ive gotten is 27/28 FPS, lowest is 20 FPS. Sound and graphics are excellent.
+	
+		 
+	
+			Super Mario 64 (J) [!]
+			PSP Slim 5.50 Gen-D3 
+			Alpha 552
+			yes
+			Y*
+			22-32*
+			Y*
+			Sound Gets a bit choppy when the framerate drops below 25. The game slows down to 17-27 FPS when in some levels of the game, but when in and around the castle the framerate is 22-32 FPS.
+	
+		 
+	
+			Super Mario 64 (U) [!]
+			PSP 3001 6.60 Pro C 
+			Rev 777
+			Y
+			Y Sync
+			29fps
+			Minor
+			      ***Edit Preferences***
+Texture Update Check= Disabled (Make game 1-2 fps faster in gaming)*
+Frameskip=Disable or Auto 1
+Zoom=100% (Makes quality perfect when the screen is unscaled)*
+Dynamic Recompilation= Enabled
+High Level Emulation= Enabled
+Sound=Disable or Synchronous
+Controller=Default Z+L Swap
+
+***Advanced Options***
+Clean Scene= Enabled
+Dynarec Memory Optimisation= Enabled
+Dynarec Loop Optimisation= Enabled
+Dynarec Double Optimisation= Enabled
+Double Display Lists= Enabled
+Video Rate Match= Yes*(No, Dev)
+Audio Rate Match= No
+Fog Emulation= Enabled 
+
+*Texture Update Check: If you disable, the game goes a bit faster, but sometimes when you load a new level the texture might be mistaking. (Don't understand: Have a least 5 lives go to the lava world keep dying until you see something weird.)
+
+*Zoom: Read the ''Quality Option'' form for more info.
+
+*Video Rate Match: Mario's texture will be more smother (Enabling this does not help SM64, Devs) 
+ 
+This game is now in full speed (30 fps) without enabling the sound.
+	
+		 
+	
+			Super Mario 64 - Shindou Edition (J) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 602
+			Yes
+			Yes*
+			25-30**
+			Minor***
+			     Keep settings at default (except for maybe the controller). Game play is nearly identical to the USA version, if you are familiar with that version you would be able to play this one.
+
+*Async is faster, but often crashes. Sync is slower, but more stable. Disable for better speed.
+
+**On some levels it will go a little slower with sound on, but with it off it will be close to full speed.
+
+*** Seems to be a bit better than the original in terms of graphic quality, although this may not be true. Some of the Japanese Characters in the game would occasionally flicker, don't know if it makes it unreadable, since I cant read Japanese.
+
+Recommended Settings:
+TUC: Every Frame
+FS: Auto 
+Fog Emulation: Enabled
+	
+		 
+	
+			Super Smash Bros. (E) (M3) [!]
+			1001 5.00M33-6 
+			713
+			yes
+			Y
+			60
+			
+			       boot , but frezze in the first screen
+	
+		 
+	
+			Super Smash Bros. (U) [!]
+			PSP 3001 6.60 Pro C2 
+			rev 1878
+			Yes
+			Yes
+			45-60
+			Minor
+			  Texture Update Check: Disable
+Frameskip: Auto 1 (Any higher then you get jerky movement)
+Zoom: 108% (To fit screen)
+Limit Framerate: Full speed
+Dynamic Recompilation: Enabled
+HLE: Enabled
+Dyn Mem Opt: Enabled
+Dyn Loop Opt: Enabled
+Dyn Doubles Opt: Enabled
+Clean Scene: Disabled
+D.D Lists: Enabled
+Audio: Async or Sync (Disable for best speed)
+Video Rate Match: Enabled
+	
+		 
+	
+			Supercross 2000 (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 602
+			Partial
+			Yes
+			4-14
+			Major
+			  10-14 FPS in menus, but a major slowdown to about 4 FPS in-game. Also, the entire track is one giant inexact blend along with many other glitches. I wasn't able to actually start playing the game, and it crashed the Emulator.
+Recommended Settings:
+FS: Auto
+	
+		 
+	
+			Superman (U) (M3) [!]
+			slim 5.00 m33-6 
+			beta 3 update
+			Partial
+			Y  Sync
+			22-30
+			major
+			 
+Requires CleanScene to stop duplicating textures.
+doesnt have a sky
+	
+		 
+	
+			Tetrisphere (U) [!]
+			Slim 6.35 HEn 
+			Beta 3 Update
+			Yes
+			Yes
+			15-30
+			Minor
+			  Game starts up fine but there are some minor graphic bugs such as little black spots on the screen when it changes images. Async and Sync sound both work pretty good but are choppy at times. This game is playable with minor graphic glitches.
+Recommended Settings:
+TUC: Every Frame (Fixes many glitches)
+FS: Auto-1 (Depends on preference)
+
+Main Menu looks horrible until you enter singleplayer screen. Seems to fix itself afterwords.
+	
+		 
+	
+			Tigger's Honey Hunt (U) [!]
+			Psp 3001 6.20 Pro-B1 
+			Rev 755
+			Yes
+			Y
+			19-20Fps
+			Minor
+			  Main menu works well at 19-20fps pretty fast when you choose options from the menu you arent able to see images or text inside the book but can see what option you are choosing. during cut scenes the text is a little bit hard to read but your able to. 25-35fps during cut scenes. During gameplay, iv been able to gain 25-42 fps this game runs Very good minor graphic problems the only thing bad about this game is the Sound. i may be a Teenager but this game is Very fun to play Even if its a old winnie the pooh game, Enjoy :)
+     - Trozzul
+Preferences
+
+Texture Update Check               Every 16 Frames
+Framskip                                 Auto 2
+Limit Framrate                          Disabled
+Dyanamic Recompilation             Enabled
+High level emulation                  Disabled
+Audio                                     Async is better sounding but not Recommend 
+
+Advanced Options
+Disable all 
+Warning Enabling  on Audio Rate Match with crash your game 
+	
+		 
+	
+			Tom Clancy's Rainbow Six (U) [!]
+			Slim 5.50 GEN-B 
+			Alpha 502
+			Yes
+			Y
+			7
+			Minor
+			  Menu and start menu text messed up. Sounds do play, but rarely.
+Dynamic Loop Opt : Disable ****
+	
+		 
+	
+			Tom and Jerry in Fists of Furry (E) [!]
+			PSP-E1004 CFW 6.60 
+			rev 1878
+			Yes
+			Y
+			30-35
+			Minor
+			  Tested with default settings
+
+Intro and Menu runs too fast (Intro= over 150 FPS) (Main menu=108 FPS)
+(Ingame menu=42-47 FPS)
+
+Ingame graphic issues :
+Lifebar is streaked (red and orange)
+Background of the profile picture is black
+Sometimes a object get black/invisible stripes.
+
+
+
+	
+		 
+	
+			Tom and Jerry in Fists of Furry (U) [!]
+			PSP 1001 6.39 PROB-9 
+			766
+			Yes
+			Yes 
+			45-60
+			minor
+			 rumble pack
+Frameskip: auto 2
+video and audio rate match enable 
+	
+		 
+	
+			Tonic Trouble (U) (V1.1) [!]
+			Go 6.20 Pro-B6 
+			rev 716
+			Y
+			Partial
+			17-28
+			Moderated to Major
+			    This game will not boot up unless you have sound disabled! If you have any sound enabled at boot up you will get a glitched up start menu and then nothing. Start up with sound disabled to get past the start menu. This game has a lot of graphical glitches such as images not displayed correctly, lots of images are flashing and glitchy. In-game graphics seem to be decent besides a few images not being transparent and there are some white bars that flicker on the screen. You can enable Sync sound after start up but it is VERY choppy. If you enable Async sound the game crashes shortly after. This game is playable with some moderated to major graphic glitches.
+	
+		 
+	
+			Tony Hawk's Pro Skater (U) [!]
+			Go 6.20 Pro-B6 
+			rev 716
+			Y
+			Y
+			30
+			Minor
+			 Almost about full speed with audio disabled, emulates at about 2/3 speed with audio synchronous. Asynchronous emulates faster than Sync, but much lag results (in gameplay, not FPS).
+Please do not enable sound cause it will lower the game's FPS
+WARNING: Do not enable High Level Emulation
+
+	
+		 
+	
+			Tony Hawk's Pro Skater 2 (U) [!]
+			Go 6.20 Pro-B6 
+			rev 716
+			Yes
+			Yes
+			30-70
+			Minor to none
+			  Excellent game play. The menu has a minor graphical bug but other than that the game looks very crisp and clean . FS is recommended and Sync sound is good although Async works too. With Sync sound enabled, the music has a chipmunk sound to it.
+Recommended Settings:
+TUC: Every Frame
+FS: Auto
+	
+		 
+	
+			Top Gear Hyper Bike (E) [!]
+			PSP 1001 5.00M33-6 
+			713
+			No
+			Y
+			50
+			
+			  boot and crash at the first screen
+	
+		 
+	
+			Top Gear Hyper Bike (U) [!]
+			Slim 5.00 M33-6 
+			Alpha 430
+			N
+			N
+			N/A
+			N/A
+			Game will not pass start up unless sound is disabled. Game will freeze once it reaches the Honda logo. I might try to use a savestate with this later. So for now it is classified as unplayable.
+	
+		 
+	
+			Top Gear Overdrive (U) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			Y
+			20
+			minor
+			   You can see the game logos, but as soon as you push X (A button) it freezes immediately then crashes
+	
+		 
+	
+			Top Gear Rally (U) [!]
+			slim 5.00 m33-6 
+			543
+			Partial
+			N
+			11-17
+			Moderate
+			  cars randomly fall through ground (dynarec bug)
+	
+		 
+	
+			Top Gear Rally 2 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			Game will not boot, I tried multiple settings.
+even with a savestate
+	
+		 
+	
+			Toy Story 2 (E) [!]
+			PSP 1000 5.00M33-6 
+			755
+			Y
+			Y
+			25
+			major
+			   doesn't boot without a savestate
+savestate:
+http://forums.daedalusx64.com/download/file.php?id=2908
+
+note: you have to wait 20 sec
+controller don't work so the game is not playable
+	
+		 
+	
+			Toy Story 2 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			N/A
+			N/A
+			N/A
+			 doesn't boot without a savestate
+see Toy Story 2 (E) [!] 
+	
+		 
+	
+			Transformers - Beast Wars Transmetal (U) [!]
+			Slim 6.60 ME-1 
+			Alpha 725
+			Yes
+			Yes
+			9-12
+			Moderate
+			  All of the logos &amp; menus look ok, but in-game, the background seems to flicker a bit, and it affects gameplay. Set Texture Update Check to Every Frame  to fix a lot of the graphics problems.The speeds are not that great, so set Framekip to Auto or 1. Both Sync and Async work, but the sound is too choppy to be enjoyable, so leave it Disabled for more speed. The controls are a bit hard to grasp as well.
+
+	
+		 
+	
+			Tsumi to Batsu(Sin and Punishment) - Chikyuu no Keishousha (J) [!]
+			Slim 5.00 M33-6  
+			Alpha 423
+			Yes
+			Y
+			12
+			Moderate
+			No text on menu. Sound is glitchy.
+	
+		 
+	
+			Turok - Dinosaur Hunter (E) (V1.2) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			No
+			no
+			0.0
+			
+			  black screen/ no menu nothing psp just freeze
+	
+		 
+	
+			Turok - Dinosaur Hunter (U) (V1.0) [!]
+			PSP 2004 
+			777
+			Yes
+			Async
+			28-35
+			No
+			very very playable (no freezing !!!)
+sounds are not choppy very perfect
+
+TUC: disabled
+FS: disabled
+Limit Framerate: No (if its too fast set it to full speed)
+DR: enabled
+HLE: enabled
+Audio: async (its important)
+Controller: Dpad and buttons inverted
+Advanced Options: only doubledisplay list enabled 
+	
+		 
+	
+			Turok - Rage Wars (E) [!]
+			PSP 1001 PRO B9 
+			755
+			no
+			no
+			none
+			
+			no boot 
+even with a savestate
+	
+		 
+	
+			Turok - Rage Wars (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			No
+			no
+			
+			
+			     no boot 
+	
+		 
+	
+			Turok 2 - Seeds of Evil (E) [!]
+			PSP 1001 PRO B9 
+			755
+			Partial
+			no
+			
+			
+			Black screen, don't boot
+even with a savestate
+	
+		 
+	
+			Turok 2 - Seeds of Evil (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			No
+			no
+			
+			
+			   NO BOOT JUST FREEZES YOUR PSP 
+
+
+ texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  
+
+	
+		 
+	
+			Turok 3 - Shadow of Oblivion (E) [!]
+			PSP 1001 PRO B9 
+			755
+			no
+			no
+			none 
+			
+			don't boot even with a savestate
+	
+		 
+	
+			Turok 3 - Shadow of Oblivion (U) [!]
+			psp slim 6.60 ME-1.6 
+			rev 755
+			No
+			No
+			N/A
+			N/A
+			  texture update every frame frameskip auto 1 limit framerate no  high level emulation disabled clean scene enabled  dynamic loop disabled  
+
+ NO BOOT STILL =(
+	
+		 
+	
+			Twisted Edge Extreme Snowboarding (U) [!]
+			Slim 5.00 M33-6 
+			Alpha 430
+			Y
+			N
+			10-15
+			Major
+			 Game starts up but you can not get to the start menu unless you have a save-state. You can also not get in-game without a save state. In-game graphics have some major problems. I did not hear any sound when sound was enabled.
+	
+		 
+	
+			V-Rally Edition 99 (E) [!]
+			PSP 2000 Prome-4 
+			 rev. 718
+			Yes
+			y
+			10.0 - 11.
+			Minor
+			    Game play very well without any freezing only bug is that menu is a mess.
+	
+		 
+	
+			V-Rally Edition 99 (U) [!]
+			Slim 5.00 m33-6 
+			Alpha 486 
+			No
+			N
+			0
+			No
+			S2DEX Issues
+	
+		 
+	
+			Vigilante 8 (E) [!]
+			PSP 1001 PRO B9 
+			rev 755
+			No
+			no
+			N/A
+			
+			BSOD
+	
+		 
+	
+			Vigilante 8 (U) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			No
+			N/A
+			N/A
+			 BSOD
+	
+		 
+	
+			Vigilante 8 - 2nd Offence (E) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			 BSOD 
+I tried with a savestate BSOD
+	
+		 
+	
+			Vigilante 8 - 2nd Offense (U) [!]
+			PSP 1001 6.39 PROB-9 
+			755
+			No
+			N/A
+			N/A
+			N/A
+			 Game would not boot I tried multiple settings. Eventually after trying enough I got a BSOD.
+I tried with a savestate and BSOD
+	
+		 
+	
+			Virtual Chess 64 (E) [!]
+			Slim 5.50 GEN D3 
+			618
+			Yes
+			Y*
+			23
+			none
+			Works really well!!!
+	
+		 
+	
+			Virtual Chess 64 (U) [!]
+			Slim 5.50 GEN D3 
+			618
+			Y
+			Y
+			18
+			N
+			Works really well!!!
+	
+		 
+	
+			Virtual Pool 64 (U) [!]
+			PSP 1001 5.00M33-6 
+			713
+			Y
+			Y
+			15-20
+			Minor
+			 Game works fine without modification, just a little slow.
+	
+		 
+	
+			WCW Backstage Assault (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			18-25
+			Major
+			 The graphics do not get rendered, but with a bit of button mashing, text does appear on screen. It says that it is trying to read the controller pak, and hangs soon afterward. The audio does work with both Sync and Async. I suspect that this might be the result of a possible regression.
+	
+		 
+	
+			WCW Mayhem (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			40+
+			Minor
+			*Boots to "Press Start" menu and stops.
+
+*You must have Dynamic Loop Optimization disabled or else it crashes after the N64 logo. It still crashes after the "Press Start" menu
+	
+		 
+	
+			WCW Nitro (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			Yes
+			Yes
+			14-33
+			Moderate
+			 The menus look pretty bad due to the lack of framebuffer support. Other than the menu graphics, the game looks pretty good. The speed is quite slow, but the gameplay feels close to fullspeed. Async sound is extremely choppy, so I would recommend that the audio be left disabled. I was able to get in-game and open up a can of whoop-ass without any random freezes, so the game seems quite stable.
+
+Recommended Settings:
+Frameskip: Auto
+	
+		 
+	
+			WCW vs. nWo - World Tour (U) (V1.0) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			No
+			8-15
+			Major
+			 You must have HLE disabled for the game to boot! Just like other WCW games, the graphics are not rendered out. Both Sync and Async do not work. After a few moments of a blank screen, the game experiences a BSOD.
+	
+		 
+	
+			WCW-nWo Revenge (U) [!]
+			Slim 5.50 Gen-D3 
+			Alpha 631
+			No
+			Yes
+			7-8
+			N/A
+			  Game starts, but nothing is rendered onscreen. Sound can be heard, but is choppy. After pressing start a couple of times, the game eventually freezes.
+	
+		 
+	
+			WWF Attitude (U) [!]
+			Fat 5.00 M33-6 
+			Alpha 713
+			Yes
+			Async
+			20 - 30
+			Minor
+			The logo's look correct, the credits when they start to roll don't look quite right, but overall the main game works nearly perfect, just the options screen and a few other information screens don't look quite right, wrong colours etc etc..........BUT in game and in demo mode the graphics are perfect &amp; run as near damn it full speed, wait for it......with Async audio enabled as well.
+Please note........There seem to be problems with the intro's of the wrestlers, flickering/dark visuals depending on the wrestler, but enabling Clean scene in advanced options cures this problem, but at a slight speed reduction.
+	
+		 
+	
+			WWF No Mercy (U) [!]
+			Slim 6.35 pro-b5 
+			747
+			partial
+			yes
+			8-9 
+			major
+			 The sound is choppy so its best to leave it off the. graphical bugs are exactly the same as they were before example the wrestlers have holes in their bodies and their hands and feet and separate from them, the menu's still dont look right but look better than before. 
+	
+		 
+	
+			WWF WrestleMania 2000 (U) [!]
+			Slim 3000 6.35 PRO-B 
+			Rev 747
+			Partial
+			yes
+			9-10
+			Major
+			 Menu's look better than before no rainbow like colours flickering, sound is choppy, in game is the same character models have many glitches which include holes in their bodies and their hands and feet are not attached to them speed is slow
+
+
+	
+		 
+	
+			Waialae Country Club - True Golf Classics (U) [!]
+			Slim 5.00 M33-6 
+			Alpha 430
+			Y
+			Y
+			10-15
+			Major
+			Game starts up fine but the screen will sometimes be shaky unless you enabled Double Display. Menu graphics seem to be good besides a few black spots and a glitched looking right side at the menu. In-game graphics is where things start to look real messy. The sky is often display with lots of repeating clouds and is black and sometimes is displayed as white. Some things such as tree's are displayed as black. (Yes I tried texture update) Character motion will not display unless texture update is on. Async and sync sound both work but are very choppy. This game is playable with some major graphic errors.
+	
+		 
+	
+			War Gods (U) [!]
+			Slim 5.50 Gen D3 
+			Alpha beta 3
+			Y
+			Y
+			25-30
+			Minor*
+			       Game works really well, *the only graphical bug I noticed is the shadows displaying wrong.
+FrameSkip : 2 recommended.
+	
+		 
+	
+			Wave Race 64 (U) (V1.0) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			Y
+			20
+			None
+			 This game works perfectly with Async audio. No graphical glitches and is fast. 
+	
+		 
+	
+			Wayne Gretzky's 3D Hockey '98 (U) [!]
+			Slim 5.00 m33-6 
+			rev 486
+			Y
+			Y
+			18-21
+			Minor
+			  Game works great about fullspeed, make sure to set atleast FrameSkip : 1 or 2.
+Graphics look perfect only issue is that characters seem to be wearing the same uniform (changes randomly) &lt; texture update might help?
+	
+		 
+	
+			Wayne Gretzky's 3D Hockey (U) (V1.1) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			Yes
+			Yes
+			30
+			None
+			       This game was looking so great! The sound was good there was hardly any choppiness
+	
+		 
+	
+			Wetrix (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			Y
+			20-30
+			minor
+			  The start 
+but BSOD as soon as you want to play
+	
+		 
+	
+			Wheel of Fortune (U) [!]
+			PSP 1001 6.20 proB6 
+			717
+			Y
+			Y
+			40-50
+			N/A
+			 This game runs near perfect, runs at half speed, there don't seem to be any graphic problems, only the sound, but that will improve as the speed of the emulator improves. FS: 2, Audio: Async. When running this game make sure to change player 2 &amp; 3 to computer players, or else, the game becomes unplayable when its player 2's turn.
+	
+		 
+	
+			WinBack - Covert Operations (U) [!]
+			PSP 1001 6.39 PROB-9 
+			736
+			yes
+			Yes sync
+			15
+			Minor
+			   This game starts up fine but has some minor graphic errors. In-game graphics seem to be pretty good besides annoying grey blocks that keep on appearing on the screen. Other minor graphic errors seem to be mainly just inexact blends on the explosions. This game is playable depending on if you can deal with very slow gameplay, which seems to be slower than previous revisions.
+Settings on this game are:
+FS: 1 or 2, Audio: Async or Sync (Disabled is recommended).
+
+	
+		 
+	
+			Wipeout 64 (E) [!]
+			PSP 1000 5.00M33-6 
+			Beta 3
+			partial
+			yes ,Sync
+			15-20
+			major
+			       The game boot , after 1 min we can see intro and play 
+but there are serious bug in menu
+	
+		 
+	
+			Wipeout 64 (U) [!]
+			Phat 6.20 Pro B8 
+			Rev 721 
+			Y
+			Y
+			20
+			Serious
+			   *Menu and HUD are not displayed correctly. I didn't notice the road going missing.    Menu and HUD are so bad, that the games basiclly unplayable.  The graphics and speed are fantastic however.
+	
+		 
+	
+			Wonder Project J2 (J) [!]
+			PSP 2000 M33 5.0 
+			777
+			yes
+			Yes sync
+			45-60
+			Minor
+			With FrameSkip: 2 runs pretty much full speed. Audio Async a bit glitchy but isn't really bad.
+
+Note: There's an English patch, I recommend to use it, works perfectly :)
+Note2: The English patch needs to set TextureUpdate=4 to be able to read the text and still keep good speed.
+	
+		 
+	
+			World Cup 98 (U) [!]
+			Fat 5.00 M33-6 
+			Alpha 429
+			N*
+			N**
+			11-19
+			Moderate
+			Logo's and Menu's show ok, but when you start a game, the graphics of the players glitch as they move, the football itself is square shaped, *resulting in a unplayable game. FS: 2, **Audio: Disabled (game will not boot up with this enabled)
+	
+		 
+	
+			World Driver Championship (E) [!]
+			PSP 1001 PRO B9 
+			755
+			No
+			N
+			
+			
+			the Game start but it is not playable
+black screen (if framelimiter is disable 300 fps :O )
+don't enable sound the PSP crash 
+(pressing L,R start is useless, you have to reboot your PSP)
+
+	
+		 
+	
+			World Driver Championship (U) [!]
+			PSP 1001 PRO B9 
+			755
+			N
+			N
+			N/A
+			N/A
+			 the game start but black screen
+	
+		 
+	
+			Worms - Armageddon (E) (M3) [!]
+			PSP 2000 6.39 ME 9.2 
+			790
+			Partial
+			Y
+			20-40
+			Major
+			The menu Looks OK, but inside of the game, everything is black.
+On Worms - Armageddon (U) (M3), Texture Update Check should fix a lot of graphical glitches, but on this version, it seems to do nothing at all.
+
+-High Level Emulation causes BSOD.
+-Dynarec Loop Optimisation causes BSOD.
+-You can't see the select weapon cursor.
+-You can't see explosion holes in the landscape.
+-Everything is black inside of the main game.
+	
+		 
+	
+			Worms - Armageddon (U) (M3) [!]
+			PSP 2000 6.39 ME 9.2 
+			790
+			Yes
+			Y Sync
+			15-30
+			Minor
+			  Works fine, just need some more FPS.
+Dynarec Loop Optimisation - Leave it off, it crashes the game.
+Enabling Texture Update Check will fix black textures.
+20-40 FPS Main Menu
+15-25 FPS Inside of the game
+	
+		 
+	
+			Xena Warrior Princess - The Talisman of Fate (U) [!]
+			phat 5.00 M33-6 
+			747
+			Y
+			Y
+			26-30
+			None
+			     Sound is choppy with sync and and rom crashes with async. You must have Dynamic Loop Optimization disabled or else the counter during gameplay, that should take 60 seconds to expire, expires in 5.
+	
+		 
+	
+			Yakouchuu II - Satsujin Kouru (J) [!]
+			PSP 1001 m33-6 
+			747
+			No
+			No
+			N/A
+			N/A
+			the game is still the same and does not boot 
+	
+		 
+	
+			Yoshi's Story (E) [!]
+			PSP 1001 m33-6 
+			766
+			yes
+			Y sync
+			40-60
+			minor
+			  recommended settings:
+texture update check: everyframe
+that option should fix the backround of the level
+	
+		 
+	
+			Yoshi's Story (U) [!]
+			phat 5.00 M33-6 
+			766
+			yes
+			Y sync
+			40-60
+			minor
+			       recommended settings:
+texture update check: everyframe
+that option should fix the backround of the level sometimes
+dont apply any speed ups or the game will crash,also asynchronous crashes the game so use synchronous :)
+runs great but has graphical bug issues
+
+	
+		 
+	
+			Zool - Majou Tsukai Densetsu (J) [!]
+			PSP 1001 m33-6 
+			747
+			Yes
+			Yes
+			38-50
+			Minor
+			  You must have Dynamic Loop Optimization Disabled or else the game will crash immediately after you enter your character's name. This slows down emulation by 10-20fps, so after you get past the freeze point you may want to Enable it again. Make frequent savestates just in case the game freezes at some point further in-game, which can most likely be fixed by Disabling Dynamic Loop Optimization again. The game runs at a decent speed, and can gain a bit more by setting Frameskip to Auto. Both Sync and Async audio work, and the choppiness depends on the framerate. The graphics look flawless, but there might be an incorrect blendmode or two somewhere deep in-game. The game actually takes a long time to get in-game from the point where you press start in the main menu, but be patient and you will be able to play it.
+	
+		
+	
+
+
+

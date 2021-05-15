@@ -1,0 +1,48 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: Helvetica;
+    margin: 20px;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0px;
+    padding: 3px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 1px 2px 0 rgba(211, 211, 211, 0.3), 0 1px 3px 1px rgba(211, 211, 211, 0.15);
+    position: fixed;
+    border-radius: 2px;
+}
+
+li {
+    float: left;
+}
+
+li > a {
+    display: block;
+    color: gray;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: .2s;
+}
+
+li a:hover:not(.active) {
+    color: black;
+}
+
+.active {
+    color: black;
+    font-weight: bold;
+}
+
+.content {
+    margin-left: 170px;
+    margin-right: 170px
+}
+
+.paragraph {
+    text-indent: 20px;
+}
