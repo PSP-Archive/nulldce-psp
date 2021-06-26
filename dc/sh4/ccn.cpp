@@ -4,8 +4,10 @@
 #include "types.h"
 #include "dc/mem/sh4_internal_reg.h"
 #include "dc/pvr/pvr_if.h"
+#include "dc/sh4/sh4_if.h"
 #include "plugins/plugin_manager.h"
 #include "ccn.h"
+#include "dc/mem/mmu.h"
 #include "sh4_registers.h"
 
 
@@ -22,20 +24,17 @@ u32 CCN_TRA;
 u32 CCN_EXPEVT;
 u32 CCN_INTEVT;
 CCN_PTEA_type CCN_PTEA;
-CCN_QACR_type CCN_QACR0;
-CCN_QACR_type CCN_QACR1;
-
-u32 CCN_QACR_TR[2];
+CCN_QACR_type CCN_QACR[2];
+u32 		  CCN_QACR_TR[2];
 
 template<u32 idx>
-void CCN_QACR_write(u32 addr, u32 value)
+void CCN_QACR_write(u32 value)
 {
-	/*SH4IO_REGN(CCN,CCN_QACR0_addr+idx*4,32)=value;
-	//CCN_QACR[idx].reg_data=value;
+	
+	CCN_QACR[idx].reg_data=value;
+	CCN_QACR_TR[idx]=(CCN_QACR[idx].Area<<26)-0xE0000000;
 
-	u32 area=((CCN_QACR_type&)value).Area;
-
-	CCN_QACR_TR[idx]=(area<<26)-0xE0000000; //-0xE0000000 because 0xE0000000 is added on the translation again ...
+	u32 area = ((CCN_QACR_type&)value).Area;
 
 	switch(area)
 	{
@@ -43,11 +42,11 @@ void CCN_QACR_write(u32 addr, u32 value)
 			do_sqw_nommu=&do_sqw_nommu_area_3_nonvmem;
 		break;
 
-		case 4:
-			do_sqw_nommu=(sqw_fp*)&TAWriteSQ;
-			break;
+		/*case 4:
+			do_sqw_nommu=&TAWriteSQ_nommu;
+			break;*/
 		default: do_sqw_nommu=&do_sqw_nommu_full;
-	}*/
+	}
 }
 
 void CCN_MMUCR_write(u32 value)
@@ -55,15 +54,19 @@ void CCN_MMUCR_write(u32 value)
 	CCN_MMUCR_type temp;
 	temp.reg_data=value;
 
-	if ((temp.AT!=CCN_MMUCR.AT))
-	{
-		printf("<*******>MMU Enabled , OLNY SQ remaps work<*******>\n");
-	}
+	//const bool mmu_changed_state = temp.AT != CCN_MMUCR.AT;
 	
-	if (temp.TI != 0)
+	if (temp.TI)
 	{
+		for (u32 i = 0; i < 4; i++)
+			ITLB[i].Data.V = 0;
+
+		for (u32 i = 0; i < 64; i++)
+			UTLB[i].Data.V = 0;
+
 		temp.TI=0;
 	}
+
 	CCN_MMUCR=temp;
 }
 void CCN_CCR_write(u32 value)
@@ -73,21 +76,22 @@ void CCN_CCR_write(u32 value)
 
 	if (temp.ICI && curr_pc!=0xAC13DBF8)
 	{
-		printf("Sh4: i-cache invalidation %08X\n",curr_pc);
+		temp.ICI = 0;
+		//printf("Sh4: i-cache invalidation %08X\n",curr_pc);
 		sh4_cpu.ResetCache();
-
-		temp.ICI=0;
+		
 	}
 
-	if (temp.OCI) {
-		temp.OCI = 0;
-	}
-
+	temp.OCI = 0;
+	
 	CCN_CCR=temp;
 }
 //Init/Res/Term
 void ccn_Init()
 {
+
+	do_sqw_nommu=&do_sqw_nommu_full;
+
 	//CCN PTEH 0xFF000000 0x1F000000 32 Undefined Undefined Held Held Iclk
 	CCN[(CCN_PTEH_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA | REG_WRITE_DATA;
 	CCN[(CCN_PTEH_addr&0xFF)>>2].readFunction=0;
@@ -161,16 +165,16 @@ void ccn_Init()
 	CCN[(CCN_PTEA_addr&0xFF)>>2].data32=&CCN_PTEA.reg_data;
 
 	//CCN QACR0 0xFF000038 0x1F000038 32 Undefined Undefined Held Held Iclk
-	CCN[(CCN_QACR0_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA | REG_WRITE_DATA;
+	CCN[(CCN_QACR0_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA;
 	CCN[(CCN_QACR0_addr&0xFF)>>2].readFunction=0;
-	CCN[(CCN_QACR0_addr&0xFF)>>2].writeFunction=0;
-	CCN[(CCN_QACR0_addr&0xFF)>>2].data32=&CCN_QACR0.reg_data;
+	CCN[(CCN_QACR0_addr&0xFF)>>2].writeFunction=CCN_QACR_write<0>;
+	CCN[(CCN_QACR0_addr&0xFF)>>2].data32=&CCN_QACR[0].reg_data;
 
 	//CCN QACR1 0xFF00003C 0x1F00003C 32 Undefined Undefined Held Held Iclk
-	CCN[(CCN_QACR1_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA | REG_WRITE_DATA;
+	CCN[(CCN_QACR1_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA;
 	CCN[(CCN_QACR1_addr&0xFF)>>2].readFunction=0;
-	CCN[(CCN_QACR1_addr&0xFF)>>2].writeFunction=0;
-	CCN[(CCN_QACR1_addr&0xFF)>>2].data32=&CCN_QACR1.reg_data;
+	CCN[(CCN_QACR1_addr&0xFF)>>2].writeFunction=CCN_QACR_write<1>;
+	CCN[(CCN_QACR1_addr&0xFF)>>2].data32=&CCN_QACR[1].reg_data;
 }
 
 void ccn_Reset(bool Manual)
@@ -184,3 +188,7 @@ void ccn_Reset(bool Manual)
 void ccn_Term()
 {
 }
+
+
+template void CCN_QACR_write<0>(u32 value);
+template void CCN_QACR_write<1>(u32 value);

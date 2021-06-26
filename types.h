@@ -167,10 +167,10 @@ using namespace std;
 #define PPSTR(x) PPSTR_(x)
 
 #define VER_MAJOR 1		//MAJOR changes (like completely rewriten stuff ;p)
-#define VER_MINOR 0		//less-major changes (like, new dynarec / gui / whatever)
+#define VER_MINOR 2		//less-major changes (like, new dynarec / gui / whatever)
 #define VER_FIXBUILD 0	//minnor changes, fixes and few features added
 
-#define VER_EMUNAME		"nullDCe/" VER_TARGET
+#define VER_EMUNAME		"nullDC|Reicast/" VER_TARGET
 
 #define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " pre-1 (built " __DATE__ "@" __TIME__ ")"
 #define VER_SHORTNAME	VER_EMUNAME " " PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) "p1"
@@ -179,7 +179,7 @@ using namespace std;
 #define _T(x) x
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
-#define verify(x) if(unlikely((x)==false)){ msgboxf(_T("Verify Failed  : ") #x "\n in %s -> %s : %d \n",MBX_ICONERROR,_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
+#define verify(x) if(/*unlikely((x)==false)*/0){ msgboxf(_T("Verify Failed  : ") #x "\n in %s -> %s : %d \n",MBX_ICONERROR,_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
 #define die(reason) { msgboxf(_T("Fatal error : %s\n in %s -> %s : %d \n"),MBX_ICONERROR,_T(reason),_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
 #define fverify verify
 
@@ -216,6 +216,24 @@ struct RegisterStruct
 	u32 flags;					//flags for read/write
 };
 
+struct GDRomDisc {
+	virtual s32 Init() = 0;
+	virtual void Reset(bool M) = 0;
+
+	//IO
+	virtual void ReadSector(u8* buff, u32 StartSector, u32 SectorCount, u32 secsz) = 0;
+	virtual void ReadSubChannel(u8* buff, u32 format, u32 len) = 0;
+	virtual void GetToc(u32* toc, u32 area) = 0;
+	virtual u32 GetDiscType() = 0;
+	virtual void GetSessionInfo(u8* pout, u8 session) = 0;
+	virtual void Swap() = 0;
+	virtual ~GDRomDisc() { }
+
+	static GDRomDisc* Create();
+};
+
+void libCore_gdrom_disc_change();
+
 
 struct __settings
 {
@@ -238,6 +256,8 @@ struct __settings
 	} emulator;
 };
 extern __settings settings;
+
+void CPUType(int type);
 
 void LoadSettings();
 void SaveSettings();

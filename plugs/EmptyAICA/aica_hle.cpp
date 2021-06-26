@@ -76,22 +76,24 @@ bool HleEnabled()
 }
 void Hle_process()
 {
-	return ;
-	/*
 	if (!HleEnabled() || arm7_on==false)
 		return;
 
-	u32* cmd_start= (u32*)&aica_ram[aud_drv->cmdBuffer & AICA_MEM_MASK];
+	return;
 
+	u32* cmd_start= (u32*)&aica_ram[aud_drv->cmdBuffer & AICA_MEM_MASK];
+	
 	//u32 sz=aud_drv->
-	while (*cmd_start!=0 && *cmd_start!=0xFFFFFFFF )
-	//for (int i=0;i<64;i++)
+	//while (*cmd_start!=0 && *cmd_start!=0xFFFFFFFF )
+	for (int i=0;i<64;i++)
 	{
 		char* data=(char*)cmd_start;
 
+		printf("CMD: %x\n",*data);
+
 		//if (*cmd_start>10)
-		*cmd_start=0xFFFFFFFF;
+		//*cmd_start=0xFFFFFFFF;
 		cmd_start++;
-	}*/
+	}
 }
 }

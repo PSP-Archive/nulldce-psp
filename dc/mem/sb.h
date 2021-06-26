@@ -9,7 +9,7 @@ void sb_Init();
 void sb_Reset(bool Manual);
 void sb_Term();
 
-extern Array<RegisterStruct> sb_regs;	
+extern RegisterStruct sb_regs[0x540];	
 
 //RegEx
 //{

@@ -8,6 +8,8 @@
 #include "regs.h"
 #include <psprtc.h>
 
+#include "dc/sh4/sh4_sched.h"
+
 u32 spg_InVblank=0;
 s32 spg_ScanlineSh4CycleCounter;
 u32 spg_ScanlineCount=512;
@@ -16,7 +18,13 @@ u32 spg_VblankCount=0;
 u32 spg_LineSh4Cycles=0;
 u32 spg_FrameSh4Cycles=0;
 
-#define PROFILER_REG_BASE 0xBC400000
+u32 vblank_count_monotonic = 0;
+
+int render_end_schid;
+static int vblank_schid;
+static int time_sync;
+
+#define PROFILER_REG_BASE 0x1C400000
 #define PROFILER_REG_COUNT 21
 
 void usrDebugProfilerEnable(void)
@@ -91,16 +99,7 @@ void CalculateSync()
 	u32 pixel_clock;
 	float scale_x=1,scale_y=1;
 
-	if (FB_R_CTRL.vclk_div)
-	{
-		//VGA :)
-		pixel_clock=PIXEL_CLOCK;
-	}
-	else
-	{
-		//It is half for NTSC/PAL
-		pixel_clock=PIXEL_CLOCK/2;
-	}
+	pixel_clock =  (FB_R_CTRL.vclk_div ? PIXEL_CLOCK : PIXEL_CLOCK / 2);
 
 	//Derive the cycle counts from the pixel clock
 	spg_ScanlineCount=SPG_LOAD.vcount+1;
@@ -112,38 +111,44 @@ void CalculateSync()
 	{
 		//this is a temp hack and needs work ...
 		spg_LineSh4Cycles/=2;
-		u32 interl_mode=(VO_CONTROL>>4)&0xF;
-
 		scale_y=1;
 	}
 	else
 	{
-		if ((SPG_CONTROL.NTSC == 0 && SPG_CONTROL.PAL ==0) ||
-			(SPG_CONTROL.NTSC == 1 && SPG_CONTROL.PAL ==1))
+		 if (FB_R_CTRL.vclk_div)
 		{
-			scale_y=1.0f;//non interlaced vga mode has full resolution :)
+			scale_y = 1.0f;//non interlaced VGA mode has full resolution :)
 		}
 		else
-			scale_y=0.5f;//non interlaced modes have half resolution
+		{
+			scale_y = 0.5f;//non interlaced modes have half resolution
+		}
 	}
 
 	//rend_set_fb_scale(scale_x,scale_y);
 
 	spg_FrameSh4Cycles=spg_ScanlineCount*spg_LineSh4Cycles;
+	spg_CurrentScanline = 0;
+
+	sh4_sched_request(vblank_schid, spg_LineSh4Cycles);
 }
 
 u32 last_fps=0;
 s32 render_end_pending_cycles;
 bool render_end_pending;
-//called from sh4 context , should update pvr/ta state and evereything else
-void FASTCALL libPvr_UpdatePvr(u32 cycles)
+char fpsStr[256];
+
+int elapse_time(int tag, int cycl, int jit)
 {
-	
-	if (unlikely(spg_LineSh4Cycles == 0)) return;
+	return min(max(spg_FrameSh4Cycles, (u32)1 * 1000 * 1000), (u32)8 * 1000 * 1000);
+}
 
-	spg_ScanlineSh4CycleCounter += cycles;
+//called from sh4 context , should update pvr/ta state and evereything else
+int spg_line_sched(int tag, int cycl, int jit)
+{
+	spg_ScanlineSh4CycleCounter += cycl;
 
-	if (spg_ScanlineSh4CycleCounter > spg_LineSh4Cycles)//60 ~herz = 200 mhz / 60=3333333.333 cycles per screen refresh
+	while (spg_ScanlineSh4CycleCounter >= spg_LineSh4Cycles)//60 ~herz = 200 mhz / 60=3333333.333 cycles per screen refresh
 	{
 		//ok .. here , after much effort , a full scanline was emulated !
 		//now , we must check for raster beam interupts and vblank
@@ -164,20 +169,19 @@ void FASTCALL libPvr_UpdatePvr(u32 cycles)
 		if (SPG_VBLANK.vbend == spg_CurrentScanline)
 			spg_InVblank=0;
 
-		if (SPG_CONTROL.interlace)
-			SPG_STATUS.fieldnum=~SPG_STATUS.fieldnum;
-		else
-			SPG_STATUS.fieldnum=0;
-
 		SPG_STATUS.vsync=spg_InVblank;
 		SPG_STATUS.scanline=spg_CurrentScanline;
 
 		//Vblank/etc code
 		if (spg_CurrentScanline == 0)
 		{
+			if (SPG_CONTROL.interlace)
+				SPG_STATUS.fieldnum=~SPG_STATUS.fieldnum;
+			else
+				SPG_STATUS.fieldnum=0;
+
 			//Vblank counter
 			spg_VblankCount++;
-
 			
 			// This turned out to be HBlank btw , needs to be emulated ;(
 			params.RaiseInterrupt(holly_HBLank);
@@ -188,9 +192,12 @@ void FASTCALL libPvr_UpdatePvr(u32 cycles)
 			{
 				spg_last_vps=tdiff;
 
-				char fpsStr[256];
 				const char* mode=0;
 				const char* res=SPG_CONTROL.interlace?"480i":"240p";
+
+				if (!SPG_CONTROL.interlace){
+					settings.Enhancements.AspectRatioMode = 5;
+				}
 
 				if (SPG_CONTROL.NTSC==0 && SPG_CONTROL.PAL==1)
 					mode="PAL";
@@ -198,6 +205,7 @@ void FASTCALL libPvr_UpdatePvr(u32 cycles)
 					mode="NTSC";
 				else
 				{
+					settings.Enhancements.AspectRatioMode = 1;
 					res=SPG_CONTROL.interlace?"480i":"480p";
 					mode="VGA";
 				}
@@ -220,24 +228,50 @@ void FASTCALL libPvr_UpdatePvr(u32 cycles)
 		}
 	}
 
-		if (likely(render_end_pending))
-		{
-			if (render_end_pending_cycles<cycles)
-			{
-				params.RaiseInterrupt(holly_RENDER_DONE);
-				params.RaiseInterrupt(holly_RENDER_DONE_isp);
-				params.RaiseInterrupt(holly_RENDER_DONE_vd);
-				rend_end_render();
-			}
+	u32 min_scanline = spg_CurrentScanline + 1;
+	u32 min_active = spg_ScanlineCount;
 
-			render_end_pending_cycles-=cycles;
-		}
+	if (min_scanline < SPG_VBLANK_INT.vblank_in_interrupt_line_number)
+		min_active = min(min_active, SPG_VBLANK_INT.vblank_in_interrupt_line_number);
+
+	if (min_scanline < SPG_VBLANK_INT.vblank_out_interrupt_line_number)
+		min_active = min(min_active, SPG_VBLANK_INT.vblank_out_interrupt_line_number);
+
+	if (min_scanline < SPG_VBLANK.vbstart)
+		min_active = min(min_active, SPG_VBLANK.vbstart);
+
+	if (min_scanline < SPG_VBLANK.vbend)
+		min_active = min(min_active, SPG_VBLANK.vbend);
+
+	if (min_scanline < spg_ScanlineCount)
+		min_active = min(min_active, spg_ScanlineCount);
+
+	min_active = max(min_active, min_scanline);
+
+	return (min_active - spg_CurrentScanline) * spg_LineSh4Cycles;
 		
+}
+
+int rend_end_sch(int tag, int cycl, int jitt)
+{
+	params.RaiseInterrupt(holly_RENDER_DONE);
+	params.RaiseInterrupt(holly_RENDER_DONE_isp);
+	params.RaiseInterrupt(holly_RENDER_DONE_vd);
+	rend_end_render();
+	return 0;
 }
 
 
 bool spg_Init()
 {
+	render_end_schid = sh4_sched_register(0, rend_end_sch);
+	vblank_schid = sh4_sched_register(0, spg_line_sched);
+	time_sync = sh4_sched_register(0, elapse_time);
+
+	sh4_sched_request(time_sync, 8 * 1000 * 1000);
+
+	vblank_count_monotonic = 0;
+		
 	return true;
 }
 
@@ -248,5 +282,7 @@ void spg_Term()
 void spg_Reset(bool Manual)
 {
 	CalculateSync();
+
+	vblank_count_monotonic = 0;
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "drkPvr.h"
+#include "threaded.h"
 #define params PVRPARAMS
 #define __forceinline 
 namespace TASplitter
@@ -81,6 +82,7 @@ namespace TASplitter
 			verify(CurrentList==ListType_None);
 			verify(ListIsFinished[new_list]==false);
 			//printf("Starting list %d\n",new_list);
+			threaded_CurrentList=new_list;
 			CurrentList=new_list;
 			TA_decoder::StartList(CurrentList);
 		}
@@ -312,6 +314,7 @@ public:
 						if (CurrentList==ListType_None)
 						{
 							CurrentList=data->pcw.ListType;
+							threaded_CurrentList=data->pcw.ListType;
 							//printf("End_Of_List : list error\n");
 						}
 						else
@@ -322,6 +325,7 @@ public:
 
 						//printf("End list %X\n",CurrentList);
 						params.RaiseInterrupt(ListEndInterrupt[CurrentList]);
+						//doInterrupt |= end_list;
 						ListIsFinished[CurrentList]=true;
 						CurrentList=ListType_None;
 						VerxexDataFP=0;
@@ -331,7 +335,7 @@ public:
 					//32B
 				case ParamType_User_Tile_Clip:
 					{
-						TA_decoder::SetTileClip(data->data_32[3]&63,data->data_32[4]&31,data->data_32[5]&63,data->data_32[6]&31);
+						//TA_decoder::SetTileClip(data->data_32[3]&63,data->data_32[4]&31,data->data_32[5]&63,data->data_32[6]&31);
 						//*couh* ignore it :p
 						data+=SZ32;
 					}
@@ -339,7 +343,7 @@ public:
 					//32B
 				case ParamType_Object_List_Set:
 					{
-						die("ParamType_Object_List_Set");
+						//printf("Unsupported list type: ParamType_Object_List_Set\n");	// NAOMI Virtual on Oratorio Tangram
 						//*couh* ignore it :p
 						data+=SZ32;
 					}
@@ -361,8 +365,9 @@ public:
 							TA_decoder::StartModVol((TA_ModVolParam*)data);
 							VerxexDataFP=ta_mod_vol_data;
 							data+=SZ32;
+							continue;
 						}
-						else
+						
 						{
 
 							u32 uid=ta_type_lut[data->pcw.obj_ctrl];
@@ -371,7 +376,6 @@ public:
 							u32 ppid=(u8)(uid>>8);
 
 							VerxexDataFP=ta_poly_data_lut[pdid];
-							verify(StripStarted==false);
 							
 							if (data != data_end || psz==1)
 							{
@@ -411,7 +415,6 @@ public:
 					//log ("vtx");
 					{
 						//printf("VTX:0x%08X\n",VerxexDataFP);
-						verify(VerxexDataFP!=0);
 						data=VerxexDataFP(data,data_end);
 					}
 					break;
@@ -1065,6 +1068,7 @@ public:
 						if (CurrentList==ListType_None)
 						{
 							CurrentList=data->pcw.ListType;
+							threaded_CurrentList=data->pcw.ListType;
 							//printf("End_Of_List : list error\n");
 						}
 						else
@@ -1072,6 +1076,8 @@ public:
 							//end of list should be all 0's ...
 							TA_decoder::EndList(CurrentList);//end a list olny if it was realy started
 						}
+
+						//doInterrupt |= end_list;
 
 						//printf("End list %X\n",CurrentList);
 						params.RaiseInterrupt(ListEndInterrupt[CurrentList]);
@@ -1141,20 +1147,21 @@ public:
 						GROUP_EN();
 						if (CurrentList==ListType_None)
 							ta_list_start(data->pcw.ListType);	//start a list ;)
+
 						if (!IsModVolList(CurrentList))
 						{
 
 							u32 uid=ta_type_lut[data->pcw.obj_ctrl];
-							u32 pdsz=(u8)(uid)&1;
-							u32 ppsz=(u8)(uid)&(32);
+							u32 psz=uid>>30;
+							u32 pdid=(u8)(uid);
 							u32 ppid=(u8)(uid>>8);
 
-							VerxexDataFP=ta_poly_data_lut[pdsz];
+							VerxexDataFP=ta_poly_data_lut[pdid];
 							
-							if (ppsz==0 || data != data_end)
+							if (data != data_end || psz==1)
 							{
 								ta_poly_param_lut[ppid](data);
-								data=(Ta_Dma*) &((u8*)data)[ppsz+32];
+								data+=psz;
 							}
 							else
 							{
@@ -1168,7 +1175,6 @@ public:
 						}
 						else
 						{	//accept mod data
-							//TA_decoder::StartModVol((TA_ModVolParam*)data);
 							VerxexDataFP=ta_mod_vol_data;
 							data+=SZ32;
 						}
@@ -1183,15 +1189,15 @@ public:
 							ta_list_start(data->pcw.ListType);	//start a list ;)
 
 						VerxexDataFP=ta_sprite_data;
-						//printf("Sprite \n");
-						//TA_decoder::AppendSpriteParam((TA_SpriteParam*)data);
+
+						TA_decoder::AppendSpriteParam((TA_SpriteParam*)data);
+
 						data+=SZ32;
 					}
 					break;
 
 				case ParamType_Vertex_Parameter:
 					{
-						verify(VerxexDataFP!=0);
 						data=VerxexDataFP(data,data_end);
 					}
 					break;
@@ -1220,17 +1226,14 @@ public:
 			{
 				PCW pcw;
 				pcw.obj_ctrl=i;
-				u32 rv=0;
-				rv=	poly_data_type_id(pcw);
-				if (rv==5||rv==6||rv==11||rv==12||rv==13||rv==14)
-					rv=1;
-				else
-					rv=0;
+				u32 rv=	poly_data_type_id(pcw);
 				u32 type= poly_header_type_size(pcw);
 
 				if (type& 0x80)
-					rv|=32;
-				
+					rv|=(SZ64<<30);
+				else
+					rv|=(SZ32<<30);
+
 				rv|=(type&0x7F)<<8;
 
 				ta_type_lut[i]=rv;
@@ -1269,7 +1272,13 @@ public:
 			TaCmd=ta_main;
 
 			ListIsFinished[0]=ListIsFinished[1]=ListIsFinished[2]=ListIsFinished[3]=ListIsFinished[4]=false;
-			CurrentList=ListType_None;
+
+			if (CurrentList!=ListType_None)
+			{
+				//StripStarted should be checked ?
+				TA_decoder::EndList(CurrentList);
+				CurrentList=ListType_None;
+			}
 
 			TA_decoder::ListInit();
 		}

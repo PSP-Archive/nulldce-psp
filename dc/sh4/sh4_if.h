@@ -83,6 +83,7 @@ enum Sh4RegType
 	reg_sr,				//includes T (combined on read/separated on write)
 	reg_sr_status,		//Only the status bits
 	reg_sr_T,			//only T
+	reg_old_fpscr,
 	reg_fpscr,
 	
 	reg_pc_dyn,			//Write only, for dynarec only (dynamic block exit address)
@@ -116,6 +117,7 @@ enum Sh4RegType
 	regv_fv_12,
 
 	regv_xmtrx,
+	regv_fmtrx,
 
 	NoReg=-1
 };
@@ -276,6 +278,14 @@ struct sh4_if
 
 	IsCpuRunningFP* IsCpuRunning;
 };
+
+extern "C" void do_sqw_nommu_area_3_nonvmem(u32 dst);
+void  do_sqw_nommu_full(u32 dst);
+
+typedef void sqw_fp(u32 dst);
+extern sqw_fp* do_sqw_nommu;
+
+
 
 //Get an interface to sh4 interpreter
 void Get_Sh4Interpreter(sh4_if* cpu);

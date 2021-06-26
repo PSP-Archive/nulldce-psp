@@ -1,6 +1,8 @@
 #pragma once
 #include "types.h"
 #include "dc/sh4/sh4_if.h"
+#include "memory"
+
 
 extern sh4_if				  sh4_cpu;
 
@@ -24,6 +26,7 @@ void plugins_Term();
 
 	void FASTCALL libPvr_UpdatePvr(u32 cycles);			//called every ~ 1800 cycles , set to 0 if not used
 	void libPvr_TaDMA(u32* data,u32 count);				//size is 32 byte transfer counts
+	void libPvr_TaDMA_ME(u32* data,u32 size);			//Used by the ME
 	void libPvr_TaSQ(u32* data);				//size is 32 byte transfer counts
 	u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size);
 	void FASTCALL libPvr_WriteReg(u32 addr,u32 data,u32 size);
@@ -51,19 +54,7 @@ void plugins_Term();
 
 
 //GDR
-	s32 FASTCALL libGDR_Load();
-	void FASTCALL libGDR_Unload();
-
-	s32 FASTCALL libGDR_Init(gdr_init_params* param);
-	void FASTCALL libGDR_Reset(bool M);
-	void FASTCALL libGDR_Term();
-
-	//IO
-	void FASTCALL libGDR_ReadSector(u8 * buff,u32 StartSector,u32 SectorCount,u32 secsz);
-	void FASTCALL libGDR_ReadSubChannel(u8 * buff, u32 format, u32 len);
-	void FASTCALL libGDR_GetToc(u32* toc,u32 area);
-	u32 FASTCALL libGDR_GetDiscType();
-	void FASTCALL libGDR_GetSessionInfo(u8* pout,u8 session);
+	extern unique_ptr<GDRomDisc> g_GDRDisc;
 
 
 //ExtDev

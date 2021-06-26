@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define BM_BLOCKLIST_COUNT (16384)
+#define BM_BLOCKLIST_COUNT (16384 * 2)
 #define BM_BLOCKLIST_MASK (BM_BLOCKLIST_COUNT-1)
 #define BM_BLOCKLIST_SHIFT 2
 

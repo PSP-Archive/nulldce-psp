@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include "dc/dc.h"
+#include "../drkPvr/drkPvr.h"
 #include "dc/sh4/rec_v2/ngen.h"
 
 #if HOST_OS==OS_WII
@@ -68,7 +69,7 @@ void UpdateInputState(u32 port)
 		kcode[port]&=~key_CONT_START;
 
 	if (pad.Buttons&PSP_CTRL_SELECT){
-		static int codeNum = 0;
+		/*static int codeNum = 0;
 		FILE*f=fopen("dynarec_code.bin","wb");
 		if (!f) f=fopen("dynarec_code.bin","wb");
 		fwrite(CodeCache,LastAddr,1,f);
@@ -76,7 +77,8 @@ void UpdateInputState(u32 port)
 		{
 			#undef printf
 			printf("%d\n",LastAddr);
-		}
+		}*/
+		settings.Enhancements.AspectRatioMode++;
 	}
 
 	if (pad.Buttons&PSP_CTRL_UP)

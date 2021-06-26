@@ -26,13 +26,14 @@ sh4op(i0000_nnnn_0010_0011)
  sh4op(i0000_0000_0010_1011)
 {
 	//iNimp("rte");
-	//sr.SetFull(ssr);
 	u32 newpc = spc;
+
+	sr.SetFull(ssr);
+	
 	ExecuteDelayslot_RTE();
 	next_pc = newpc;
 	if (UpdateSR())
 	{
-		//FIXME olny if interrupts got on .. :P
 		UpdateINTC();
 	}
 }
@@ -154,10 +155,10 @@ sh4op(i1100_0011_iiii_iiii)
 	//iNimp("Sleep");
 	//just wait for an Interrupt
 
-	sh4_sleeping=true;
+	//sh4_sleeping=true;
 	int i=0,s=1;
 
-	while (!UpdateSystem())//448
+	while (!UpdateSystem_INTC())//448
 	{
 		if (i++>1000)
 		{
@@ -169,6 +170,6 @@ sh4op(i1100_0011_iiii_iiii)
 	if (s==0)
 		next_pc-=2;// re execute sleep
 
-	sh4_sleeping=false;
+	//sh4_sleeping=false;
 }
 #endif

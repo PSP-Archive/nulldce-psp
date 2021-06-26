@@ -19,7 +19,6 @@ enum sh4_eu
 	FE,
 	CO,
 	MA,
-	UsesFPU      = 2048, // Floating point op
 	sh4_eu_max
 };
 
@@ -40,7 +39,7 @@ struct sh4_opcodelistentry
 	OpCallFP* oph;
 	u32 mask;
 	u32 rez;
-	OpcodeType type;
+	u32 type;
 	const char* diss;
 	u8 IssueCycles;
 	u8 LatencyCycles;
@@ -139,6 +138,7 @@ enum DecParam
 
 enum DecMode
 {
+	DM_ReadSRF,
 	DM_BinaryOp,	//d=d op s
 	DM_UnaryOp,		//d= op s
 	DM_ReadM,		//d=readm(s);s+=e
@@ -151,4 +151,7 @@ enum DecMode
 	DM_EXTOP,
 	DM_MUL,
 	DM_DIV0,
+	DM_DIV1,
+	DM_ADC,
+	DM_NEGC,
 };

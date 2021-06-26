@@ -1,13 +1,18 @@
-PSP_EBOOT_TITLE = nullDC/PSP
+
+PSP_EBOOT_TITLE = NULLDCPSP EXPERIMENTAL
 TARGET = nullDCpsp
 OBJS = \
  ../cl/cl.o \
  ../config/config.o \
  ../dc/aica/aica_if.o \
+ ../dc/arm7/arm7.o \
+ ../dc/arm7/mem.o \
+ ../dc/arm7/vbaARM.o \
  ../dc/asic/asic.o \
  ../dc/dc.o \
  ../dc/gdrom/gdromv3.o \
  ../dc/gdrom/gdrom_response.o \
+ ../dc/gdrom/disc_common.o \
  ../dc/maple/maple_if.o \
  ../dc/maple/maple_devs.o \
  ../dc/maple/maple_cfg.o \
@@ -36,6 +41,7 @@ OBJS = \
  ../dc/sh4/sh4_interpreter.o \
  ../dc/sh4/sh4_opcode_list.o \
  ../dc/sh4/sh4_registers.o \
+ ../dc/sh4/sh4_sched.o \
  ../dc/sh4/tmu.o \
  ../dc/sh4/ubc.o \
  ../dc/sh4/rec_v2/blockmanager.o \
@@ -43,6 +49,7 @@ OBJS = \
  ../dc/sh4/rec_v2/decoder.o \
  ../dc/sh4/rec_v2/shil.o \
  ../dc/sh4/rec_v2/sinTable.o \
+ ../dc/sh4/rec_v2/xxhash/xxhash.o \
  ../nullDC.o \
  ../plugins/plugin_manager.o \
  ../plugins/plugin_types.o \
@@ -52,35 +59,49 @@ OBJS = \
  ../plugs/EmptyAICA/aica_hax.o \
  ../plugs/EmptyAICA/aica_hle.o \
  ../plugs/EmptyAICA/EmptyAICA.o \
- ../plugs/ImgReader/ImgReader.o \
+ ../plugs/ImgReader/ioctl.o \
  ../plugs/ImgReader/cdi.o \
- ../plugs/ImgReader/common.o \
- ../plugs/ImgReader/iso9660.o \
- ../plugs/ImgReader/mds.o \
- ../plugs/ImgReader/mds_reader.o \
+ ../plugs/ImgReader/gdi.o \
+ ../plugs/ImgReader/chd.o \
+ ../plugs/ImgReader/cue.o \
+ ../plugs/ImgReader/chd.o \
+ ../deps/cdipsr/cdipsr.o \
+ ../deps/chdr/bitstream.o \
+ ../deps/chdr/cdrom.o \
+ ../deps/chdr/chd.o \
+ ../deps/chdr/flac.o \
+ ../deps/chdr/huffman.o \
+ ../deps/coreio/coreio.o \
+ ../deps/crypto/md5.o \
+ ../deps/crypto/sha1.o \
+ ../deps/crypto/sha256.o \
+ ../plugs/ImgReader/imgread_common.o \
  ../plugs/drkPvr/drkPvr.o \
+ ../plugs/drkPvr/threaded.o \
  ../plugs/drkPvr/regs.o \
  ../plugs/drkPvr/nullRend.o \
  ../plugs/drkPvr/Renderer_if.o \
  ../plugs/drkPvr/SPG.o \
  ../plugs/drkPvr/ta.o \
+ VramExt.o 
  
  #PSP only files
  OBJS+= \
  ../psp/dc/sh4/rec_v2/psp_driver.o \
+ ../psp/dc/sh4/rec_v2/fast_access.o \
   ../psp/main.o \
  #../psp/plugs/drkPvr/pspDveManager.o \
 
 
 INCDIR = ../  ./include
-CFLAGS = -O3 -G 0
+CFLAGS = -O3 -g #-G 0
 #CFLAGS += -g
 CFLAGS += -mno-gpopt
 #CFLAGS += -fcall-saved-t4 -fcall-saved-t5 -fcall-saved-t6 -fcall-saved-t7
 #CFLAGS += -fcall-saved-t8 -fcall-saved-t9
 #CFLAGS += -fcall-saved-k0 -fcall-saved-k1
 CFLAGS += -Wall -mno-check-zero-division
-CFLAGS += -frename-registers -fno-strict-aliasing -fsingle-precision-constant -fomit-frame-pointer -ffast-math -funroll-loops 
+CFLAGS +=  -fno-use-cxa-atexit -frename-registers -fno-strict-aliasing -fsingle-precision-constant -fomit-frame-pointer -ffast-math -funroll-loops 
 CFLAGS += -DRELEASE# -DNOPSPLINK
 #CFLAGS += -save-temps
 CXXFLAGS = -fno-exceptions -fno-rtti -D _PSP
@@ -94,7 +115,7 @@ LIBS =  -lme -lzlib -lpspdmac -lpspgum -lpspgu -lm -lstdc++ -lpsprtc -lpsppower 
 LDFLAGS =
 
 #PSP_FW_VERSION=390
-BUILD_PRX=0
+#BUILD_PRX=1
 PSP_LARGE_MEMORY=1
 
 PSPSDK=$(shell psp-config --pspsdk-path)

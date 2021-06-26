@@ -14,6 +14,22 @@ typedef void fastcall _vmem_WriteMem32FP(u32 Address,u32 data);
 //our own handle type :)
 typedef u32 _vmem_handler;
 
+#define HANDLER_MAX 0x1F
+
+extern void* _vmem_MemInfo_ptr[0x100];
+
+//handler tables
+extern _vmem_handler			_vmem_lrp;
+
+extern _vmem_ReadMem8FP*		_vmem_RF8[HANDLER_MAX + 1];
+extern _vmem_WriteMem8FP*		_vmem_WF8[HANDLER_MAX + 1];
+
+extern _vmem_ReadMem16FP*		_vmem_RF16[HANDLER_MAX + 1];
+extern _vmem_WriteMem16FP*		_vmem_WF16[HANDLER_MAX + 1];
+
+extern _vmem_ReadMem32FP*		_vmem_RF32[HANDLER_MAX + 1];
+extern _vmem_WriteMem32FP*		_vmem_WF32[HANDLER_MAX + 1];
+
 //Functions
 
 //init/reset/term
@@ -41,6 +57,7 @@ void _vmem_map_block(void* base,u32 start,u32 end,u32 mask);
 void _vmem_mirror_mapping(u32 new_region,u32 start,u32 size);
 
 #define _vmem_map_block_mirror(base,start,end,blck_size) {u32 block_size=(blck_size)>>24;u32 map_sz=(end)-(start)+1;/*verify((map_sz%block_size)==0);u32 map_times=map_sz/(block_size);*/ for (u32 _maip=(start);_maip<(end);_maip+=block_size) _vmem_map_block((base),_maip,_maip+block_size-1,blck_size-1);}
+#define _vmem_map_block_mirror2(base,start,end,blck_size) {u32 block_size=(blck_size)>>16;u32 map_sz=(end)-(start)+1;verify((map_sz%block_size)==0);/*u32 map_times=map_sz/(block_size);*/ for (u32 _maip=(start);_maip<(end);_maip+=block_size) _vmem_map_block((base),_maip,_maip+block_size-1,blck_size-1);}
 
 //ReadMem(s)
 u8 fastcall _vmem_ReadMem8(u32 Address);
@@ -61,3 +78,4 @@ void _vmem_release();
 void _vmem_get_ptrs(u32 sz,bool write,void*** vmap,void*** func);
 void* _vmem_get_ptr2(u32 addr,u32& mask);
 void* _vmem_read_const(u32 addr,bool& ismem,u32 sz);
+void* _vmem_write_const(u32 addr,bool& ismem,u32 sz);

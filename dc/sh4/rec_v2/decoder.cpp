@@ -11,32 +11,49 @@
 #include "dc/sh4/sh4_registers.h"
 #include "dc/mem/sh4_mem.h"
 #include "decoder_opcodes.h"
+#include "dc/dc.h"
 
 #define BLOCK_MAX_SH_OPS_SOFT 510
 
+Sh4RegType div_som_reg1;
+Sh4RegType div_som_reg2;
+Sh4RegType div_som_reg3;
+
 static const char idle_hash[] =
 	//BIOS
-       ">:1:05:13B23363"
-       ">:1:04:2E23A33B"
-       ">:1:04:FB498832"
-       ">:1:0A:50A249F9"
+	">:1:05:BD3BE51F:1E886EE6:6BDB3F70:7FB25EA3:DE0083A8"
+	">:1:04:CB0C9B99:5082FB07:50A46C46:4035B1F1:6A9F47DC"
+	">:1:04:26AEABE5:E9D01A08:C25DD887:EEAFF173:CE2BBA10"
+	">:1:0A:5785DC3D:68688650:C5E1AFB3:7F686AE5:89538042"
 
 	//SC
-       ">:1:0A:B4E90338"
-       ">:1:04:11578A16"
-       ">:1:04:C281CC52"
+	">:1:0A:5693F8B9:E5C0D65C:ABF59CAC:B05DF34C:4A359E4A"
+	">:1:04:BC1C1C9C:C17809D5:1EA4548E:8CD97AFE:E263253F"
+	">:1:04:DD9FDF9D:55306FAD:4B3FDAEF:1D58EE41:11301FF1"
 
 	//HH
-       ">:1:07:0757DC10"
-       ">:1:04:1476CC5E"
+	">:1:07:3778EBBC:29B99980:3E6CBA8E:4CA0C16A:AD952F27"
+	">:1:04:23F5F301:89CDFEC8:EBB8EB1A:57709C84:55EA4585"
 
 	//these look very suspicious, but I'm not sure about any of them
 	//cross testing w/ IKA makes them more suspects than not
-       ">:1:0D:8C2921FF"
-       ">:1:04:B806EEE4"
+	">:1:0D:DF0C1754:1E3DDC72:E845B7BF:AE1FC6D2:8644F261"
+	">:1:04:DB35BCA0:AB19570C:0E0E54D7:CCA83E6E:A8D17744"
 
-       // Dead or Alive 2
-       ">:1:08:0A37187A";
+	//IKA
+
+	//Also on HH, dunno if IDLESKIP
+	//Looks like this one is
+	">:1:04:DB35BCA0:AB19570C:0E0E54D7:CCA83E6E:A8D17744"
+
+	//Similar to the hh 1:07 one, dunno if idleskip
+	//Looks like yhis one is
+	">:1:0D:DF0C1754:1E3DDC72:E845B7BF:AE1FC6D2:8644F261"
+
+	//also does the -1 load
+	//looks like this one is
+	">1:08:AF4AC687:08BA1CD0:18592E67:45174350:C9EADF11";
+
 
 shil_param mk_imm(u32 immv)
 {
@@ -145,6 +162,119 @@ void dec_fallback(u32 op)
 #define 	FMT_PARAM OMG!THIS!IS!WRONG++!!
 #define 	FMT_MASK OMG!THIS!IS!WRONG++!!
 
+#define GetN(str) ((str>>8) & 0xf)
+#define GetM(str) ((str>>4) & 0xf)
+
+#define MASK_N_M 0xF00F
+#define MASK_N   0xF0FF
+#define MASK_NONE   0xFFFF
+
+#define DIV0U_KEY 0x0019
+#define DIV0S_KEY 0x2007
+#define DIV1_KEY 0x3004
+#define ROTCL_KEY 0x4024
+
+u32 MatchDiv32(u32 pc , Sh4RegType &reg1,Sh4RegType &reg2 , Sh4RegType &reg3)
+{
+
+	u32 v_pc=pc;
+	u32 match=1;
+	for (int i=0;i<32;i++)
+	{
+		u16 opcode=ReadMem16(v_pc);
+		v_pc+=2;
+		if ((opcode&MASK_N)==ROTCL_KEY)
+		{
+			if (reg1==NoReg)
+				reg1=(Sh4RegType)GetN(opcode);
+			else if (reg1!=(Sh4RegType)GetN(opcode))
+				break;
+			match++;
+		}
+		else
+		{
+			//printf("DIV MATCH BROKEN BY: %s\n",OpDesc[opcode]->diss);
+			break;
+		}
+		
+		opcode=ReadMem16(v_pc);
+		v_pc+=2;
+		if ((opcode&MASK_N_M)==DIV1_KEY)
+		{
+			if (reg2==NoReg)
+				reg2=(Sh4RegType)GetM(opcode);
+			else if (reg2!=(Sh4RegType)GetM(opcode))
+				break;
+			
+			if (reg2==reg1)
+				break;
+
+			if (reg3==NoReg)
+				reg3=(Sh4RegType)GetN(opcode);
+			else if (reg3!=(Sh4RegType)GetN(opcode))
+				break;
+			
+			if (reg3==reg1)
+				break;
+
+			match++;
+		}
+		else
+			break;
+	}
+	
+	return match;
+}
+
+bool MatchDiv32s(u32 op,u32 pc)
+{
+	u32 n = GetN(op);
+	u32 m = GetM(op);
+
+	div_som_reg1=NoReg;
+	div_som_reg2=(Sh4RegType)m;
+	div_som_reg3=(Sh4RegType)n;
+
+	u32 match=MatchDiv32(pc+2,div_som_reg1,div_som_reg2,div_som_reg3);
+	//printf("DIV32S matched %d%% @ 0x%X\n",match*100/65,pc);
+	
+	if (match==65)
+	{
+		//DIV32S was perfectly matched :)
+		//printf("div32s %d/%d/%d\n",div_som_reg1,div_som_reg2,div_som_reg3);
+		return true;
+	}
+	else //no match ...
+	{
+		/*
+		printf("%04X\n",ReadMem16(pc-2));
+		printf("%04X\n",ReadMem16(pc-0));
+		printf("%04X\n",ReadMem16(pc+2));
+		printf("%04X\n",ReadMem16(pc+4));
+		printf("%04X\n",ReadMem16(pc+6));*/
+		return false;
+	}
+}
+
+bool MatchDiv32u(u32 op,u32 pc)
+{
+	div_som_reg1=NoReg;
+	div_som_reg2=NoReg;
+	div_som_reg3=NoReg;
+
+	u32 match=MatchDiv32(pc+2,div_som_reg1,div_som_reg2,div_som_reg3);
+
+
+	//log("DIV32U matched %d%% @ 0x%X\n",match*100/65,pc);
+	if (match==65)
+	{
+		//DIV32U was perfectly matched :)
+		return true;
+	}
+	else //no match ...
+		return false;
+}
+
 void dec_DynamicSet(u32 regbase,u32 offs=0)
 {
 	if (offs==0)
@@ -159,7 +289,7 @@ void dec_End(u32 dst,BlockEndType flags,bool delay)
 	{
 		block.Emit(shop_mov32,mk_reg(reg_nextpc),mk_imm(dst));
 		dec_DynamicSet(reg_nextpc);
-		dec_End(0,BET_DynamicJump,delay);
+		dec_End(0xFFFFFFFF,BET_DynamicJump,delay);
 		return;
 	}
 
@@ -239,7 +369,7 @@ sh4dec(i0000_nnnn_0010_0011)
 	u32 n = GetN(op);
 
 	dec_DynamicSet(reg_r0+n,state.cpu.rpc + 4);
-	dec_End(0,BET_DynamicJump,true);
+	dec_End(0xFFFFFFFF,BET_DynamicJump,true);
 }
 //jmp @<REG_N>
 sh4dec(i0100_nnnn_0010_1011)
@@ -247,7 +377,7 @@ sh4dec(i0100_nnnn_0010_1011)
 	u32 n = GetN(op);
 
 	dec_DynamicSet(reg_r0+n);
-	dec_End(0,BET_DynamicJump,true);
+	dec_End(0xFFFFFFFF,BET_DynamicJump,true);
 }
 //bsr <bdisp12>
 sh4dec(i1011_iiii_iiii_iiii)
@@ -263,7 +393,7 @@ sh4dec(i0000_nnnn_0000_0011)
 	//TODO: set PR
 	u32 retaddr=dec_set_pr();
 	dec_DynamicSet(reg_r0+n,retaddr);
-	dec_End(0,BET_DynamicCall,true);
+	dec_End(0xFFFFFFFF,BET_DynamicCall,true);
 }
 //jsr @<REG_N>
 sh4dec(i0100_nnnn_0000_1011) 
@@ -273,13 +403,13 @@ sh4dec(i0100_nnnn_0000_1011)
 	//TODO: Set pr
 	dec_set_pr();
 	dec_DynamicSet(reg_r0+n);
-	dec_End(0,BET_DynamicCall,true);
+	dec_End(0xFFFFFFFF,BET_DynamicCall,true);
 }
 //rts
 sh4dec(i0000_0000_0000_1011)
 {
 	dec_DynamicSet(reg_pr);
-	dec_End(0,BET_DynamicRet,true);
+	dec_End(0xFFFFFFFF,BET_DynamicRet,true);
 }
 //rte
 sh4dec(i0000_0000_0010_1011)
@@ -288,7 +418,7 @@ sh4dec(i0000_0000_0010_1011)
 	dec_write_sr(reg_ssr);
 	block.Emit(shop_sync_sr);
 	dec_DynamicSet(reg_spc);
-	dec_End(0,BET_DynamicIntr,true);
+	dec_End(0xFFFFFFFF,BET_DynamicIntr,true);
 }
 //trapa #<imm>
 sh4dec(i1100_0011_iiii_iiii)
@@ -296,7 +426,7 @@ sh4dec(i1100_0011_iiii_iiii)
 	//TODO: ifb
 	dec_fallback(op);
 	dec_DynamicSet(reg_nextpc);
-	dec_End(0,BET_DynamicJump,false);
+	dec_End(0xFFFFFFFF,BET_DynamicJump,false);
 }
 //sleep
 sh4dec(i0000_0000_0001_1011)
@@ -304,13 +434,13 @@ sh4dec(i0000_0000_0001_1011)
 	//TODO: ifb
 	dec_fallback(op);
 	dec_DynamicSet(reg_nextpc);
-	dec_End(0,BET_DynamicJump,false);
+	dec_End(0xFFFFFFFF,BET_DynamicJump,false);
 }
 
 //ldc.l @<REG_N>+,SR
-/*sh4dec(i0100_nnnn_0000_0111)
+sh4dec(i0100_nnnn_0000_0111)
 {
-	u32 sr_t;
+	/*u32 sr_t;
 	ReadMemU32(sr_t,r[n]);
 	if (sh4_exept_raised)
 		return;
@@ -320,18 +450,45 @@ sh4dec(i0000_0000_0001_1011)
 	{
 		//FIXME olny if interrupts got on .. :P
 		UpdateINTC();
-	}
-	dec_End(0,BET_StaticIntr,true);
-}*/
+	}*/
+	dec_End(0xFFFFFFFF,BET_StaticIntr,false);
+}
+
+//frchg
+sh4dec(i1111_1011_1111_1101)
+{
+	block.Emit(shop_xor,reg_fpscr,reg_fpscr,mk_imm(1<<21));
+	block.Emit(shop_mov32,reg_old_fpscr,reg_fpscr);
+	shil_param rmn;//null param
+	block.Emit(shop_frswap,regv_xmtrx,regv_fmtrx,regv_xmtrx,0,rmn,regv_fmtrx);
+}
 
 //ldc <REG_N>,SR
 sh4dec(i0100_nnnn_0000_1110)
 {
-	/*u32 n = GetN(op);
+	u32 n = GetN(op);
 
 	dec_write_sr((Sh4RegType)(reg_r0+n));
-	block.Emit(shop_sync_sr);*/
-	dec_End(0,BET_StaticIntr,false);
+	block.Emit(shop_sync_sr);
+	//dec_End(0xFFFFFFFF,BET_StaticIntr,false);
+}
+
+//rotcl
+sh4dec(i0100_nnnn_0010_0100)
+{
+	u32 n = GetN(op);
+	Sh4RegType rn=(Sh4RegType)(reg_r0+n);
+
+	block.Emit(shop_rocl,rn,rn,reg_sr_T,0,shil_param(),reg_sr_T);
+}
+
+//rotcr
+sh4dec(i0100_nnnn_0010_0101)
+{
+	u32 n = GetN(op);
+	Sh4RegType rn=(Sh4RegType)(reg_r0+n);
+
+	block.Emit(shop_rocr,rn,rn,reg_sr_T,0,shil_param(),reg_sr_T);
 }
 
 //nop !
@@ -596,6 +753,22 @@ bool dec_generic(u32 op)
 
 	switch(mode)
 	{
+	
+	case DM_ReadSRF:
+		block.Emit(shop_mov32,rs1,reg_sr_status);
+		block.Emit(shop_or,rs1,rs1,reg_sr_T);
+	break;
+
+	case DM_ADC:
+		{
+			block.Emit(natop,rs1,rs1,rs2,0,mk_reg(reg_sr_T),mk_reg(reg_sr_T));
+		}
+		break;
+
+	case DM_NEGC:
+		block.Emit(natop, rs1, rs2, mk_reg(reg_sr_T), 0, shil_param(), mk_reg(reg_sr_T));
+		break;
+
 	case DM_WriteTOp:
 		block.Emit(natop,reg_sr_T,rs1,rs2);
 		break;
@@ -740,41 +913,76 @@ bool dec_generic(u32 op)
 		}
 		break;
 
+	case DM_DIV1:
+		block.Emit(shop_div1,mk_reg(reg_sr_T),rs1,rs2,0,shil_param(),mk_reg(reg_sr_status));
+	break;
+
 	case DM_DIV0:
 		{
 			if (e==1)
 			{
-				//crear QM (bits 8,9)
-				u32 qm=(1<<8)|(1<<9);
-				block.Emit(shop_and,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_imm(~qm));
-				//clear T !
-				block.Emit(shop_mov32,mk_reg(reg_sr_T),mk_imm(0));
+				if (MatchDiv32u(op,state.cpu.rpc))
+				{
+					verify(!state.cpu.is_delayslot);
+					//div32u
+					block.Emit(shop_div32u,mk_reg(div_som_reg1),mk_reg(div_som_reg1),mk_reg(div_som_reg2),0,shil_param(),mk_reg(div_som_reg3));
+					
+					block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(div_som_reg1),mk_imm(1));
+					block.Emit(shop_shr,mk_reg(div_som_reg1),mk_reg(div_som_reg1),mk_imm(1));
+
+					block.Emit(shop_div32p2,mk_reg(div_som_reg3),mk_reg(div_som_reg3),mk_reg(div_som_reg2),0,shil_param(reg_sr_T));
+					
+					//skip the aggregated opcodes
+					state.cpu.rpc+=128;
+					block.cycles+=CPU_RATIO*64;
+				}
+				else
+				{
+					//clear QM (bits 8,9)
+					u32 qm=(1<<8)|(1<<9);
+					block.Emit(shop_and,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_imm(~qm));
+					//clear T !
+					block.Emit(shop_mov32,mk_reg(reg_sr_T),mk_imm(0));
+				}
 			}
 			else
 			{
-				//sr.Q=r[n]>>31;
-				//sr.M=r[m]>>31;
-				//sr.T=sr.M^sr.Q;
+				if (MatchDiv32s(op,state.cpu.rpc))
+				{
+					verify(!state.cpu.is_delayslot);
+					//div32s
+					block.Emit(shop_div32s,mk_reg(div_som_reg1),mk_reg(div_som_reg1),mk_reg(div_som_reg2),0,shil_param(),mk_reg(div_som_reg3));
+					
+					block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(div_som_reg1),mk_imm(1));
+					block.Emit(shop_sar,mk_reg(div_som_reg1),mk_reg(div_som_reg1),mk_imm(1));
 
-				//This is nasty because there isn't a temp reg ..
-				//VERY NASTY
+					block.Emit(shop_div32p2,mk_reg(div_som_reg3),mk_reg(div_som_reg3),mk_reg(div_som_reg2),0,shil_param(reg_sr_T));
+					
+					//skip the aggregated opcodes
+					state.cpu.rpc+=128;
+					block.cycles+=CPU_RATIO*64;
+				}else
+				{
+					//This is nasty because there isn't a temp reg ..
+					//VERY NASTY
 
-				//Clear Q & M
-				block.Emit(shop_and,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_imm(~((1<<8)|(1<<9))));
+					//Clear Q & M
+					block.Emit(shop_and,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_imm(~((1<<8)|(1<<9))));
 
-				//sr.Q=r[n]>>31;
-				block.Emit(shop_sar,mk_reg(reg_sr_T),rs1,mk_imm(31));
-				block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(1<<8));
-				block.Emit(shop_or,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_reg(reg_sr_T));
+					//sr.Q=r[n]>>31;
+					block.Emit(shop_sar,mk_reg(reg_sr_T),rs1,mk_imm(31));
+					block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(1<<8));
+					block.Emit(shop_or,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_reg(reg_sr_T));
 
-				//sr.M=r[m]>>31;
-				block.Emit(shop_sar,mk_reg(reg_sr_T),rs2,mk_imm(31));
-				block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(1<<9));
-				block.Emit(shop_or,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_reg(reg_sr_T));
+					//sr.M=r[m]>>31;
+					block.Emit(shop_sar,mk_reg(reg_sr_T),rs2,mk_imm(31));
+					block.Emit(shop_and,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(1<<9));
+					block.Emit(shop_or,mk_reg(reg_sr_status),mk_reg(reg_sr_status),mk_reg(reg_sr_T));
 
-				//sr.T=sr.M^sr.Q;
-				block.Emit(shop_xor,mk_reg(reg_sr_T),rs1,rs2);
-				block.Emit(shop_shr,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(31));
+					//sr.T=sr.M^sr.Q;
+					block.Emit(shop_xor,mk_reg(reg_sr_T),rs1,rs2);
+					block.Emit(shop_shr,mk_reg(reg_sr_T),mk_reg(reg_sr_T),mk_imm(31));
+				}
 			}
 		}
 		break;
@@ -815,64 +1023,47 @@ DecodedBlock* dec_DecodeBlock(u32 startpc,fpscr_type fpu_cfg,u32 max_cycles)
 						&& !state.cpu.is_delayslot)
 				{
 					dec_End(state.cpu.rpc,BET_StaticJump,false);
+					continue;
+				}
+				
+				u32 op=ReadMem16(state.cpu.rpc);
+
+				/*if (op == 16398){
+					printf("%s\n", OpDesc[op]->diss); 
+				}*/
+
+				if (op==0 && state.cpu.is_delayslot){
+					printf("Delayslot 0 hack!\n");
+					continue;
+				}
+
+				block.opcodes++;
+				if (OpDesc[op]->IsFloatingPoint()){block.contains_fpu_op = true;}
+				if (op<0xF000)
+					block.cycles+=CPU_RATIO;
+
+				if (state.ngen.OnlyDynamicEnds || !OpDesc[op]->rec_oph)
+				{
+					if (state.ngen.InterpreterFallback || !dec_generic(op))
+					{
+						dec_fallback(op);
+						if (OpDesc[op]->SetPC())
+						{
+							dec_DynamicSet(reg_nextpc);
+							dec_End(0xFFFFFFFF,BET_DynamicJump,false);
+						}
+						if (OpDesc[op]->SetFPSCR() && !state.cpu.is_delayslot)
+						{
+							dec_End(state.cpu.rpc+2,BET_StaticJump,false);
+						}
+					}
 				}
 				else
 				{
-					u32 op=ReadMem16(state.cpu.rpc);
-
-					if (op==0 && state.cpu.is_delayslot){
-						state.cpu.rpc+=2;
-						continue;
-					}
-
-					block.opcodes++;
-					/*if (!mmu_enabled())
-					{*/
-						if (op>=0xF000)
-							block.cycles+=0;
-						else
-							block.cycles+=CPU_RATIO;
-					/*}
-					else
-					{
-						block.cycles+= max((int)OpDesc[op]->LatencyCycles, 1);
-					}*/
-
-					/*if (OpDesc[op]->IsFloatingPoint())
-					{
-						if (sr.FD == 1)
-						{
-							// We need to know FPSCR to compile the block, so let the exception handler run first
-							// as it may change the fp registers
-							//Do_Exception(next_pc, 0x800, 0x100);
-							return false;
-						}
-						//blk->has_fpu_op = true;
-					}*/
-
-					if (state.ngen.OnlyDynamicEnds || !OpDesc[op]->rec_oph)
-					{
-						if (state.ngen.InterpreterFallback || !dec_generic(op))
-						{
-							dec_fallback(op);
-							if (OpDesc[op]->SetPC())
-							{
-								dec_DynamicSet(reg_nextpc);
-								dec_End(0,BET_DynamicJump,false);
-							}
-							if (OpDesc[op]->SetFPSCR() && !state.cpu.is_delayslot)
-							{
-								dec_End(state.cpu.rpc+2,BET_StaticJump,false);
-							}
-						}
-					}
-					else
-					{
-						OpDesc[op]->rec_oph(op);
-					}
-
-					state.cpu.rpc+=2;
+					OpDesc[op]->rec_oph(op);
 				}
+
+				state.cpu.rpc+=2;
 			}
 			break;
 
@@ -892,18 +1083,15 @@ _end:
 	block.BranchBlock=state.JumpAddr;
 	block.BlockType=state.BlockType;
 
-	//#undef printf
-	//printf("%08X\n",block.start);
-
-	//cycle tricks
-	//Hardcoded cycle idle skip(bios only) 8C184632
-	//extern u32 LastAddr;
-	/*if ((block.start&0x0FFF0000) == 0x0C180000)
-		{
-			//printf("IDLESKIP: %08X\n",block.start);
-			block.cycles = dynarecIdle;
-		}
-	else*/
+	if (strstr(idle_hash, block.hash()))
+	{
+		//printf("IDLESKIP: %08X\n",block.start);
+		block.cycles = (dynarecIdle != 0) ? dynarecIdle*max_cycles : max_cycles;
+	}
+	else if (dynarecIdle == 0){
+		block.cycles *= 1.5;
+	}
+	else
 	{
 		//Small-n-simple idle loop detector :p
 		if (state.info.has_readm && !state.info.has_writem && !state.info.has_fpu && block.opcodes<6)
@@ -915,7 +1103,7 @@ _end:
 
 			if (block.BranchBlock==block.start)
 			{
-				block.cycles*=10;
+				block.cycles *= 10;
 			}
 		}
 
@@ -937,9 +1125,10 @@ _end:
 
 		//make sure we don't use wayy-too-many cycles ;p
 		block.cycles=min(block.cycles,max_cycles);
-		//make sure we don't use wayy-too-few cycles
-		block.cycles=max(1U,block.cycles);
 	}
+
+	//make sure we don't use wayy-too-few cycles
+	block.cycles=max(1U,block.cycles);
 
 	return &block;
 }

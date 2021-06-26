@@ -7,6 +7,8 @@
 
 #include "plugins/plugin_manager.h"
 
+#include "dc/sh4/sh4_registers.h"
+
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
@@ -59,7 +61,7 @@ inline static u32 bswap32(u32 v)
 
 //use unified size handler for registers
 //it realy makes no sense to use different size handlers on em -> especialy when we can use templates :p
-template<u32 sz, class T, u32 b_start,u32 b_end>
+template<u32 sz, class T>
 T FASTCALL ReadMem_area0(u32 addr)
 {
 	addr &= 0x01FFFFFF;//to get rid of non needed bits
@@ -78,7 +80,7 @@ T FASTCALL ReadMem_area0(u32 addr)
 		}
 
 		//ReadMemArrRet(bios_b,addr,sz);
-		EMUERROR3("Read from [MPX	System/Boot ROM], addr=%x , sz=%d",addr,sz);
+		//EMUERROR3("Read from [MPX	System/Boot ROM], addr=%x , sz=%d",addr,sz);
 	}
 	//map 0x0020 to 0x0021
 	else if ((base>= 0x0020) && (base<= 0x0021))		//	:Flash Memory
@@ -96,15 +98,11 @@ T FASTCALL ReadMem_area0(u32 addr)
                 return (T)HOST_TO_LE32(*(u32*)&flash_b[addr]);
         }
 
-		EMUERROR3("Read from [Flash Memory], addr=%x , sz=%d",addr,sz);
+		//EMUERROR3("Read from [Flash Memory], addr=%x , sz=%d",addr,sz);
 	}
 	//map 0x005F to 0x005F
 	else if (likely(base==0x005F))
 	{
-		if ((addr<= 0x005F67FF)) // :Unassigned
-		{
-			//INFO_LOG(MEMORY, "Read from area0_32 not implemented [Unassigned], addr=%x", addr);
-		}
 		if ((addr>= 0x005F7000) && (addr<= 0x005F70FF)) //	:GD-ROM
 		{
 			//EMUERROR3("Read from area0_32 not implemented [GD-ROM], addr=%x,size=%d",addr,sz);
@@ -164,7 +162,7 @@ T FASTCALL ReadMem_area0(u32 addr)
 	return 0;
 }
 
-template<u32 sz, class T, u32 b_start,u32 b_end>
+template<u32 sz, class T>
 void  FASTCALL WriteMem_area0(u32 addr,T data)
 {
 	addr &= 0x01FFFFFF;//to get rid of non needed bits
@@ -172,10 +170,9 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 	const u32 base=(addr>>16);
 
 	//map 0x0000 to 0x001F
-	if (base<=0x001F)//	:MPX	System/Boot ROM
+	if (unlikely(base<=0x001F))//	:MPX	System/Boot ROM
 	{
-		//WriteMemFromPtrRet(bootfile,adr,sz);
-		EMUERROR4("Write to  [MPX	System/Boot ROM] is not possible, addr=%x,data=%x,size=%d",addr,data,sz);
+		//printf("Write to  [MPX	System/Boot ROM] is not possible, addr=%x,data=%x,size=%d | pc = 0x%X\n",addr,data,sz, curr_pc);
 	}
 	//map 0x0020 to 0x0021
 	else if ((base >=0x0020) && (base <=0x0021))		//	:Flash Memory
@@ -187,7 +184,7 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 	//map 0x005F to 0x005F
 	else if (likely(base==0x005F))		//	:Unassigned
 	{
-		if ((addr<= 0x005F67FF)) // Unassigned
+		if (unlikely(addr<= 0x005F67FF)) // Unassigned
 		{
 			EMUERROR4("Write to area0_32 not implemented [Unassigned], addr=%x,data=%x,size=%d",addr,data,sz);
 		}
@@ -212,7 +209,7 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 		libExtDevice_WriteMem_A0_006(addr,data,sz);
 	}
 	//map 0x0060 to 0x006F
-	else if ((base >=0x0060) && (base <=0x006F) && (addr>= 0x00600800) && (addr<= 0x006FFFFF)) //	:G2 (Reserved)
+	else if (unlikely((base >=0x0060) && (base <=0x006F) && (addr>= 0x00600800) && (addr<= 0x006FFFFF))) //	:G2 (Reserved)
 	{
 		EMUERROR4("Write to area0_32 not implemented [G2 (Reserved)], addr=%x,data=%x,size=%d",addr,data,sz);
 	}
@@ -229,19 +226,19 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 		return;
 	}
 	//map 0x0080 to 0x00FF
-	else if ((base >=0x0080) && (base <=0x00FF)) //	:AICA- Wave Memory
+	/*else if ((base >=0x0080) && (base <=0x00FF)) //	:AICA- Wave Memory
 	{
 		//EMUERROR4("Write to area0_32 not implemented [AICA- Wave Memory], addr=%x,data=%x,size=%d",addr,data,sz);
 		//aica_writeram(addr,data,sz);
 		libAICA_WriteMem_aica_ram(addr,data,sz);
 		return;
-	}
+	}*/
 	//map 0x0100 to 0x01FF
-	else if (base >= 0x0100 && base <= 0x01FF) //	:Ext. Device
+	/*else if (base >= 0x0100 && base <= 0x01FF) //	:Ext. Device
 	{
 		//EMUERROR4("Write to area0_32 not implemented [Ext. Device], addr=%x,data=%x,size=%d",addr,data,sz);
 		libExtDevice_WriteMem_A0_010(addr,data,sz);
-	}
+	}*/
 	return;
 }
 
@@ -263,71 +260,20 @@ void sh4_area0_Term()
 
 
 //AREA 0
-_vmem_handler area0_handler_0000_00FF;
-_vmem_handler area0_handler_0100_01FF;
+_vmem_handler area0_handler;
 
-
-//Different mem mapping regions for area0
-//0x0000-0x001f
-//0x0020-0x0021
-//0x005F-0x005F
-//0x0060-0x0060
-//0x0061-0x006F
-//0x0070-0x0070
-//0x0071-0x0071
-//0x0080-0x00FF
-//0x0100-0x01FF
-//Count : 9
 
 void map_area0_init()
 {
-	//area0_handler =	_vmem_register_handler(ReadMem8_area0,ReadMem16_area0,ReadMem32_area0,
-	//									  WriteMem8_area0,WriteMem16_area0,WriteMem32_area0);
-	
-	area0_handler_0000_00FF = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0000,0x00FF);
-	/*
-	area0_handler_20_21 = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0020,0x0021);
-	area0_handler_5F_5F = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x005F,0x005F);
-	area0_handler_60_60 = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0060,0x0060);
-	area0_handler_61_6F = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0061,0x006F);
-	area0_handler_70_70 = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0070,0x0070);
-	area0_handler_71_71 = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0071,0x0071);
-	//area0_handler_80_FF = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0080,0x00FF);
-	*/
-	area0_handler_0100_01FF = _vmem_register_handler_Template2(ReadMem_area0,WriteMem_area0,0x0100,0x01FF);
+	area0_handler = _vmem_register_handler_Template(ReadMem_area0,WriteMem_area0);
 }
 void map_area0(u32 base)
 {
-	verify(base<0xE000);
+	verify(base<0xE0);
 
-	//Map 0x0000 to 0x01FF
-	//u32 start=0x0000 | base;
-	//u32 end  =start+0x01FF;
-	
 	//_vmem_map_handler(area0_handler,start,end);
 	//0x0000-0x001f
-	_vmem_map_handler(area0_handler_0000_00FF,0x00|base,0x00|base);
-	/*
-	//0x0020-0x0021
-	_vmem_map_handler(area0_handler_20_21,0x0020|base,0x0021|base);
-	//0x005F-0x005F
-	_vmem_map_handler(area0_handler_5F_5F,0x005F|base,0x005F|base);
-	//0x0060-0x0060
-	_vmem_map_handler(area0_handler_60_60,0x0060|base,0x0060|base);
-	//0x0061-0x006F
-	_vmem_map_handler(area0_handler_61_6F,0x0061|base,0x006F|base);
-	//0x0070-0x0070
-	_vmem_map_handler(area0_handler_70_70,0x0070|base,0x0070|base);
-	//0x0071-0x0071
-	_vmem_map_handler(area0_handler_71_71,0x0071|base,0x0071|base);
-	//0x0080-0x00FF
-	//_vmem_map_handler(area0_handler_80_FF,0x0080|base,0x00FF|base);
-	
-	_vmem_map_block_mirror(aica_ram.data,0x0080|base,0x00FF|base,ARAM_SIZE);
-	*/
-
-	//0x0100-0x01FF
-	_vmem_map_handler(area0_handler_0100_01FF,0x01|base,0x01|base);
+	_vmem_map_handler(area0_handler,0x00|base,0x01|base);
 
 	//0x0240 to 0x03FF mirrors 0x0040 to 0x01FF (no flashrom or bios)
 	//0x0200 to 0x023F are unused

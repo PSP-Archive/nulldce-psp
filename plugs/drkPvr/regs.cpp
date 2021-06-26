@@ -1,7 +1,10 @@
 #include "regs.h"
 #include "Renderer_if.h"
+#include "../../dc/pvr/pvr_if.h"
 #include "ta.h"
 #include "spg.h"
+
+#include "dc/sh4/sh4_sched.h"
 /*
 	Basic PVR emulation -- much more work is needed for real TA emulation
 */
@@ -13,9 +16,8 @@ u8 regs[RegSize];
 
 u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size)
 {
-	if (unlikely(size!=4))
+	if (size!=4)
 	{
-		//error ?
 		return 0;
 	}
 
@@ -23,13 +25,13 @@ u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size)
 }
 
 void PrintfInfo();
-
+extern int render_end_schid;
 
 void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 {
-	if (unlikely(size!=4))
+
+	if (size!=4)
 	{
-		//error ?
 		return;
 	}
 
@@ -39,10 +41,14 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 	{
 		case ID_addr:
 		case REVISION_addr:
+		case TA_YUV_TEX_CNT_addr:
 			return;	//read only
 
 		case STARTRENDER_addr:
 			//start render
+			
+			sh4_sched_request(render_end_schid, 100000);
+			
 			rend_start_render();
 			render_end_pending=true;
 			return;
@@ -69,12 +75,29 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 			rend_list_cont();
 			break;
 
-		case FB_R_CTRL_addr:
+		
 		case SPG_CONTROL_addr:
 		case SPG_LOAD_addr:
-			PvrReg(addr,u32)=data;
-			CalculateSync();
+			if (PvrReg(addr, u32) != data)
+            {
+                PvrReg(addr, u32) = data;
+                CalculateSync();
+            }
+		return;
+
+		case TA_YUV_TEX_BASE_addr:
+		case TA_YUV_TEX_CTRL_addr:
+			PvrReg(addr, u32) = data;
+            YUV_init();
+		return;
+
+		case FB_R_CTRL_addr:
+            PvrReg(addr, u32) = data;
+            if ((PvrReg(addr, u32) ^ data) & (1 << 23)){
+                CalculateSync();
+			}
 			return;
+		
 
 		default:
 		break;
@@ -91,6 +114,11 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 				}
 			}*/
 	}
+
+	/*if (addr >= PALETTE_RAM_START_addr && PvrReg(addr, u32) != data)
+    {
+            pal_needs_update = true;
+    }*/
 
 	PvrReg(addr,u32)=data;
 }

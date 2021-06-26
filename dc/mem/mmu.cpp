@@ -26,20 +26,22 @@ const u32 mmu_mask[4]=
 //sync mem mapping to mmu , suspend compiled blocks if needed.entry is a UTLB entry # , -1 is for full sync
 void UTLB_Sync(u32 entry)
 {	
+	if (UTLB[entry].Data.V == 0)
+		return;
 
 	if ((UTLB[entry].Address.VPN & (0xFC000000>>10)) == (0xE0000000>>10))
 	{
 		u32 vpn_sq=((UTLB[entry].Address.VPN & 0x7FFFF)>>10) &0x3F;//upper bits are allways known [0xE0/E1/E2/E3]
 		sq_remap[vpn_sq]=UTLB[entry].Data.PPN<<10;
-		printf("SQ remap %d : 0x%X to 0x%X\n",entry,UTLB[entry].Address.VPN<<10,UTLB[entry].Data.PPN<<10);
+		//printf("SQ remap %d : 0x%X to 0x%X\n",entry,UTLB[entry].Address.VPN<<10,UTLB[entry].Data.PPN<<10);
 	}
-	else
-		printf("MEM remap %d : 0x%X to 0x%X\n",entry,UTLB[entry].Address.VPN<<10,UTLB[entry].Data.PPN<<10);
+	/*else
+		printf("MEM remap %d : 0x%X to 0x%X\n",entry,UTLB[entry].Address.VPN<<10,UTLB[entry].Data.PPN<<10);*/
 }
 //sync mem mapping to mmu , suspend compiled blocks if needed.entry is a ITLB entry # , -1 is for full sync
 void ITLB_Sync(u32 entry)
 {
-	printf("ITLB MEM remap %d : 0x%X to 0x%X\n",entry,ITLB[entry].Address.VPN<<10,ITLB[entry].Data.PPN<<10);
+	//printf("ITLB MEM remap %d : 0x%X to 0x%X\n",entry,ITLB[entry].Address.VPN<<10,ITLB[entry].Data.PPN<<10);
 }
 
 bool mmu_match(u32 va,CCN_PTEH_type Address,CCN_PTEL_type Data)
@@ -62,6 +64,31 @@ bool mmu_match(u32 va,CCN_PTEH_type Address,CCN_PTEL_type Data)
 
 	return false;
 }
+
+/*bool mmu_TranslateSQW(u32 adr, u32* out)
+{
+	//if (!settings.dreamcast.FullMMU)
+	{
+		//This will only work for 1 mb pages .. hopefully nothing else is used
+		//*FIXME* to work for all page sizes ?
+
+		*out = sq_remap[(adr >> 20) & 0x3F] | (adr & 0xFFFE0);
+	}
+	else
+	{
+		u32 addr;
+		u32 tv = mmu_full_SQ<MMU_TT_DREAD>(adr, addr);
+		if (tv != MMU_ERROR_NONE)
+		{
+			mmu_raise_exception(tv, adr, MMU_TT_DREAD);
+			return false;
+		}
+
+		*out = addr;
+	}
+
+	return true;
+}*/
 
 void MMU_Init()
 {

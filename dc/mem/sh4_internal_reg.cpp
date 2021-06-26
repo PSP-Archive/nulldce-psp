@@ -1,6 +1,8 @@
 #include "types.h"
 #include "sh4_internal_reg.h"
 
+#include "dc/mem/sh4_mem.h"
+#include "dc/aica/aica_if.h"
 #include "dc/sh4/bsc.h"
 #include "dc/sh4/ccn.h"
 #include "dc/sh4/cpg.h"
@@ -12,13 +14,14 @@
 #include "dc/sh4/tmu.h"
 #include "dc/sh4/ubc.h"
 #include "_vmem.h"
+#include "dc/sh4/ccn.h"
 #include "mmu.h"
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
 //64bytes of sq
-ALIGN(64) u8 sq_both[64];
+ALIGN(64) u64 sq_buffer[64/8];
 
 //i know , its because of templates :)
 #pragma warning( disable : 4127 /*4244*/)
@@ -146,11 +149,6 @@ INLINE void RegSWrite(RegisterStruct* reg,u32 offset,u32 data)
 template <u32 sz,class T>
 T FASTCALL ReadMem_P4(u32 addr)
 {
-	/*if (((addr>>26)&0x7)==7)
-	{
-	return ReadMem_area7(addr,sz);	
-	}*/
-
 	switch((addr>>24)&0xFF)
 	{
 
@@ -281,8 +279,15 @@ void FASTCALL WriteMem_P4(u32 addr,T data)
 	case 0xF3:
 		//printf("Unhandled p4 Write [Instruction TLB data arrays 1 and 2] 0x%x = %x\n",addr,data);
 		{
-			u32 entry=(addr>>8)&3;
-			ITLB[entry].Data.reg_data=data;
+			u32 entry = (addr >> 8) & 3;
+			if (addr & 0x800000)
+			{
+				ITLB[entry].Assistance.reg_data = data & 0xf;
+			}
+			else
+			{
+				ITLB[entry].Data.reg_data = data;
+			}
 			ITLB_Sync(entry);
 			return;
 		}
@@ -308,31 +313,7 @@ void FASTCALL WriteMem_P4(u32 addr,T data)
 		{
 			if (addr&0x80)
 			{
-				//printf("Unhandled p4 Write [Unified TLB address array , Associative Write] 0x%x = %x\n",addr,data);
-				CCN_PTEH_type t;
-				t.reg_data=data;
-
-				u32 va=t.VPN<<10;
-
-				for (int i=0;i<64;i++)
-				{
-					if (mmu_match(va,UTLB[i].Address,UTLB[i].Data))
-					{
-						UTLB[i].Data.V=((u32)data>>8)&1;
-						UTLB[i].Data.D=((u32)data>>9)&1;
-						UTLB_Sync(i);
-					}
-				}
-
-				for (int i=0;i<4;i++)
-				{
-					if (mmu_match(va,ITLB[i].Address,ITLB[i].Data))
-					{
-						ITLB[i].Data.V=((u32)data>>8)&1;
-						ITLB[i].Data.D=((u32)data>>9)&1;
-						ITLB_Sync(i);
-					}
-				}
+				printf("Unhandled p4 Write [Unified TLB address array , Associative Write] 0x%x = %x\n",addr,data);
 			}
 			else
 			{
@@ -348,18 +329,16 @@ void FASTCALL WriteMem_P4(u32 addr,T data)
 
 	case 0xF7:
 		{
-			if (addr&0x800000)
+			u32 entry = (addr >> 8) & 63;
+			if (addr & 0x800000)
 			{
-				//printf("Unhandled p4 Write [Unified TLB data array 2] 0x%x = %x\n",addr,data);
+				UTLB[entry].Assistance.reg_data = data & 0xf;
 			}
 			else
 			{
-				//printf("Unhandled p4 Write [Unified TLB data arrays 1 and 2] 0x%x = %x\n",addr,data);
-				u32 entry=(addr>>8)&63;
-				UTLB[entry].Data.reg_data=data;
-				UTLB_Sync(entry);
-				return;
+				UTLB[entry].Data.reg_data = data;
 			}
+			UTLB_Sync(entry);
 		}
 		break;
 
@@ -375,50 +354,6 @@ void FASTCALL WriteMem_P4(u32 addr,T data)
 	EMUERROR3("Write to P4 not implemented , addr=%x,data=%x",addr,data);
 }
 
-
-//***********
-//Store Queue
-//***********
-//TODO : replace w/ mem mapped array
-//Read SQ
-template <u32 sz,class T>
-T FASTCALL ReadMem_sq(u32 addr)
-{
-	if (sz!=4)
-	{
-		printf("Store Queue Error , olny 4 byte read are possible[x%X]\n",addr);
-		return 0xDE;
-	}
-
-	u32 united_offset=addr & 0x3C;
-
-	return (T)*(u32*)&sq_both[united_offset];
-}
-
-
-//Write SQ
-template <u32 sz,class T>
-void FASTCALL WriteMem_sq(u32 addr,T data)
-{
-	if (sz!=4)
-		printf("Store Queue Error , olny 4 byte writes are possible[x%X=0x%X]\n",addr,data);
-	//u32 offset = (addr >> 2) & 7; // 3 bits
-	u32 united_offset=addr & 0x3C;
-
-	/*if ((addr & 0x20)) // 0: SQ0, 1: SQ1
-	{
-	sq1_dw[offset] = data;
-	}
-	else
-	{
-	sq0_dw[offset] = data;
-	}
-	return;*/
-
-	*(u32*)&sq_both[united_offset]=data;
-}
-
-
 //***********
 //**Area  7**
 //***********
@@ -426,11 +361,11 @@ void FASTCALL WriteMem_sq(u32 addr,T data)
 template <u32 sz,class T>
 T FASTCALL ReadMem_area7(u32 addr)
 {
-	if ((addr==0xFF000028))
+	if (likely(addr == 0xFF000028))
 	{
 		return CCN_INTEVT;
 	}
-	else if ((addr==0xFFA0002C))
+	else if (likely(addr == 0xFFA0002C))
 	{
 		return DMAC_CHCR[2].full;
 	}
@@ -586,15 +521,15 @@ T FASTCALL ReadMem_area7(u32 addr)
 template <u32 sz,class T>
 void FASTCALL WriteMem_area7(u32 addr,T data)
 {
-	/*if ((addr==0xFF000038))
+	/*if (likely(addr==0xFF000038))
 	{
-		CCN_QACR_write<0>(addr,data);
-		return;
+		CCN_QACR_write<0>(addr& 0xFF,data);
+		//return;
 	}
-	else if ((addr==0xFF00003C))
+	else if (likely(addr==0xFF00003C))
 	{
-		CCN_QACR_write<1>(addr,data);
-		return;
+		CCN_QACR_write<1>(addr& 0xFF,data);
+		//return;
 	}	*/
 
 	addr&=0x1FFFFFFF;
@@ -805,6 +740,7 @@ void FASTCALL WriteMem_area7_OCR_T(u32 addr,T data)
 	}
 }
 
+
 //Init/Res/Term
 void sh4_internal_reg_Init()
 {
@@ -871,18 +807,6 @@ void sh4_internal_reg_Term()
 
 //AREA 7	--	Sh4 Regs
 _vmem_handler area7_handler;
-/*
-_vmem_handler area7_handler_1F00;
-_vmem_handler area7_handler_1F20;
-_vmem_handler area7_handler_1F80;
-_vmem_handler area7_handler_1FA0;
-_vmem_handler area7_handler_1FC0;
-_vmem_handler area7_handler_1FC8;
-_vmem_handler area7_handler_1FD0;
-_vmem_handler area7_handler_1FD8;
-_vmem_handler area7_handler_1FE0;
-_vmem_handler area7_handler_1FE8;
-_vmem_handler area7_handler_1FF0;*/
 
 _vmem_handler area7_orc_handler;
 
@@ -905,20 +829,6 @@ void map_area7(u32 base)
 	else
 	{
 		_vmem_map_handler(area7_handler,0x1F | base , 0x1F| base);
-/*
-#define mmap_a7_handler(mbase) _vmem_map_handler(area7_handler_##mbase,0x##mbase | base , 0x##mbase| base);
-
-		mmap_a7_handler(1F00);
-		mmap_a7_handler(1F20);
-		mmap_a7_handler(1F80);
-		mmap_a7_handler(1FA0);
-		mmap_a7_handler(1FC0);
-		mmap_a7_handler(1FC8);
-		mmap_a7_handler(1FD0);
-		mmap_a7_handler(1FD8);
-		mmap_a7_handler(1FE0);
-		mmap_a7_handler(1FE8);
-		mmap_a7_handler(1FF0);*/
 	}
 }
 
@@ -933,15 +843,14 @@ void map_p4()
 	//0xE0000000-0xFFFFFFFF
 	_vmem_map_handler(p4_handler,0xE0,0xFF);
 
-	//Store Queues	--	Write olny 32bit (well , they can be readed too btw)
-	/*
-	_vmem_handler sq_handler =_vmem_register_handler_Template(ReadMem_sq,WriteMem_sq);
-	_vmem_map_handler(sq_handler,0xE000,0xE3FF);
-	*/
 	_vmem_map_block(sq_both,0xE0,0xE0,63);
 	_vmem_map_block(sq_both,0xE1,0xE1,63);
 	_vmem_map_block(sq_both,0xE2,0xE2,63);
 	_vmem_map_block(sq_both,0xE3,0xE3,63);
 
+	/*_vmem_handler sq_handler =_vmem_register_handler_Template(ReadMem_sq,WriteMem_sq);
+	_vmem_map_handler(sq_handler,0xE0,0xE3);*/
+
 	map_area7(0xE0);
+
 }

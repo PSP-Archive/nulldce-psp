@@ -10,23 +10,44 @@ ALIGN(64) Sh4Context Sh4cntx;
 
 INLINE void ChangeGPR()
 {
-	u32 temp[8];
+	/*u32 temp[8];
 	for (int i=0;i<8;i++)
 	{
 		temp[i]=r[i];
 		r[i]=r_bank[i];
 		r_bank[i]=temp[i];
+	}*/
+
+	for (int i=0;i<2;i++)
+	{
+		__asm__(
+			"lv.q c000, %0 \t\n"
+			"lv.q c100, %1 \t\n"
+
+			"sv.q c000, %2 \t\n"
+			"sv.q c100, %3 \t\n"
+		: "=m" ( r[i * 4] ),"=m" ( r_bank[i * 4] ) : "m" ( r_bank[i * 4] ), "m" ( r[i * 4] ) );
 	}
 }
 
 INLINE void ChangeFP()
 {
-	u32 temp[16];
+	/*u32 temp[16];
 	for (int i=0;i<16;i++)
 	{
 		temp[i]=fr_hex[i];
 		fr_hex[i]=xf_hex[i];
 		xf_hex[i]=temp[i];
+	}*/
+	for (int i=0;i<4;i++)
+	{
+		__asm__(
+			"lv.q c000, %0 \t\n"
+			"lv.q c100, %1 \t\n"
+
+			"sv.q c000, %2 \t\n"
+			"sv.q c100, %3 \t\n"
+		: "=m" ( xf_hex[i * 4] ),"=m" ( fr_hex[i * 4] ) : "m" ( fr_hex[i * 4] ), "m" ( xf_hex[i * 4] ) );
 	}
 }
 
@@ -40,21 +61,13 @@ bool UpdateSR()
 	}
 	else
 	{
-		if (unlikely(sr.RB))
-		{
-			printf("UpdateSR MD=0;RB=1 , this must not happen\n");
-			sr.RB =0;//error - must allways be 0
-			if (old_sr.RB)
-				ChangeGPR();//switch
-		}
-		else
-		{
-			if (old_sr.RB)
-				ChangeGPR();//switch
-		}
+		if (old_sr.RB)
+			ChangeGPR();//switch
+
 	}
 
 	old_sr.status=sr.status;
+	//old_sr.RB &= sr.MD;
 
 	return SRdecode();
 }
@@ -164,9 +177,14 @@ u32* Sh4_int_GetRegisterPtr(Sh4RegType reg)
 		case reg_sr_status :
 			return &sr.status;
 			break;
+			
 
 		case reg_sr_T :
 			return &sr.T;
+			break;
+
+		case reg_old_fpscr :
+			return &old_fpscr.full;
 			break;
 
 		case reg_fpscr :
@@ -187,7 +205,7 @@ u32 Sh4Context::offset(u32 sh4_reg)
 {
 	void* addr=Sh4_int_GetRegisterPtr((Sh4RegType)sh4_reg);
 	u32 offs=(u8*)addr-(u8*)&Sh4cntx;
-	verify(offs<sizeof(Sh4cntx));
+	//verify(offs<sizeof(Sh4cntx));
 
 	return offs;
 }

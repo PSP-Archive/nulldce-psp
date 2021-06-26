@@ -19,3 +19,5 @@ void aica_Term();
 void aica_sb_Init();
 void aica_sb_Reset(bool Manual);
 void aica_sb_Term();
+
+void aica_periodical(u32 cycl);

@@ -21,7 +21,7 @@ typedef union
 	struct { u32 fun : 6, sa  : 5, rd :  5, rt : 5, rs :  5, op : 6; } rtype; // register type
 	struct { u32 imm                  : 16, rt : 5, rs :  5, op : 6; } itype; // immediate type
 	struct { u32 imm                                   : 26, op : 6; } jtype; // jump type
-	struct { u32 fun : 6, fmt : 5, fd :  5, ft : 5, fs :  5, op : 6; } ftype; // register type
+	struct { u32 fun : 6, fd :  5, fs : 5, ft :  5, fmt : 5, op : 6; } ftype; // register type 
 
 	struct { u32 vd : 7, one : 1, vs : 7, two : 1,  vt :  7, sub : 3, op : 6; } vtype3; // register type
 
@@ -730,9 +730,8 @@ void emit_insn(psp_insn_t insn);
 #define emit_stype(_op, _code, _fun) \
 	do { psp_insn_t insn; insn.stype.op = _op; insn.stype.imm = _code; insn.stype.fun = _func; emit_insn(insn); } while(0)
 
-#define emit_ftype(_op, _fs, _ft, _fd, _fmt, _func) \
-	do { psp_insn_t insn; insn.ftype.op = _op; insn.ftype.fs = _fs; insn.ftype.ft = _ft; insn.ftype.fd = _fd; insn.ftype.fmt = _fmt; insn.ftype.fun = _func; emit_insn(insn); } while(0)
-
+#define emit_ftype(_op, _fmt, _fs, _ft, _fd, _func) \
+    do { psp_insn_t insn; insn.ftype.op = _op; insn.ftype.fs = _fs; insn.ftype.ft = _ft; insn.ftype.fd = _fd; insn.ftype.fmt = _fmt; insn.ftype.fun = _func; emit_insn(insn); } while(0)
 
 #define emit_reg(_op, _rs, _rt, _rd, _sa, _func) \
 	emit_rtype(psp_##_op, _rs, _rt, _rd, _sa, psp_##_func)
@@ -876,7 +875,8 @@ void emit_insn(psp_insn_t insn);
 #define emit_wsbh(_rd, _rt) emit_special3_bshfl(wsbh, _rt, _rd)
 
 #define emit_nop() emit_sll(psp_zero, psp_zero, 0)
-#define emit_move(_rt, _rs) emit_addiu(_rt, _rs, 0)
+#define emit_movi(_rt, _imm) emit_addiu(_rt, 0, _imm)
+#define emit_move(_rt, _rs) emit_addu(_rt, psp_zero, _rs)
 
 #define emit_cop1bc(_func, _imm) \
 	emit_itype(psp_cop1, psp_##_func, 0, _imm)
@@ -886,6 +886,7 @@ void emit_insn(psp_insn_t insn);
 
 #define emit_cop1w(_func, _fs, _ft, _fd) \
 	emit_ftype(psp_cop1, psp_cop1w, _fs, _ft, _fd, psp_##_func)
+
 
 //  | (bc1f|bc1t|bc1fl|bc1tl) imm
 #define emit_bc1f(_imm) emit_cop1bc(bc1f, ((u32)(_imm))>>2)
@@ -908,9 +909,14 @@ void emit_insn(psp_insn_t insn);
 #define emit_ceilws(_fd, _fs) emit_cop1s(ceilws, _fs, 0, _fd)
 #define emit_floorws(_fd, _fs) emit_cop1s(floorws, _fs, 0, _fd)
 #define emit_cvtws(_fd, _fs) emit_cop1s(cvtws, _fs, 0, _fd)
+
+#define emit_cfc1(_rt,_fd) emit_ftype(psp_cop1,psp_cfc1,_rt,_fd,0,0)
+#define emit_ctc1(_rt,_fd) emit_ftype(psp_cop1,psp_ctc1,_rt,_fd,0,0)
+
 //  | (c.f.s|c.un.s|c.eq.s|c.ueq.s|c.olt.s|c.ult.s|c.ole.s|c.ule.s) fd, fs
 //  | (c.sf.s|c.ngle.s|c.seq.s|c.ngl.s|c.lt.s|c.nge.s|c.le.s|c.ngt.s) fd, fs
-#define emit_cconds(_fcond, _fs, _ft) emit_cop1s(cvtws, _fs, _ft, 0, (psp_cconds + _fcond))
+#define emit_cconds(_fcond, _fs, _ft) emit_ftype(psp_cop1, psp_cop1s, _fs, _ft, 0, (psp_cconds + _fcond))
+
 #define emit_cfs(_fs, _ft) emit_cconds(psp_fcond_f, _fs, _ft)
 #define emit_cuns(_fs, _ft) emit_cconds(psp_fcond_un, _fs, _ft)
 #define emit_ceqs(_fs, _ft) emit_cconds(psp_fcond_eq, _fs, _ft)
@@ -930,8 +936,8 @@ void emit_insn(psp_insn_t insn);
 //  | cvt.s.w fd, fs
 #define emit_cvtsw(_fd, _fs) emit_cop1w(cvtsw, _fs, 0, _fd)
 //  | (mfc1|mtc1) rt, fs
-#define emit_mfc1(_rt, _fs) emit_ftype(psp_cop1, psp_mfc1, _fs, _rt, 0, 0)
-#define emit_mtc1(_rt, _fs) emit_ftype(psp_cop1, psp_mtc1, _fs, _rt, 0, 0)
+#define emit_mfc1(_rt, _fs) emit_ftype(psp_cop1, psp_mfc1, _rt, _fs, 0, 0)
+#define emit_mtc1(_rt, _fs) emit_ftype(psp_cop1, psp_mtc1, _rt, _fs, 0, 0)
 
 
 #define emit_vtype_vd_vs_vt(_op, _sub, _vsize, _vs, _vt, _vd) \
@@ -950,7 +956,7 @@ void emit_insn(psp_insn_t insn);
 #define emit_vmovs(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs,  0, _vd)
 #define emit_vabss(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs,  1, _vd)
 #define emit_vnegs(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs,  2, _vd)
-#define emit_vsqrts(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs, 13, _vd)
+#define emit_vsqrts(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs, 18, _vd)
 #define emit_vrcps(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs, 16, _vd)
 #define emit_vrsqs(_vs, _vd) emit_vtype_vd_vs_vt(psp_vfpu4, 0, 1, _vs, 17, _vd)
 

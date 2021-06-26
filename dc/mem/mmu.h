@@ -22,7 +22,7 @@ void MMU_Reset(bool Manual);
 void MMU_Term();
 bool mmu_match(u32 va,CCN_PTEH_type Address,CCN_PTEL_type Data);
 
-#define mmu_TranslateSQW(adr) (sq_remap[(adr>>20)&0x3F] | (adr & 0xFFFFF))
+#define mmu_TranslateSQW(addr) (sq_remap[(addr>>20)&0x3F] | (addr & 0xFFFE0))
 
 static INLINE bool mmu_enabled()
 {

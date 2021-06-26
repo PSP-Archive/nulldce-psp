@@ -3,10 +3,11 @@
 #pragma once
 
 #ifndef DEBUG 
-#define printf(fmt, ...) (0)
+//#define printf(fmt, ...) (0)
 #endif
 
 extern u32 dynarecIdle;
+extern bool BETcondPatch;
 
 bool Init_DC();
 //this is to be called from emulation code

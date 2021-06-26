@@ -63,6 +63,8 @@ void cpu_iNimp(u32 op, const char* info)
 	printf("not implemented opcode : %X : ", op);
 	printf(info);
 
+	//0100 1101 1100 1000
+
 	//sh4_cpu.Stop();
 }
 
@@ -94,21 +96,21 @@ sh4op(i0000_0000_0011_1000)
 //ocbi @<REG_N>
 sh4op(i0000_nnnn_1001_0011)
 {
-	u32 n = GetN(op);
+	//u32 n = GetN(op);
 	//printf("ocbi @0x%08X \n",r[n]);
 }
 
 //ocbp @<REG_N>
 sh4op(i0000_nnnn_1010_0011)
 {
-	u32 n = GetN(op);
+	//u32 n = GetN(op);
 	//printf("ocbp @0x%08X \n",r[n]);
 }
 
 //ocbwb @<REG_N>
 sh4op(i0000_nnnn_1011_0011)
 {
-	u32 n = GetN(op);
+	//u32 n = GetN(op);
 	//printf("ocbwb @0x%08X \n",r[n]);
 }
 
@@ -117,38 +119,46 @@ template<bool mmu_on>
 INLINE void FASTCALL do_sqw(u32 Dest)
 {
 	//TODO : Check for enabled store queues ?
-	u32* sq;
 	u32 Address;
-	sq = (u32*)&sq_both[Dest& 0x20];
 
 	//Translate the SQ addresses as needed
 	if (mmu_on)
 	{
-		Address=mmu_TranslateSQW(Dest&0xFFFFFFE0);
+		Address=mmu_TranslateSQW(Dest);
 	}
 	else
 	{
-		u32 QACR;
-		if ((Dest& 0x20)==0)
-			QACR = CCN_QACR0.Area;
-		else
-			QACR = CCN_QACR1.Area;
+		u32 QACR = CCN_QACR_TR[0];
 
-		Address = (Dest & 0x03FFFFE0) | (QACR << 26);
+		Address = QACR+(Dest&~0x1f);
 	}
 
-	if (((Address >> 26) & 0x7) == 4)//Area 4
+	if (((Address >> 26) & 0x7) != 4)//Area 4
 	{
-		TAWriteSQ(Address,sq);
+		u8* sq=&sq_both[Dest& 0x20];
+		WriteMemBlock_nommu_sq(Address,(u32*)sq);
+		
 	}
 	else
 	{
-		WriteMemBlock_nommu_ptr(Address,sq,8*4);
+		TAWriteSQ(Address,sq_both);
 	}
 }
 
+extern "C" void do_sqw_nommu_area_3_nonvmem(u32 dst)
+{
+	const u32 Address = CCN_QACR_TR[0]+(dst&~0x1f);
+	
+	if (((Address >> 26) & 0x7) == 4){
+		TAWriteSQ(Address,sq_both);
+		return;
+	}
+	
+	memcpy((u64*)&mem_b.data[dst&(RAM_MASK-0x1F)],(u64*)&sq_both[dst& 0x20],32);
+}
+
 void FASTCALL do_sqw_mmu(u32 dst) { do_sqw<true>(dst); }
-void FASTCALL do_sqw_nommu(u32 dst) { do_sqw<false>(dst); }
+void FASTCALL do_sqw_nommu_full(u32 dst) { do_sqw<false>(dst); }
 
 sh4op(i0000_nnnn_1000_0011)
 {
@@ -199,14 +209,13 @@ sh4op(i0000_nnnn_0010_1001)
 {
 	//iNimp("movt <REG_N>");
 	u32 n = GetN(op);
-	r[n] = !!sr.T;
+	r[n] = sr.T;
 }
 
 //************************ Reg Compares ************************
 //cmp/pz <REG_N>
 sh4op(i0100_nnnn_0001_0001)
-{//ToDo : Check This [26/4/05]
-	//iNimp("cmp/pz <REG_N>");
+{
 	u32 n = GetN(op);
 
 	if (((s32)r[n]) >= 0)
@@ -457,70 +466,57 @@ sh4op(i0010_nnnn_mmmm_0111)
 	sr.Q=r[n]>>31;
 	sr.M=r[m]>>31;
 	sr.T=sr.M^sr.Q;
-	return;
-	/*
-	if ((r[n] & 0x80000000)!=0)
-	sr.Q = 1;
-	else
-	sr.Q = 0;
-
-	if ((r[m] & 0x80000000)!=0)
-		sr.M = 1;
-	else
-		sr.M = 0;
-
-	if (sr.Q == sr.M)
-		sr.T = 0;
-	else
-		sr.T = 1;
-		*/
 }
 
 //div1 <REG_M>,<REG_N>
 sh4op(i0011_nnnn_mmmm_0100)
 {
-	u32 n = GetN(op);
-	u32 m = GetM(op);
+	u32 n=GetN(op);
+	u32 m=GetM(op);
 
-	const u8 old_q = sr.Q;
-	sr.Q = (u8)((0x80000000 & r[n]) != 0);
+	unsigned long tmp0, tmp2;
+	unsigned char old_q, tmp1;
+
+	old_q = sr.Q;
+	sr.Q = (u8)((0x80000000 & r[n]) !=0);
 
 	r[n] <<= 1;
-	r[n] |= sr.T;
+	r[n] |= (unsigned long)sr.T;
 
-	const u32 old_rn = r[n];
+	tmp0 = r[n];	// this need only be done once here ..
+	tmp2 = r[m];
 
-	if (old_q == 0)
+	if( 0 == old_q )
 	{
-		if (sr.M == 0)
+		if( 0 == sr.M )
 		{
-			r[n] -= r[m];
-			bool tmp1 = r[n] > old_rn;
-			sr.Q = sr.Q ^ tmp1;
+			r[n] -= tmp2;
+			tmp1	= (r[n]>tmp0);
+			sr.Q	= (sr.Q==0) ? tmp1 : (u8)(tmp1==0) ;
 		}
 		else
 		{
-			r[n] += r[m];
-			bool tmp1 = r[n] < old_rn;
-			sr.Q = !sr.Q ^ tmp1;
+			r[n] += tmp2;
+			tmp1	=(r[n]<tmp0);
+			sr.Q	= (sr.Q==0) ? (u8)(tmp1==0) : tmp1 ;
 		}
 	}
 	else
 	{
-		if (sr.M == 0)
+		if( 0 == sr.M )
 		{
-			r[n] += r[m];
-			bool tmp1 = r[n] < old_rn;
-			sr.Q = sr.Q ^ tmp1;
+			r[n] += tmp2;
+			tmp1	=(r[n]<tmp0);
+			sr.Q	= (sr.Q==0) ? tmp1 : (u8)(tmp1==0) ;
 		}
 		else
 		{
-			r[n] -= r[m];
-			bool tmp1 = r[n] > old_rn;
-			sr.Q = !sr.Q ^ tmp1;
+			r[n] -= tmp2;
+			tmp1	=(r[n]>tmp0);
+			sr.Q	= (sr.Q==0) ? (u8)(tmp1==0) : tmp1 ;
 		}
 	}
-	sr.T = (sr.Q == sr.M);
+	sr.T = (sr.Q==sr.M);
 }
 
 //************************ Simple maths ************************
@@ -546,12 +542,12 @@ sh4op(i0011_nnnn_mmmm_1110)
 // addv <REG_M>,<REG_N>
 sh4op(i0011_nnnn_mmmm_1111)
 {
-	iNimp(op, "addv <REG_M>,<REG_N>");
+	//iNimp(op, "addv <REG_M>,<REG_N>");
 	u32 n = GetN(op);
 	u32 m = GetM(op);
-	//s64 br=(s64)(s32)r[n]+(s64)(s32)r[m];
-	u32 rm=r[m];
-	u32 rn=r[n];
+	s64 br=(s64)(s32)r[n]+(s64)(s32)r[m];
+	//u32 rm=r[m];
+	//u32 rn=r[n];
 	/*__asm
 	{
 		mov eax,rm;
@@ -560,8 +556,8 @@ sh4op(i0011_nnnn_mmmm_1111)
 		seto sr.T;
 		mov rn,eax;
 	};*/
-	r[n]=rn;
-	/*
+	//r[n]=rn;
+
 	if (br >=0x80000000)
 		sr.T=1;
 	else if (br < (s64) (0xFFFFFFFF80000000u))
@@ -573,7 +569,7 @@ sh4op(i0011_nnnn_mmmm_1111)
 	else
 		sr.T=0;*/
 
-	//r[n]+=r[m];
+	r[n]+=r[m];
 }
 
 //subc <REG_M>,<REG_N>
@@ -599,34 +595,23 @@ sh4op(i0011_nnnn_mmmm_1010)
 //subv <REG_M>,<REG_N>
 sh4op(i0011_nnnn_mmmm_1011)
 {
-	iNimp(op, "subv <REG_M>,<REG_N>");
+	//iNimp(op, "subv <REG_M>,<REG_N>");
 	u32 n = GetN(op);
 	u32 m = GetM(op);
-	/*s64 br=(s64)(s32)r[n]-(s64)(s32)r[m];
+	s64 br=(s64)(s32)r[n]-(s64)(s32)r[m];
 
 	if (br >=0x80000000)
 		sr.T=1;
 	else if (br < (s64) (0xFFFFFFFF80000000u))
 		sr.T=1;
 	else
-		sr.T=0;*/
+		sr.T=0;
 	/*if (br>>32)
 		sr.T=1;
 	else
 		sr.T=0;*/
 
-	//r[n]-=r[m];
-	u32 rm=r[m];
-	u32 rn=r[n];
-	/*__asm
-	{
-		mov eax,rm;
-		mov ecx,rn;
-		sub eax,ecx;
-		seto sr.T;
-		mov rn,eax;
-	};*/
-	r[n]=rn;
+	r[n]-=r[m];
 }
 //dt <REG_N>
 sh4op(i0100_nnnn_0001_0000)
@@ -729,10 +714,7 @@ sh4op(i0100_nnnn_mmmm_1100)
 		r[n] <<= (r[m] & 0x1F);
 	else if ((r[m] & 0x1F) == 0)
 	{
-		if ((r[n] & 0x80000000) == 0)
-			r[n] = 0;
-		else
-			r[n] = 0xFFFFFFFF;
+		r[n]=((s32)r[n])>>31;
 	}
 	else
 		r[n] = ((s32)r[n]) >> ((~r[m] & 0x1F) + 1);
@@ -741,21 +723,7 @@ sh4op(i0100_nnnn_mmmm_1100)
 
 //shld <REG_M>,<REG_N>
 sh4op(i0100_nnnn_mmmm_1101)
-{//ToDo : Check This [26/4/05] x2
-	//iNimp("shld <REG_M>,<REG_N>");
-	//HACK : CHECKME
-	/*u32 n = GetN(op);
-	u32 m = GetM(op);
-	s32 s;
-
-	s =  (s32)(r[m] & 0x80000000);
-	if (s == 0)
-		r[n] <<= (r[m]);
-	else if ((r[m] & 0x1f) == 0)
-		r[n] = 0;
-	else
-		r[n] = (u32)r[n] >> (32-r[m]);*/ // -> bug ! 32-r[m] -> -(r[m]&0x1F)
-
+{
 	u32 n = GetN(op);
 	u32 m = GetM(op);
 	u32 sgn = r[m] & 0x80000000;
@@ -778,7 +746,7 @@ sh4op(i0100_nnnn_0010_0100)
 	u32 n = GetN(op);
 	u32 t;
 
-	t = !!sr.T;
+	t = sr.T;
 
 	sr.T = r[n] >> 31;
 
@@ -813,7 +781,7 @@ sh4op(i0100_nnnn_0010_0101)
 
 	r[n] >>= 1;
 
-	r[n] |=(!!sr.T)<<31;
+	r[n] |=(sr.T)<<31;
 
 	sr.T = t;
 }
@@ -826,7 +794,7 @@ sh4op(i0100_nnnn_0000_0101)
 	u32 n = GetN(op);
 	sr.T = r[n] & 0x1;
 	r[n] >>= 1;
-	r[n] |= ((!!sr.T) << 31);
+	r[n] |= (sr.T << 31);
 }
 //************************ byte reorder/sign ************************
 //swap.b <REG_M>,<REG_N>
@@ -983,10 +951,9 @@ sh4op(i0000_nnnn_0000_0010)//0002
  //sts FPSCR,<REG_N>
  sh4op(i0000_nnnn_0110_1010)
 {
-	//iNimp("sts FPSCR,<REG_N>");
 	u32 n = GetN(op);
 	r[n] = fpscr.full;
-	//UpdateFPSCR();
+	UpdateFPSCR();
 }
 
 //sts.l FPSCR,@-<REG_N>

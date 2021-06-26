@@ -68,6 +68,18 @@ void recSh4_ClearCache()
 	printf("recSh4:Dynarec Cache clear at %08X\n",curr_pc);
 }
 
+u32 startAddr = 0;
+
+void StartCodeDump(){
+	startAddr = LastAddr;
+}
+
+void CodeDump(const char * filename){
+	FILE*f=fopen(filename,"wb");
+	fwrite(&CodeCache[startAddr],LastAddr-startAddr,1,f);
+	fclose(f);
+}
+
 void recSh4_Run()
 {
 	sh4_int_bCpuRun=true;
@@ -114,32 +126,47 @@ u32 emit_FreeSpace()
 }
 
 
-bool DoCheck(u32 pc)
+bool DoCheck(u32 pc, u32 len)
 {
+	// is on bios or such
+	if (!GetMemPtr(pc, len))
+	{
+		return false;
+	}
+
 	if (IsOnRam(pc))
 	{
 		pc&=0xFFFFFF;
 		switch(pc)
 		{
+			//DOA2LE
 			case 0x3DAFC6:
 			case 0x3C83F8:
+
+			//Shenmue 2
+			case 0x348000:
+				
+			//Shenmue
+			case 0x41860e:
 				return true;
 
 			default:
 				return false;
 		}
 	}
+	
 	return false;
 }
 
-u32 dynarecIdle;
+u32 dynarecIdle = 2;
+bool BETcondPatch = false;
 
 void AnalyseBlock(DecodedBlock* blk);
 DynarecCodeEntry* rdv_CompileBlock(u32 bpc)
 {
 	DecodedBlock* blk=dec_DecodeBlock(bpc,fpscr,SH4_TIMESLICE/2);
 	AnalyseBlock(blk);
-	DynarecCodeEntry* rv=ngen_Compile(blk,DoCheck(blk->start));
+	DynarecCodeEntry* rv=ngen_Compile(blk,DoCheck(blk->start,blk->sh4_code_size));
 	dec_Cleanup();
 	return rv;
 }
@@ -248,6 +275,35 @@ void recSh4_Init()
     memset(CodeCache,0xCD,CODE_SIZE);
 
 #endif
+
+	#define ADDR_8BIT(psp_base_addr, sh4_base_addr, sh_size,sz) ((addr % sz) >> 21) & 255
+	#define ADDR_32BIT(psp_base_addr, sh4_base_addr, sh_size,sz) psp_base_addr + ((sh4_base_addr - sh_size) % sz)
+
+	for (int i = 0x00000000; i < 0x00800000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B800000, i, 0, ARAM_SIZE);
+	for (int i = 0x00800000; i < 0x01000000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B800000, i, 0x00800000, ARAM_SIZE);
+	for (int i = 0x20000000; i < 0x20000000 + ARAM_SIZE; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B800000 , i, 0x20000000, ARAM_SIZE);
+
+    for (int i = 0x04000000; i < 0x05000000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B000000 , i, 0x04000000, VRAM_SIZE);
+    for (int i = 0x06000000; i < 0x07000000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B000000 , i,  0x06000000, VRAM_SIZE);
+
+    for (int i = 0x0C000000; i < 0x10000000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0A000000 , i, 0x0C000000,  RAM_SIZE);
+
+	FILE * f = fopen("lut_dump.txt","w");
+	for (int i = 0; i < 256; i++){
+		fprintf(f,"SH addr: %x --> PSP Mapped: %x\n", (i * 0x200000),Sh4cntx.mem_lut[i]);
+	}
+	fclose(f);
+
+	/*#define Unused_ADDR 0x0B800000
+	#define ARAM_ADDR   0x0B800000
+	#define VRAM_ADDR   0x0B000000
+	#define RAM_ADDR    0x0A000000 
+
+	memset(Sh4cntx.mem_lut,Unused_ADDR,255); //Map everything to aica mem (even unused)
+
+	for (int i = 0b00010000; i < 0b00010100; i++) Sh4cntx.mem_lut[i] =  VRAM_ADDR;
+	for (int i = 0b00011000; i < 0b00011100; i++) Sh4cntx.mem_lut[i] =  VRAM_ADDR;
+	for (int i = 0b00110000; i < 0b01000000; i++) Sh4cntx.mem_lut[i] =  RAM_ADDR; */
 
 	memset(CodeCache,0,CODE_SIZE);
 }

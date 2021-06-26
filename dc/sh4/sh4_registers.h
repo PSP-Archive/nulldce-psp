@@ -10,6 +10,8 @@ struct Sh4Context
 
 	u32 r_bank[8];
 
+	u32  mem_lut[255];
+
 	u32 gbr,ssr,spc,sgr,dbr,vbr;
 	u32 pr,fpul;
 	u32 pc;
@@ -23,6 +25,9 @@ struct Sh4Context
 			u32 h;
 		};
 	} mac;
+
+	int sh4_sched_next;
+	u32 interrupt_pend;
 	//u16* pc_ptr;
 
 	sr_type sr;

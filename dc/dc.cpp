@@ -107,11 +107,6 @@ emu_thread_rv_t emu_rtc(emu_thread_state_t cmd)
 
 			_Reset_DC(true);
 
-			//when we boot from ip.bin , it's nice to have it seted up
-			/*sh4_cpu.SetRegister(reg_gbr,0x8c000000);
-			sh4_cpu.SetRegister(reg_sr,0x700000F0);
-			sh4_cpu.SetRegister(reg_fpscr,0x0004001);*/
-
 			emu_thread_rv=RV_OK;
 			break;
 		case EMU_QUIT:

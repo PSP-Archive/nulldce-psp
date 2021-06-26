@@ -3,6 +3,10 @@
 #include "pvrLock.h"
 #include "dc/sh4/intc.h"
 #include "dc/mem/_vmem.h"
+#include "dc/mem/sh4_mem.h"
+#include "dc/mem/sh4_internal_reg.h"
+
+#include "plugs/drkPvr/threaded.h"
 
 //TODO : move code later to a plugin
 //TODO : Fix registers arrays , they must be smaller now doe to the way SB registers are handled
@@ -82,7 +86,7 @@ INLINE u8 GetUV420(int x, int y,u8* base)
 
 	return base[realx+realy*8];
 }
-INLINE void YUV_ConvertMacroBlock()
+INLINE void YUV_ConvertMacroBlock(u8* datap)
 {
 	u32 TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
 
@@ -95,7 +99,7 @@ INLINE void YUV_ConvertMacroBlock()
 	//YUYV
 	if (block_size==384)
 	{
-		u8* U=(u8*)&YUV_tempdata[0];
+		u8* U= datap; 
 		u8* V=(u8*)&YUV_tempdata[64/4];
 		u8* Y=(u8*)&YUV_tempdata[(64+64)/4];
 		
@@ -158,14 +162,24 @@ void YUV_data(u32* data , u32 count)
 		if ((YUV_index+count)>=block_size)
 		{	//more or exactly one block remaining
 			u32 dr=block_size-YUV_index;				//remaining byts til block end
-			memcpy(&YUV_tempdata[YUV_index>>2],data,dr);	//copy em
+			if (YUV_index == 0)
+			{
+				// Avoid copy
+				YUV_ConvertMacroBlock((u8*)data);				//convert block
+			}
+			else
+			{
+				memcpy_vfpu(&YUV_tempdata[YUV_index>>2],data,dr);	//copy em
+				YUV_ConvertMacroBlock((u8*)&YUV_tempdata[0]);					//convert block
+				YUV_index = 0;
+			}
+
 			data+=dr>>2;								//count em
 			count-=dr;
-			YUV_ConvertMacroBlock();					//convert block
 		}
 		else
 		{	//less that a whole block remaining
-			memcpy(&YUV_tempdata[YUV_index>>2],data,count);	//append it
+			memcpy_vfpu(&YUV_tempdata[YUV_index>>2],data,count);	//append it
 			YUV_index+=count;
 			count=0;
 		}
@@ -221,12 +235,16 @@ void FASTCALL pvr_write_area1_8(u32 addr,u8 data)
 u32 pvr_map32(u32 offset32)
 {
 	//64b wide bus is achieved by interleaving the banks every 32 bits
-	const u32 bank_bit = VRAM_BANK_BIT;
+	//const u32 bank_bit = VRAM_BANK_BIT;
 	const u32 static_bits = VRAM_MASK - (VRAM_BANK_BIT * 2 - 1) + 3;
 	const u32 offset_bits = (VRAM_BANK_BIT - 1) & ~3;
+	
 	u32 bank = (offset32 & VRAM_BANK_BIT) / VRAM_BANK_BIT;
+
 	u32 rv = offset32 & static_bits;
+
 	rv |= (offset32 & offset_bits) * 2;
+
 	rv |= bank * 4;
 
 	return rv;
@@ -257,26 +275,67 @@ void FASTCALL TAWrite(u32 address,u32* data,u32 count)
 	else //Vram Writef
 	{
 		//This actually works on dc, need to handle lmmodes
-		//memcpy(&vram.data[address&VRAM_MASK], data, count*32);
+		memcpy_vfpu(&vram.data[address&VRAM_MASK], data, count*32);
+		//int _cont = count*32;
+		/*sceKernelDcacheWritebackRange(&vram.data[address&VRAM_MASK], _cont);
+		sceKernelDcacheWritebackRange(data, _cont);
 		sceKernelDcacheWritebackInvalidateAll();
-		sceDmacMemcpy(&vram.data[address&VRAM_MASK], data, count*32);
-		sceKernelDcacheWritebackInvalidateAll();
+		sceDmacMemcpy(&vram.data[address&VRAM_MASK], data, _cont);*/
+		//sceKernelDcacheWritebackInvalidateAll();
 	}
 }
-void FASTCALL TAWriteSQ(u32 address,u32* data)
+
+void FASTCALL TAWriteSQ(u32 address,u8* sqb)
 {
 	u32 address_w=address&0x1FFFFFF;//correct ?
+	u8* sq=&sqb[address&0x20];
+
 	if (likely(address_w<0x800000))//TA poly
 	{
-		libPvr_TaSQ(data);
+		libPvr_TaSQ((u32*)sq);
 	}
 	else if(likely(address_w<0x1000000)) //Yuv Converter
 	{
-		YUV_data(data,1);
+		YUV_data((u32*)sq,1);
 	}
 	else //Vram Writef
 	{
-		memcpy(&vram.data[address&VRAM_MASK],data,32);
+		/*if (SB_LMMODE0 == 0)
+		{
+			// 64b path
+			MemWrite32(&vram[address_w&(VRAM_MASK-0x1F)],sq);
+		}
+		else*/
+		{
+			// 32b path
+			for (int i = 0; i < 8; i++, address_w += 4)
+			{
+				pvr_write_area1_32(address_w, ((u32 *)sq)[i]);
+			}
+		}
+	}
+}
+
+
+void FASTCALL TAWriteSQ_nommu(u32 address)
+{
+	u32 address_w=address&0x1FFFFFF;//correct ?
+	u8* sq=&sq_both[address & 0x20];
+
+	if (likely(address_w<0x800000))//TA poly
+	{
+		libPvr_TaSQ((u32*)sq);
+	}
+	else if(likely(address_w<0x1000000)) //Yuv Converter
+	{
+		YUV_data((u32*)sq,1);
+	}
+	else //Vram Writef
+	{
+		for (int i = 0; i < 8; i++, address_w += 4)
+		{
+			pvr_write_area1_32(address_w, sq[i]);
+		}
 	}
 }
 //Misc interface
@@ -284,10 +343,11 @@ void FASTCALL TAWriteSQ(u32 address,u32* data)
 //Init/Term , global
 void pvr_Init()
 {
+	threaded_init();
 }
 void pvr_Term()
 {
-
+	threaded_term();
 }
 //Reset -> Reset - Initialise to defualt values
 void pvr_Reset(bool Manual)

@@ -77,6 +77,9 @@ void bm_AddCode(u32 addr,DynarecCodeEntry* code)
 void bm_Reset()
 {
 	//ngen_ResetBlocks();
+
+	//cache = (DynarecBlock**)0x00010000;
+
 	for (u32 i=0;i<BM_BLOCKLIST_COUNT;i++)
 	{
 		cache[i]=BM_BLOCK_EMPTY;

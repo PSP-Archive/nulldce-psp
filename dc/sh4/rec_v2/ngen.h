@@ -26,6 +26,11 @@ u32 emit_FreeSpace();
 void* emit_GetCCPtr();
 void emit_SetBaseAddr();
 
+void emit_WriteCodeCache();
+
+void CodeDump(const char * filename);
+void StartCodeDump();
+
 //Called from ngen_FailedToFindBlock
 DynarecCodeEntry* rdv_FailedToFindBlock();
 //Called when a block check failed, and the block needs to be invalidated

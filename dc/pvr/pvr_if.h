@@ -26,7 +26,9 @@ void pvr_Term();
 void pvr_Reset(bool Manual);
 
 void FASTCALL TAWrite(u32 address,u32* data,u32 count);
-void FASTCALL TAWriteSQ(u32 address,u32* data);
+void FASTCALL TAWriteSQ(u32 address,u8* data);
+void FASTCALL TAWriteSQ_nommu(u32 address);
+void YUV_init();
 
 //
 #define UpdatePvr(clc) libPvr_UpdatePvr(clc)

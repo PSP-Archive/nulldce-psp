@@ -14,11 +14,15 @@ enum shil_param_type
 	FMT_I32,
 	FMT_F32,
 	FMT_F64,
+	
+	FMT_V2,
+	FMT_V3,
 	FMT_V4,
+	FMT_V8,
 	FMT_V16,
 
 	FMT_REG_BASE=FMT_I32,
-	FMT_VECTOR_BASE=FMT_V4,
+	FMT_VECTOR_BASE=FMT_V2,
 
 	FMT_MASK=0xFFFF,
 };
@@ -77,13 +81,17 @@ struct shil_param
 		{
 			type=FMT_V16;
 			_imm=reg_xf_0;
+		}else if (reg==regv_fmtrx)
+		{
+			type=FMT_V16;
+			_imm=reg_fr_0;
 		}
 		else
 		{
 			type=FMT_I32;
 			_reg=reg;
 		}
-		
+		memset(version, 0, sizeof(version));
 	}
 	union
 	{
@@ -91,6 +99,7 @@ struct shil_param
 		Sh4RegType _reg;
 	};
 	u32 type;
+	u16 version[16];
 
 	bool is_null() { return type==FMT_NULL; }
 	bool is_imm() { return type==FMT_IMM; }
@@ -131,10 +140,46 @@ struct shil_param
 
 struct shil_opcode
 {
+	u8  psp_rd = 0,  psp_rd2 = 0;
+	u8  psp_rs1 = 0, psp_rs2 = 0, psp_rs3 = 0;
+
 	shilop op;
 	u32 Flow;
 	u32 flags;
 
+	bool loadReg = true;
+	bool SwapReg = false;
+	bool SaveReg = true;
+
+	bool UseCustomReg = false;
+	u8 customReg = 0;
+
+	bool SwapWFloatR = false;
+
+	bool SwapSaveReg = false;
+	bool SkipLoadReg2 = false;
+
+	bool UseMemReg2 = false;
+
+	bool UseStaticReg = false;
+
 	shil_param rd,rd2;
 	shil_param rs1,rs2,rs3;
 };
+
+class RegValue : public std::pair<Sh4RegType, u32>
+	{
+	public:
+		RegValue(const shil_param& param, int index = 0)
+			: std::pair<Sh4RegType, u32>((Sh4RegType)(param._reg + index), param.version[index])
+		{
+			verify(param.is_reg());
+			verify(index >= 0 && index < (int)param.count());
+		}
+		RegValue(Sh4RegType reg, u32 version)
+			: std::pair<Sh4RegType, u32>(reg, version) { }
+		RegValue() : std::pair<Sh4RegType, u32>() { }
+
+		Sh4RegType get_reg() const { return first; }
+		u32 get_version() const { return second; }
+	};

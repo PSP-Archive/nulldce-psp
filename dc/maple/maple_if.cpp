@@ -12,6 +12,8 @@
 #include "dc/asic/asic.h"
 #include "dc/maple/maple_helper.h"
 
+#include "dc/sh4/sh4_sched.h"
+
 maple_device* MapleDevices[4][6];
 s32 maple_dma_pending=0;
 
@@ -19,6 +21,8 @@ s32 maple_dma_pending=0;
 #define unlikely(x) __builtin_expect((x),0)
 #define SWAP32(a) ((((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
+
+static int maple_schid;
 
 /*
 	Maple host controller
@@ -44,8 +48,7 @@ void maple_vblank()
 		{
 			if (!maple_ddt_pending_reset)
 			{
-				//printf("DDT vblank\n");
-				SB_MDST = 1;
+				//printf("DDT vblank\n");	
 				maple_DoDma();
 				if ((SB_MSYS>>12)&1)
 				{
@@ -70,7 +73,7 @@ void maple_SB_MDST_Write(u32 data)
 	{
 		if (SB_MDEN &1)
 		{
-			SB_MDST=1;
+			SB_MDST = 1;
 			maple_DoDma();
 		}
 	}
@@ -93,7 +96,7 @@ u32 dmacount=0;
 void maple_DoDma()
 {
 	verify(SB_MDEN &1)
-	verify(SB_MDST &1)
+	verify(SB_MDST==0)
 
 #if debug_maple
 	printf("Maple: DoMapleDma\n");
@@ -180,30 +183,44 @@ void maple_DoDma()
 		}
 	}
 
-	//printf("Maple XFER size %d bytes - %.2f ms\n",xfer_count,xfer_count*100.0f/(2*1024*1024/8));
-	maple_dma_pending=std::min((u64)xfer_count * (SH4_CLOCK / (2 * 1024 * 1024 / 8)), (u64)SH4_CLOCK);
-	
+	//printf("Maple XFER size %d bytes ms\n",xfer_count);
+	//maple_dma_pending= ((xfer_count*200000000)/262144)+1;
+	/*maple_dma_pending= (xfer_count*763);
+	SB_MDST = 1;*/
+
+	sh4_sched_request(maple_schid, xfer_count * (SH4_CLOCK / (2 * 1024 * 1024 / 8)));
 }
 
 void maple_Update(u32 cycles)
 {
 	if (maple_dma_pending>0)
 	{
+		cycles = (maple_dma_pending <= 0) ? 0 : cycles;
 		maple_dma_pending-=cycles;
-		if (likely(SB_MDEN&1))
+
+		if (maple_dma_pending<=0)
 		{
-			if (maple_dma_pending<=0)
-			{
-				SB_MDST=0;
-				asic_RaiseInterrupt(holly_MAPLE_DMA);
-			}
-		}
-		else
-		{
-			printf("WARNING: MAPLE DMA ABORT\n");
-			SB_MDST=0;	//I really wonder what this means, can the dma be continued ?
+			asic_RaiseInterrupt(holly_MAPLE_DMA);
+			maple_dma_pending = 0;
+			SB_MDST=0;
 		}
 	}
+}
+
+int Update(int tag, int c, int j)
+{
+	if (SB_MDEN & 1)
+	{
+		SB_MDST = 0;
+		asic_RaiseInterrupt(holly_MAPLE_DMA);
+	}
+	else
+	{
+		printf("WARNING: MAPLE DMA ABORT\n");
+		SB_MDST = 0; //I really wonder what this means, can the DMA be continued ?
+	}
+
+	return 0;
 }
 
 //Init registers :)
@@ -214,6 +231,8 @@ void maple_Init()
 
 	sb_regs[(SB_MSHTCL_addr-SB_BASE)>>2].flags=REG_32BIT_READWRITE;
 	sb_regs[(SB_MSHTCL_addr-SB_BASE)>>2].writeFunction=maple_SB_MSHTCL_Write;
+
+	maple_schid = sh4_sched_register(0, Update);
 }
 
 void maple_Reset(bool Manual)

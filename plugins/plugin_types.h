@@ -103,6 +103,17 @@ struct aica_init_params
 	HollyCancelInterruptFP* CancelInterrupt;
 };
 
+typedef u32 FASTCALL ReadMemFP(u32 addr,u32 size);
+typedef void FASTCALL WriteMemFP(u32 addr,u32 data,u32 size);
+
+struct arm_init_params
+{
+	u8*			aica_ram;
+
+	ReadMemFP*  ReadMem_aica_reg;
+	WriteMemFP* WriteMem_aica_reg;
+};
+
 //******************************************************
 //****************** Maple devices ******************
 //******************************************************

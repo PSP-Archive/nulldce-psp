@@ -42,5 +42,7 @@ namespace NORenderer
 #define rend_set_fps_text NORenderer::SetFpsText
 #define rend_set_render_rect(rect,sht)
 #define rend_set_fb_scale(x,y)
+
+extern volatile bool FB_DIRTY;
 #endif
 

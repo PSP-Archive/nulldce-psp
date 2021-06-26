@@ -20,7 +20,6 @@ Translated map:
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
-#define HANDLER_MAX 0x1F
 #define HANDLER_COUNT (HANDLER_MAX+1)
 //top registed handler
 _vmem_handler			_vmem_lrp;
@@ -156,6 +155,56 @@ void* _vmem_get_ptr2(u32 addr,u32& mask)
    mask=0xFFFFFFFF>>iirf;
    return ptr;
 }
+
+u32* _vmem_get_ptr2(u32 addr)
+{
+   u32   page=addr>>24;
+   size_t  iirf=(size_t)_vmem_MemInfo_ptr[page];
+   u32* ptr=(u32*)(iirf&~HANDLER_MAX);
+
+   return ptr;
+}
+
+void* _vmem_write_const(u32 addr,bool& ismem,u32 sz)
+{
+	u32   page=addr>>24;
+	unat  iirf=(unat)_vmem_MemInfo_ptr[page];
+	void* ptr=(void*)(iirf&~HANDLER_MAX);
+
+	if (ptr==0)
+	{
+		ismem=false;
+		const unat id=iirf;
+		if (sz==1)
+		{
+			return (void*)_vmem_WF8[id/4];
+		}
+		else if (sz==2)
+		{
+			return (void*)_vmem_WF16[id/4];
+		}
+		else if (sz==4)
+		{
+			return (void*)_vmem_WF32[id/4];
+		}
+		else
+		{
+			die("Invalid size");
+		}
+	}
+	else
+	{
+		ismem=true;
+		addr<<=iirf;
+		addr>>=iirf;
+
+		return &(((u8*)ptr)[addr]);
+	}
+	die("Invalid memory size");
+
+	return 0;
+}
+
 
 void* _vmem_read_const(u32 addr,bool& ismem,u32 sz)
 {
@@ -335,31 +384,31 @@ void fastcall _vmem_WriteMem64(u32 Address,u64 data)
 //defualt read handlers
 u8 fastcall _vmem_ReadMem8_not_mapped(u32 addresss)
 {
-	printf("[sh4]Read8 from 0x%X, not mapped [_vmem default handler]\n",addresss);
+	//printf("[sh4]Read8 from 0x%X, not mapped [_vmem default handler]\n",addresss);
 	return (u8)MEM_ERROR_RETURN_VALUE;
 }
 u16 fastcall _vmem_ReadMem16_not_mapped(u32 addresss)
 {
-	printf("[sh4]Read16 from 0x%X, not mapped [_vmem default handler]\n",addresss);
+	//printf("[sh4]Read16 from 0x%X, not mapped [_vmem default handler]\n",addresss);
 	return (u16)MEM_ERROR_RETURN_VALUE;
 }
 u32 fastcall _vmem_ReadMem32_not_mapped(u32 addresss)
 {
-	printf("[sh4]Read32 from 0x%X, not mapped [_vmem default handler]\n",addresss);
+	//printf("[sh4]Read32 from 0x%X, not mapped [_vmem default handler]\n",addresss);
 	return (u32)MEM_ERROR_RETURN_VALUE;
 }
 //defualt write handers
 void fastcall _vmem_WriteMem8_not_mapped(u32 addresss,u8 data)
 {
-	printf("[sh4]Write8 to 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
+	//printf("[sh4]Write8 to 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
 }
 void fastcall _vmem_WriteMem16_not_mapped(u32 addresss,u16 data)
 {
-	printf("[sh4]Write16 to 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
+	//printf("[sh4]Write16 to 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
 }
 void fastcall _vmem_WriteMem32_not_mapped(u32 addresss,u32 data)
 {
-	printf("[sh4] 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
+	//printf("[sh4] 0x%X=0x%X, not mapped [_vmem default handler]\n",addresss,data);
 }
 //code to register handlers
 //0 is considered error :)
@@ -398,21 +447,21 @@ u32 FindMask(u32 msk)
 //map a registed handler to a mem region :)
 void _vmem_map_handler(_vmem_handler Handler,u32 start,u32 end)
 {
-	/*verify(start<0x100);
+	verify(start<0x100);
 	verify(end<0x100);
-	verify(start<=end);*/
+	verify(start<=end);
 	for (u32 i=start;i<=end;i++)
 	{
 		_vmem_MemInfo_ptr[i]=((u8*)0)+(0x00000000 + Handler*4);
-		//_vmem_MemInfo_mask(i)=(Handler*4);
 	}
 }
 //map a memory block to a mem region :)
 void _vmem_map_block(void* base,u32 start,u32 end,u32 mask)
 {
-	verify(start<0x10000);
-	verify(end<0x10000);
+	verify(start<0x100);
+	verify(end<0x100);
 	verify(start<=end);
+	verify(base!=0);
 	u32 j=0;
 	for (u32 i=start;i<=end;i++)
 	{
@@ -431,7 +480,7 @@ void _vmem_mirror_mapping(u32 new_region,u32 start,u32 size)
 	u32 j=new_region;
 	for (u32 i=start;i<=end;i++)
 	{
-		_vmem_MemInfo_ptr[j&0xFFFF]=(u8*)_vmem_MemInfo_ptr[i&0xFFFF]+(i*0x10000)-(j*0x10000);
+		_vmem_MemInfo_ptr[j&0xFF]=_vmem_MemInfo_ptr[i&0xFF];
 		j++;
 	}
 }
@@ -508,8 +557,8 @@ void _vmem_term()
 	rv=[ptr]						//1
 */
 #if HOST_OS==OS_PSP
-//#define SLIM_RAM ((u8*)0x0A000000)
-ALIGN(64) u8 SLIM_RAM[ARAM_SIZE+RAM_SIZE+VRAM_SIZE];
+#define SLIM_RAM ((u8*)0x0A000000)
+//ALIGN(64) u8 SLIM_RAM[ARAM_SIZE+RAM_SIZE+VRAM_SIZE];
 union 
 {
 	struct 
@@ -548,20 +597,17 @@ bool _vmem_reserve()
 	u8* ram_alloc=SLIM_RAM;
 #endif
 
+	mem_b.size=RAM_SIZE;
+	mem_b.data=ram_alloc;
+	ram_alloc+=RAM_SIZE;
+	
+	vram.size=VRAM_SIZE;
+	vram.data=ram_alloc;
+	ram_alloc+= VRAM_SIZE;
 
 	aica_ram.size=ARAM_SIZE;
 	aica_ram.data=ram_alloc;
 	ram_alloc+=ARAM_SIZE;
-	
-	vram.size=VRAM_SIZE;
-	/*_PSPVRAM.GPUVram = (u8*)(sceGeEdramGetAddr());
-	_PSPVRAM.RAMVram = ram_alloc;*/
-	vram.data=ram_alloc;//(u8*)sceGeEdramGetAddr();
-	ram_alloc+= VRAM_SIZE;
-
-	mem_b.size=RAM_SIZE;
-	mem_b.data=ram_alloc;
-	ram_alloc+=RAM_SIZE;
 
 	return true;
 }

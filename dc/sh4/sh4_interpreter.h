@@ -23,6 +23,13 @@ enum OpcodeType
 	ReadWritePC=ReadsPC|WritesPC,		//Read and writes pc :P
 	WritesSRRWPC=WritesSR|ReadsPC|WritesPC,
 
+	NO_FP        = 256,
+	NO_GP        = 512,
+	NO_SP        = 1024,
+
+	UsesFPU      = 2048, // Floating point op
+	FWritesFPSCR = UsesFPU | WritesFPSCR,
+
 	//branches :
 	//not delay slot
 	Branch_dir=ReadWritePC,		//direct (eg , pc=r[xx]) -- this one is ReadWritePC b/c the delayslot may use pc ;)
@@ -56,6 +63,7 @@ extern "C" {
 #endif
 
 int  FASTCALL UpdateSystem();
+int UpdateSystem_INTC();
 
 #if HOST_OS==OS_LINUX
 }

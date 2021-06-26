@@ -8,6 +8,7 @@
 #include "dc/pvr/pvr_if.h"
 #include "dc/pvr/pvrLock.h"
 #include "dc/aica/aica_if.h"
+#include "dc/arm7/vbaARM.h"
 #include "dc/asic/asic.h"
 #include "dc/gdrom/gdrom_if.h"
 #include "dc/maple/maple_cfg.h"
@@ -47,7 +48,6 @@ void maple_cfg_plug(int i,int j,wchar * out)
 s32 plugins_Load_()
 {
 	libPvr_Load();
-	libGDR_Load();
 	libAICA_Load();
 	libExtDevice_Load();
 	mcfg_CreateDevices();
@@ -155,7 +155,7 @@ void plugins_Unload()
 	//libMaple_Unload
 	libExtDevice_Unload();
 	libAICA_Unload();
-	libGDR_Unload();
+	g_GDRDisc.reset();
 	libPvr_Unload();
 }
 
@@ -180,10 +180,10 @@ s32 plugins_Init_()
 		return rv;
 
 
-	gdr_init_params gdr_info;
+	 g_GDRDisc.reset(GDRomDisc::Create());
 
-	if (s32 rv = libGDR_Init(&gdr_info))
-		return rv;
+    if (s32 rv = g_GDRDisc->Init())
+        return rv;
 
 
 	aica_init_params aica_info;
@@ -194,6 +194,8 @@ s32 plugins_Init_()
 
 	if (s32 rv = libAICA_Init(&aica_info))
 		return rv;
+	/*if (s32 rv = libAICA_Init_LLE(&aica_info))
+		return rv;*/
 
 	ext_device_init_params ext_device_info;
 	ext_device_info.RaiseInterrupt=asic_RaiseInterrupt;
@@ -294,15 +296,15 @@ void plugins_Term()
 	//term all plugins
 	libExtDevice_Term();
 	libAICA_Term();
-	libGDR_Term();
+	g_GDRDisc.reset();
 	libPvr_Term();
 }
 
 void plugins_Reset(bool Manual)
 {
 	libPvr_Reset(Manual);
-	libGDR_Reset(Manual);
-	libAICA_Reset(Manual);
+	g_GDRDisc->Reset(Manual);
+	libAICA_Reset_LLE(Manual);
 	libExtDevice_Reset(Manual);
 }
 

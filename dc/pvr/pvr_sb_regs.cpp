@@ -75,7 +75,7 @@ void RegWrite_SB_PDST(u32 data)
 
 u32 calculate_start_link_addr()
 {
-	u8* base=&mem_b[SB_SDSTAW & (RAM_MASK - 31)];
+	u8* base=&mem_b[SB_SDSTAW & RAM_MASK];
 	u32 rv;
 	if (SB_SDWLT==0)
 	{
@@ -100,7 +100,7 @@ void pvr_do_sort_dma()
 	u32 link_addr=calculate_start_link_addr();
 	u32 link_base_addr = SB_SDBAAW & ~31;
 
-	while (link_addr!=2)
+	while (link_addr!=1)
 	{
 		if (SB_SDLAS==1)
 			link_addr*=32;
@@ -111,7 +111,7 @@ void pvr_do_sort_dma()
 		link_addr=ea_ptr[0x1C>>2];//Next link
 		//transfer global param
 		libPvr_TaDMA(ea_ptr,ea_ptr[0x18>>2]);
-		if (link_addr==1)
+		if (link_addr==2)
 		{
 			link_addr=calculate_start_link_addr();
 		}
@@ -119,7 +119,7 @@ void pvr_do_sort_dma()
 
 	//end of dma :)
 	SB_SDST=0;
-	SB_SDSTAW += 32;
+	//SB_SDSTAW += 32;
 	asic_RaiseInterrupt(holly_PVR_SortDMA);
 }
 

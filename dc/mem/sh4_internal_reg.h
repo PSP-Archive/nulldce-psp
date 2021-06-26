@@ -4,7 +4,7 @@
 #define OnChipRAM_SIZE (0x2000)
 #define OnChipRAM_MASK (OnChipRAM_SIZE-1)
 
-extern ALIGN(256) u8 sq_both[64];
+extern ALIGN(64) u64 sq_buffer[64/8];
 
 extern ALIGN(32) RegisterStruct CCN[20];		//CCN  : 14 registers
 extern ALIGN(32) RegisterStruct UBC[20];		//UBC  : 9 registers
@@ -17,15 +17,7 @@ extern ALIGN(32) RegisterStruct TMU[20];		//TMU  : 12 registers
 extern ALIGN(32) RegisterStruct SCI[20];		//SCI  : 8 registers
 extern ALIGN(32) RegisterStruct SCIF[20];		//SCIF : 10 registers
 
-/*
-//Region P4
-u32 ReadMem_P4(u32 addr,u32 sz);
-void WriteMem_P4(u32 addr,u32 data,u32 sz);
-
-//Area7
-u32 ReadMem_area7(u32 addr,u32 sz);
-void WriteMem_area7(u32 addr,u32 data,u32 sz);
-void FASTCALL WriteMem_sq_32(u32 address,u32 data);*/
+#define sq_both ((u8*)sq_buffer)
 
 //Init/Res/Term
 void sh4_internal_reg_Init();

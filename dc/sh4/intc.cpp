@@ -61,50 +61,30 @@
 //#define COUNT_INTERRUPT_UPDATES
 
 //these are fixed
-template<u32 IRL>
-u32 GetIRLPriority()
-{
-	return 15-IRL;
-}
-//Return interrupt priority level
-template<u16* reg,u32 part>
-u32 GetPriority_bug()	//VC++ bugs this ;p
-{
-	return ((*reg)>>(4*part))&0xF;
-}
-template<u32 part>
-u32 GetPriority_a()
-{
-	return ((INTC_IPRA.reg_data)>>(4*part))&0xF;
-}
-template<u32 part>
-u32 GetPriority_b()
-{
-	return ((INTC_IPRB.reg_data)>>(4*part))&0xF;
-}
-template<u32 part>
-u32 GetPriority_c()
-{
-	return ((INTC_IPRC.reg_data)>>(4*part))&0xF;
-}
-#define GIPA(p) GetPriority_a< p >
-#define GIPB(p)  GetPriority_b< p >
-#define GIPC(p)  GetPriority_c< p >
+u16 IRLPriority=0x0246;
+#define IRLP9 &IRLPriority,0
+#define IRLP11 &IRLPriority,4
+#define IRLP13 &IRLPriority,8
 
-typedef u32 GetPrLvlFP(void);
+#define GIPA(p) &INTC_IPRA.reg_data,4*p
+#define GIPB(p) &INTC_IPRB.reg_data,4*p
+#define GIPC(p) &INTC_IPRC.reg_data,4*p
 
 struct InterptSourceList_Entry
 {
-	GetPrLvlFP* GetPrLvl;
+	u16* PrioReg;
+	u32 Shift;
 	u32 IntEvnCode;
+
+	u32 GetPrLvl() const { return ((*PrioReg)>>Shift)&0xF; }
 };
 
 const InterptSourceList_Entry InterruptSourceList[]=
 {
 	//IRL
-	{GetIRLPriority<9>,0x320},//sh4_IRL_9			= KMIID(sh4_int,0x320,0),
-	{GetIRLPriority<11>,0x360},//sh4_IRL_11			= KMIID(sh4_int,0x360,1),
-	{GetIRLPriority<13>,0x3A0},//sh4_IRL_13			= KMIID(sh4_int,0x3A0,2),
+	{IRLP9,0x320},//sh4_IRL_9			= KMIID(sh4_int,0x320,0),
+	{IRLP11,0x360},//sh4_IRL_11			= KMIID(sh4_int,0x360,1),
+	{IRLP13,0x3A0},//sh4_IRL_13			= KMIID(sh4_int,0x3A0,2),
 
 	//HUDI
 	{GIPC(0),0x600},//sh4_HUDI_HUDI		= KMIID(sh4_int,0x600,3),  /* H-UDI underflow */
@@ -150,6 +130,7 @@ const InterptSourceList_Entry InterruptSourceList[]=
 	{GIPA(2),0x5A0},//sh4_REF_ROVI		= KMIID(sh4_int,0x5A0,27),
 };
 
+
 //dynamicaly built
 //Maps siid -> EventID
 ALIGN64 u16 InterruptEnvId[32]=
@@ -183,39 +164,31 @@ INTC_IPRA_type INTC_IPRA;
 INTC_IPRB_type INTC_IPRB;
 INTC_IPRC_type INTC_IPRC;
 
-//InterruptID intr_l;
-
-u32 interrupt_vpend;
-u32 interrupt_vmask;	//-1 -> Ignore that kthx.0x0FFFffff allows all interrupts ( virtual interrupts are allways masked
-u32 decoded_srimask;	//-1 kills all interrupts,including rebuild ones.
+u32 interrupt_vpend;    // Vector of pending interrupts
+u32 interrupt_vmask;    // Vector of masked interrupts             (-1 inhibits all interrupts)errupts ( virtual interrupts are allways masked
+u32 decoded_srimask;    // Vector of interrupts allowed by SR.IMSK (-1 inhibits all interrupts)
 
 //bit 0 ~ 27 : interrupt source 27:0. 0 = lowest level, 27 = highest level.
 //bit 28~31  : virtual interrupt sources.These have to do with the emu
 
-//28:31 = 0 -> nothing (disabled)
-//28:31 = 1 -> rebuild interrupt list		, retest interrupts
-//28:31 = * -> undefined
-
-//Rebuild sorted interrupt id table (priorities where updated)
-void RequestSIIDRebuild()
+void recalc_pending_itrs()
 {
-	interrupt_vpend|=2<<28;
+	Sh4cntx.interrupt_pend=interrupt_vpend&interrupt_vmask&decoded_srimask;
 }
+
 bool SRdecode()
 {
-	u32 imsk=sr.IMASK;
-	decoded_srimask=InterruptLevelBit[imsk];
-
 	if (sr.BL)
-		decoded_srimask=0x0FFFFFFF;
+		decoded_srimask=~0xFFFFFFFF;
+	else
+		decoded_srimask=~InterruptLevelBit[sr.IMASK];
 
-	return (interrupt_vpend&interrupt_vmask)>decoded_srimask;
+	recalc_pending_itrs();
+	return Sh4cntx.interrupt_pend;
 }
 
-void fastcall VirtualInterrupt(u32 id)
+void fastcall SIIDRebuild()
 {
-	if (id)
-	{
 		u32 cnt=0;
 		u32 vpend=interrupt_vpend;
 		u32 vmask=interrupt_vmask;
@@ -243,7 +216,6 @@ void fastcall VirtualInterrupt(u32 id)
 		}
 
 		SRdecode();
-	}
 }
 //#ifdef COUNT_INTERRUPT_UPDATES
 u32 no_interrupts,yes_interrupts;
@@ -253,83 +225,45 @@ u32 no_interrupts,yes_interrupts;
 #endif
 u32 INLINE BSR(u32 v)
 {
-
-#if (HOST_ARCH==ARCH_ARM && HOST_CPU!=CPU_ARMV5) || (HOST_CPU==CPU_MIPS_ALLEGREX)
-
 	u32 rv;
 	 asm ("clz %0,%1"
              :"=r"(rv)        /* output */
              :"r"(v)         /* input */
 			 );
 	 return 31-rv;
-#elif (HOST_CPU==CPU_MIPS_5900)
-	u32 rv;
-	 asm ("PLZCW %0,%1"
-             :"=r"(rv)        /* output */
-             :"r"(v)         /* input */
-			 );
-	 return 31-rv;
-#elif (HOST_ARCH==ARCH_X86)
-    #if HOST_OS == OS_LINUX
-        u32 rv;
-        asm ("bsr %0,%1"
-             :"=r"(rv)        // output //
-             :"r"(v)         // input //
-             );
-        return rv;
-    #else
-        unsigned long rv;
-        _BitScanReverse(&rv,v);
-        return rv;
-	#endif
-
-#else
-
-	// Generic, *FIXME* ADD PPC BIT OP //
-	for (int i=31;i>=0;i--)
-	{
-		if ((1<<i)&v)
-			return i;
-	}
-#endif
-
-	return 0;
 }
 int UpdateINTC()
 {
-
-	u32 intped=interrupt_vpend&interrupt_vmask;
-	if (intped<=decoded_srimask)
+	if (!Sh4cntx.interrupt_pend)
 		return 0;
-	if (intped&0xF0000000)
-	{
-		VirtualInterrupt(intped>>28);
-		return UpdateINTC();
-	}
 
-	return Do_Interrupt(InterruptEnvId[BSR(intped)]);
+	return Do_Interrupt(InterruptEnvId[BSR(Sh4cntx.interrupt_pend)]);
 }
 
 void SetInterruptPend(InterruptID intr)
 {
 	u32 piid= intr & InterruptPIIDMask;
 	interrupt_vpend|=InterruptBit[piid];
+	recalc_pending_itrs();
 }
 void ResetInterruptPend(InterruptID intr)
 {
 	u32 piid= intr & InterruptPIIDMask;
 	interrupt_vpend&=~InterruptBit[piid];
+	recalc_pending_itrs();
 }
 
 void SetInterruptMask(InterruptID intr)
 {
 	u32 piid= intr & InterruptPIIDMask;
 	interrupt_vmask|=InterruptBit[piid];
+	recalc_pending_itrs();
 }
 void ResetInterruptMask(InterruptID intr)
 {
 	u32 piid= intr & InterruptPIIDMask;
 	interrupt_vmask&=~InterruptBit[piid];
+	recalc_pending_itrs();
 }
 
 bool fastcall Do_Interrupt(u32 intEvn)
@@ -361,7 +295,7 @@ bool Do_Exeption(u32 epc, u32 expEvn, u32 CallVect)
 	UpdateSR();
 
 	next_pc = vbr + CallVect;
-	next_pc-=2;//fix up ;)
+	//next_pc-=2;//fix up ;)
 
 	return true;
 }
@@ -373,7 +307,7 @@ void write_INTC_IPRA(u32 data)
 	if (INTC_IPRA.reg_data!=(u16)data)
 	{
 		INTC_IPRA.reg_data=(u16)data;
-		RequestSIIDRebuild();	//we need to rebuild the table
+		SIIDRebuild();//RequestSIIDRebuild();	//we need to rebuild the table
 	}
 }
 void write_INTC_IPRB(u32 data)
@@ -381,7 +315,7 @@ void write_INTC_IPRB(u32 data)
 	if (INTC_IPRB.reg_data!=(u16)data)
 	{
 		INTC_IPRB.reg_data=(u16)data;
-		RequestSIIDRebuild();	//we need to rebuild the table
+		SIIDRebuild();//RequestSIIDRebuild();	//we need to rebuild the table
 	}
 }
 void write_INTC_IPRC(u32 data)
@@ -389,7 +323,7 @@ void write_INTC_IPRC(u32 data)
 	if (INTC_IPRC.reg_data!=(u16)data)
 	{
 		INTC_IPRC.reg_data=(u16)data;
-		RequestSIIDRebuild();	//we need to rebuild the table
+		SIIDRebuild();//RequestSIIDRebuild();	//we need to rebuild the table
 	}
 }
 //Init/Res/Term
@@ -427,14 +361,16 @@ void intc_Reset(bool Manual)
 	INTC_IPRB.reg_data = 0x0;
 	INTC_IPRC.reg_data = 0x0;
 
+	SIIDRebuild();		//we have to rebuild the table.
+
 	interrupt_vpend=0x00000000;	//rebuild & recalc
 	interrupt_vmask=0xFFFFFFFF;	//no masking
 	decoded_srimask=0;			//nothing is real, everything is allowed ...
 
-	RequestSIIDRebuild();		//we have to rebuild the table.
-
 	for (u32 i=0;i<28;i++)
 		InterruptBit[i]=1<<i;
+
+	SIIDRebuild();		//we have to rebuild the table.
 }
 
 void intc_Term()

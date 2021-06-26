@@ -198,48 +198,23 @@
 // mov.b <REG_M>,@-<REG_N>       
  sh4op(i0010_nnnn_mmmm_0100)
 {
-	//iNimp("mov.b <REG_M>,@-<REG_N>");
 	u32 n = GetN(op);
 	u32 m = GetM(op);
-	//r[n]--;
-	if (n==m)
-	{
-		//printf("Mov.b !!!m==n\n");
-		//return;
-		//
-		WriteMemBOU8(r[n],(u32)-1,r[m]);
-		r[n]--;
-	}
-	else
-	{
-		r[n]--;
-		WriteMemU8(r[n],r[m]);
-	}
 	
-
-	//WriteMemoryB(r[n], R(m) & 0xFF);
-
+	u32 addr = r[n] - 1;
+	WriteMemBOU8(r[n], (u32)-1, r[m]);
+	r[n] = addr;
 }
 
 //mov.w <REG_M>,@-<REG_N>       
  sh4op(i0010_nnnn_mmmm_0101)
 {
-	//iNimp("mov.w <REG_M>,@-<REG_N>");
 	u32 n = GetN(op);
 	u32 m = GetM(op);
-	//r[n] -= 2;
-	if (n==m)
-	{
-		//printf("Mov.w !!!m==n\n");
-		//return;
-		WriteMemBOU16(r[n],(u32)-2,r[m]);
-		r[n] -= 2;
-	}
-	else
-	{
-		r[n] -= 2;
-		WriteMemU16(r[n], r[m]);
-	}
+
+	u32 addr = r[n] - 2;
+	WriteMemU16(addr, r[m]);
+	r[n] = addr;
 }
 
 //mov.l <REG_M>,@-<REG_N>       
@@ -247,20 +222,10 @@
 {
 	u32 n = GetN(op);
 	u32 m = GetM(op);
-	//r[n] -= 4;
-	if (m==n)
-	{
-		//iNimp(op,"Mov.l !!!m==n");
-		//printf("mov.l <REG_M>,@-<REG_N> !!!m==n\n");
-		//return;	
-		WriteMemBOU32(r[n],(u32)-4,r[m]);
-		r[n] -= 4;
-	}
-	else
-	{
-		r[n] -= 4;
-		WriteMemU32(r[n],r[m]);
-	}
+
+	u32 addr = r[n] - 4;
+	WriteMemU32(addr, r[m]);
+	r[n] = addr;
 }
 
  //

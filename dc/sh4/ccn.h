@@ -177,10 +177,9 @@ extern u32 CCN_TRA;
 extern u32 CCN_EXPEVT;
 extern u32 CCN_INTEVT;
 extern CCN_PTEA_type CCN_PTEA;
-extern CCN_QACR_type CCN_QACR0;
-extern CCN_QACR_type CCN_QACR1;
+extern CCN_QACR_type CCN_QACR[2];
 
 extern u32 CCN_QACR_TR[2];
 
 template<u32 idx>
-void CCN_QACR_write(u32 addr, u32 value);
+void CCN_QACR_write(u32 value);

@@ -12,13 +12,14 @@
 #include "cl/cl.h"
 
 
+unique_ptr<GDRomDisc> g_GDRDisc;
+
+
 __settings settings;
 
-//mainloop
-int RunDC()
-{
 
-	if(settings.dynarec.Enable)
+void CPUType(int type){
+	if(type == 1)
 	{
 		Get_Sh4Recompiler(&sh4_cpu);
 		printf("Using Recompiler\n");
@@ -28,7 +29,13 @@ int RunDC()
 		Get_Sh4Interpreter(&sh4_cpu);
 		printf("Using Interpreter\n");
 	}
+}
 
+//mainloop
+int RunDC()
+{
+	CPUType(1);
+		
 	Start_DC();	//this call is blocking ...
 	
 

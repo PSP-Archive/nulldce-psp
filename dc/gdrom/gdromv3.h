@@ -192,10 +192,10 @@ extern GD_HardwareInfo_t GD_HardwareInfo;
 
 //Responce strings
 extern u16 gd_data_0x11[];
-extern u16 gd_data_0x71[];
-extern u32 gd_data_0x71_len;
+extern u16 reply_71[];
 extern char szExDT[8][32];
-
+extern u16 reply_11[];
+extern u16 reply_a1[];
 
 
 
@@ -233,6 +233,7 @@ extern char szExDT[8][32];
 #define ATA_SPI_PACKET		0xA0
 #define ATA_IDENTIFY_DEV	0xA1
 #define ATA_SET_FEATURES	0xEF
+#define ATA_IDENTIFY     	0xEC
 
 
 // SPI Packet Commands

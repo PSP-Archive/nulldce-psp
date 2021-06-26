@@ -29,6 +29,22 @@ void libPvr_TaDMA(u32* data,u32 size)
 	while(ta_data<=ta_data_end);
 }
 
+void libPvr_TaDMA_ME(u32* data,u32 size)
+{
+	verify(TaCmd!=0);
+	Ta_Dma* ta_data=(Ta_Dma*)data;
+	Ta_Dma* ta_data_end=ta_data+size-1;
+
+	extern void meUtilityDcacheWritebackInvalidateAll(void);
+
+	do
+	{
+		ta_data =TaCmd(ta_data,ta_data_end);
+		meUtilityDcacheWritebackInvalidateAll();
+	}
+	while(ta_data<=ta_data_end);
+}
+
 namespace TASplitter
 {
 	//DMA from emulator :)

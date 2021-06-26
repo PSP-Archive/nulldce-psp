@@ -8,8 +8,7 @@
 #include "intc.h"
 #include "dc/asic/asic.h"
 #include "plugins/plugin_manager.h"
-
-#include "melib.h"
+#include "plugs/drkPvr/nullRend.h"
 
 u32 DMAC_SAR[4];
 
@@ -20,20 +19,6 @@ u32 DMAC_DMATCR[4];
 DMAC_CHCR_type DMAC_CHCR[4];
 
 DMAC_DMAOR_type DMAC_DMAOR;
-
-
-void meUtilityDcacheWritebackInvalidateAll(void)
-{
-    unsigned int cachesize_bits;
-    asm volatile("mfc0 %0, $16; ext %0, %0, 6, 3" : "=r" (cachesize_bits));
-    const unsigned int cachesize = 4096 << cachesize_bits;
-
-    unsigned int i;
-    for (i = 0; i < cachesize; i += 64) {
-        asm volatile("cache 0x14, 0(%0)" : : "r" (i));
-    }
-    asm volatile("sync");
-}
 
 
 void DMAC_Ch2St()
@@ -54,6 +39,11 @@ void DMAC_Ch2St()
 		printf("\n!\tDMAC: SB_C2DLEN has invalid size (%X) !\n", len);
 		return;
 	}
+	/*if (unlikely(!ME_inited)){
+		ME_inited = true;
+		J_Init(false);
+		J_EXECUTE_ME_ONCE(&DMA_ME, 0);
+	}*/
 
 //	printf(">>\tDMAC: Ch2 DMA SRC=%X DST=%X LEN=%X\n", src, dst, len );
 
@@ -61,33 +51,34 @@ void DMAC_Ch2St()
 
 	// Texture DMA 
 	if( (dst >= 0x10000000) && (dst <= 0x10FFFFFF) )
+	{
+		u32 p_addr= src & RAM_MASK;
+		u32 new_len=RAM_SIZE-p_addr;
+
+		while(len)
 		{
-			u32 p_addr=src & RAM_MASK;
-			//GetMemPtr perhaps ? it's not good to use teh mem arrays directly 
-			while(len)
+			if ((p_addr+len)>RAM_SIZE)
 			{
-				if ((p_addr+len)>RAM_SIZE)
-				{
-					u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
-					u32 new_len=RAM_SIZE-p_addr;
-					TAWrite(dst,sys_buf,(new_len/32));
-					len-=new_len;
-					src+=new_len;
-					//dst+=new_len;
-				}
-				else
-				{
-					u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
-					TAWrite(dst,sys_buf,(len/32));
-					src+=len;
-					break;
-				}
+				u32 new_len =(new_len/32);
+				u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
+				TAWrite(dst,sys_buf,new_len);
+				len-=new_len;
+				src+=new_len;
 			}
-		//libPvr_TADma(dst,sys_buf,(len/32));
+			else
+			{
+				u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
+				TAWrite(dst,sys_buf,(len/32));
+				src+=len;
+				break;
+			}
 		}
+	}
 	else	//	If SB_C2DSTAT reg is inrange from 0x11000000 to 0x11FFFFE0,	 set 1 in SB_LMMODE0 reg.
 	if( (dst >= 0x11000000) && (dst <= 0x11FFFFE0) )
 	{
+		SB_C2DSTAT += len;
+
 		if (SB_LMMODE0 == 0)
 		{
 			// 64-bit path
@@ -131,44 +122,7 @@ void DMAC_Ch2St()
 	else	//	If SB_C2DSTAT reg is inrange from 0x13000000 to 0x13FFFFE0,	 set 1 in SB_LMMODE1 reg.
 	if( (dst >= 0x13000000) && (dst <= 0x13FFFFE0) )
 	{
-		SB_C2DSTAT += len;
-
-		if (SB_LMMODE1 == 0)
-		{
-			// 64-bit path
-			dst = (dst & 0xFFFFFF) | 0xa4000000;
-			u32 p_addr = src & RAM_MASK;
-			while (len)
-			{
-				if ((p_addr + len) > RAM_SIZE)
-				{
-					u32 new_len = RAM_SIZE - p_addr;
-					WriteMemBlock_nommu_dma(dst, src, new_len);
-					len -= new_len;
-					src += new_len;
-					dst += new_len;
-				}
-				else
-				{
-					WriteMemBlock_nommu_dma(dst, src, len);
-					src+=len;
-					break;
-				}
-			}
-		}
-		else 
-		{ 
-			// 32-bit path
-			dst = (dst & 0xFFFFFF) | 0xa5000000;
-			while (len > 0)
-			{
-				u32 v = ReadMem32_nommu(src);
-				pvr_write_area1_32(dst, v);
-				len -= 4;
-				src += 4;
-				dst += 4;
-			}
-		}
+		src += len;
 	}
 	else 
 	{ 
@@ -179,13 +133,14 @@ void DMAC_Ch2St()
 
 	// Setup some of the regs so it thinks we've finished DMA
 
-	DMAC_SAR[2] = (src);
+	
 	DMAC_CHCR[2].full &= 0xFFFFFFFE;
 	DMAC_DMATCR[2] = 0x00000000;
-
+	DMAC_SAR[2] = (src);
+	
+	SB_C2DSTAT = (src);
 	SB_C2DST = 0x00000000;
 	SB_C2DLEN = 0x00000000;
-	SB_C2DSTAT = (src );
 
 	// The DMA end interrupt flag (SB_ISTNRM - bit 19: DTDE2INT) is set to "1."
 	//-> fixed , holly_PVR_DMA is for diferent use now (fixed the interrupts enum too)
@@ -234,8 +189,6 @@ void WriteDMAOR(u32 data)
 //Init term res
 void dmac_Init()
 {
-
-	//J_Init(false);
 	
 	//DMAC SAR0 0xFFA00000 0x1FA00000 32 Undefined Undefined Held Held Bclk
 	DMAC[(DMAC_SAR0_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA | REG_WRITE_DATA;

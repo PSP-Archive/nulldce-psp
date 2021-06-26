@@ -28,11 +28,17 @@ enum BlockEndType
 	BET_Cond_1=mkbet(BET_CLS_COND,BET_SCL_Jump,1),			//sr.T==1 -> BranchBlock else NextBlock
 };
 
+static char block_hash[1024];
+
+#include "deps/crypto/sha1.h"
+
 class DecodedBlock
 {
 
 public:
 	void Setup(u32 rpc);
+
+	bool contains_fpu_op = false;
 
 	u32 start;	//entry point, the block may be non-linear in memory
 	u32 cycles;
@@ -42,6 +48,8 @@ public:
 	u32 NextBlock;		//*_CALL,COND_*: next block (by position)
 
 	u32 sh4_code_size;
+
+	u8 _regUsed[8] {255};
 
 	BlockEndType BlockType;
 	vector<shil_opcode> oplist;
@@ -57,8 +65,36 @@ public:
 		sp.rs1=(rs1);
 		sp.rs2=(rs2);
 		sp.rs3=(rs3);
+		//sp.delay_slot = state.cpu.is_delayslot;
 
 		oplist.push_back(sp);
+	}
+
+	const char* hash()
+	{
+		sha1_ctx ctx;
+		sha1_init(&ctx);
+
+		u8* ptr = GetMemPtr(this->start, this->opcodes*2);
+
+		if (ptr)
+		{
+			for (u32 i=0; i<this->opcodes; i++)
+			{
+				u16 data=ptr[i];
+				//Do not count PC relative loads (relocated code)
+				if ((ptr[i]>>12)==0xD)
+					data=0xD000;
+
+				sha1_update(&ctx,2,(u8*)&data);
+			}
+		}
+
+		sha1_final(&ctx);
+
+		sprintf(block_hash,">:1:%02X:%08X:%08X:%08X:%08X:%08X",this->opcodes,ctx.digest[0],ctx.digest[1],ctx.digest[2],ctx.digest[3],ctx.digest[4]);
+
+		return block_hash;
 	}
 };
 

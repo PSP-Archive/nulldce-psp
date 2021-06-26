@@ -16,13 +16,17 @@
 #include "intc.h"
 #include "tmu.h"
 #include "dc/mem/sh4_mem.h"
+//#include "dc/arm7/arm7.h"
+#include "plugs/EmptyAICA/aica_hle.h"
 #include "ccn.h"
+
+#include "dc/sh4/sh4_sched.h"
 
 #include <time.h>
 #include <float.h>
 
-#define SH4_TIMESLICE	(448) // Under clock cpu 2x
-#define CPU_RATIO		(12) 
+#define SH4_TIMESLICE	(448)
+#define CPU_RATIO		(2) 
 
 //uh uh
 volatile bool  sh4_int_bCpuRun=false;
@@ -47,7 +51,14 @@ void Sh4_int_Run()
 			l-=CPU_RATIO;
 		} while(l>0);
 		l+=SH4_TIMESLICE;
-		UpdateSystem();
+		
+		// model how the jit works
+		// only check for sh4_int_bCpuRun on interrupts
+		if (UpdateSystem()) {
+			UpdateINTC();
+			if (!sh4_int_bCpuRun)
+				break;
+		}
 
 	} while(sh4_int_bCpuRun);
 
@@ -179,55 +190,98 @@ void ExecuteDelayslot_RTE()
 
 //General update
 s32 rtc_cycles=0;
-u32 update_cnt;
+u32 update_cnt = 0;
 u32 gcp_timer=0;
+u32 aica_sample_cycles=0;
 
 
 //14336 Cycles
 void FASTCALL VerySlowUpdate()
 {
 	//gpc_counter=0;
-	gcp_timer++;
+	/*gcp_timer++;
 	rtc_cycles-=14336;
 	if (rtc_cycles<=0)
 	{
 		rtc_cycles+=SH4_CLOCK;
 		settings.dreamcast.RTC++;
-	}
-	maple_Update(14336);
+	}*/
+	
 }
 
 //7168 Cycles
 void FASTCALL SlowUpdate()
 {
-	UpdateGDRom();
+	/*UpdateGDRom();
 
 	if (!(update_cnt&0x10))
-		VerySlowUpdate();
+		VerySlowUpdate();*/
 }
+
+extern void aica_periodical(u32 cycl);
+
+#define AICA_SAMPLE_GCM 441
+#define AICA_SAMPLE_CYCLES (SH4_CLOCK/(44100/AICA_SAMPLE_GCM))
+
+bool late_hack = false;
 
 //3584 Cycles
 void FASTCALL MediumUpdate()
 {
-	//UpdateAica(3584);
+	/*aica_sample_cycles+=3584*AICA_SAMPLE_GCM;
+
+	if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
+	{
+		UpdateArm(512);
+		UpdateAica(1);
+		aica_sample_cycles-=AICA_SAMPLE_CYCLES;
+	}
+		
+	aica_periodical(3584);*/
+
+	//AICA::Hle_process();
+
+	/*if (late_hack) UpdatePvr(3640);
+	
+	maple_Update(3584);
+
 	//libExtDevice_Update(3584);
 	//UpdateDMA();
 	if (!(update_cnt&0x8))
-		SlowUpdate();
+		SlowUpdate();*/
 }
 
 //448 Cycles (fixed)
 int FASTCALL UpdateSystem()
 {
-	if (!(update_cnt&0x7))
-		MediumUpdate();
+	/*__asm__ 
+	(
+		"LW             $16, 0(%1)			\n"
+		"ANDI			$5, $16, 0x7		\n"
+		"BLTZ			$5, _NoMUpdate		\n"
+		"ADDIU			$5, $0, 448			\n"
+		"JAL			MediumUpdate		\n"
+		"NOP								\n"
+		"_NoMUpdate:						\n"
+		"NOP								\n"
+		: "+m"(update_cnt)
+		: "r"(late_hack), "r"(Sh4cntx.interrupt_pend)
+	);*/
 
-	update_cnt++;
-
-	UpdateTMU(480);
-	UpdatePvr(480);
-	return UpdateINTC();
+	Sh4cntx.sh4_sched_next -= SH4_TIMESLICE;
+    if (Sh4cntx.sh4_sched_next < 0)
+        sh4_sched_tick(SH4_TIMESLICE);
+	
+	return Sh4cntx.interrupt_pend;// | (sh4_int_bCpuRun == false);
 }
+
+int UpdateSystem_INTC(){
+	if (UpdateSystem())
+        return UpdateINTC();
+    else
+        return 0;
+}
+
 void sh4_int_resetcache() { }
 //Get an interface to sh4 interpreter
 void Get_Sh4Interpreter(sh4_if* rv)

@@ -1,0 +1,7 @@
+nullDCe/psp v1.0.0 pre-1 (built Jan  7 2021@04:55:17) starting up ..
+Creating config fileConfig file parsed!Loading settings
+Loaded settings
+OS_MSGBOX: Unable to find bios -- exiting
+data/dc_boot.bin
+__Cleanup
+Exit

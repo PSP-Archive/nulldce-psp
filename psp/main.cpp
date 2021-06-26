@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "dc/mem/_vmem.h"
+#include "dc/vram.h"
 #include "dc/sh4/sh4_registers.h"
 #include "dc/sh4/sh4_opcode_list.h"
 #include "stdclass.h"
@@ -9,6 +10,8 @@
 #include "config/config.h"
 #include "plugins/plugin_manager.h"
 #include "cl/cl.h"
+
+#include "plugs/drkPvr/threaded.h"
 
 #include <pspgu.h>
 #include <psprtc.h>
@@ -24,10 +27,11 @@ PSP_HEAP_SIZE_KB(-256);
 #include <pspkernel.h>
 #include <pspctrl.h>
 #include <psppower.h>
-/*
+
+
 extern "C"{
-	int pspAllocExtraVram();	
-}*/
+	void VramSetSize(int kb);
+}
 
 
 #ifdef NOPSPLINK
@@ -249,9 +253,15 @@ int main(int argc, wchar* argv[])
 	
 	//if(LoadPRX("dvemgr.prx")) pspAllocExtraVram();
 
-	dynarecIdle = 224;
+	dynarecIdle = 5;
 
 	__asm__ __volatile__ ("ctc1 $0, $31");
+
+	pspSdkLoadStartModule("vramext.prx", PSP_MEMORY_PARTITION_KERNEL);
+
+	VramSetSize(4*1024);
+
+	printf("Vram Size: %i\n", sceGeEdramGetSize());
 
 	//Init_ME();
 
@@ -389,6 +399,115 @@ void TryUSBHFS(vector<FileInfoS>& dirs)
 void pspguCrear();
 void pspguWaitVblank();
 
+const char * setting_txt[] {"  Dynarec max idle","  Enable unsafe optimizations", "  Late PVR HACK", "  Enable Optimized Writing", "  Enable Optimized Reading","  Run with interpreter (ONLY FOR DEBUGGING)" , " "};
+const char * dynaloop_txt[] {"  Perfect","  Light","  Medium", "  High"};
+const u8    dynaloop_val[] {0, 2, 40, 100};
+
+u16 overClockPVRval;
+
+extern bool reg_optimizzation;
+extern bool late_hack;
+extern bool OptmizedReading;
+extern bool OptmizedWriting;
+
+void Settings(const char *rom){
+
+	SceCtrlData pad, old;
+
+	u8 pad_index = 0;
+	u8 sel = 0;
+
+	u8 jit = 1;
+
+	char buff[256] {0};
+
+	for (;;){
+
+		pspguCrear();
+		pspguWaitVblank();
+		pspDebugScreenSetXY(0,0);
+		pspDebugScreenSetTextColor(0x7F7F7F7F);
+
+		if (sel < 0) sel = 0;
+
+		if (pad_index >= 6)  	  pad_index = 0;
+		else if (pad_index < 0)   pad_index = 0;
+
+		pspDebugScreenPrintf("\nBUILD:%s\n\n\nSETTINGS:\n\n",VER_FULLNAME);
+
+		for (int i = 0; i < 6; i++){
+			strcpy(buff,setting_txt[i]);
+			if (i == 0) strcat(buff," = %s\n");
+			else	    strcat(buff," = %d\n");
+
+			if (i == pad_index) pspDebugScreenSetTextColor(0xFFFFFFFF);
+			else 				pspDebugScreenSetTextColor(0x7F7F7F7F);
+
+			switch(i){
+				case 0: pspDebugScreenPrintf(buff,dynaloop_txt[sel%4]); break;
+				case 1: pspDebugScreenPrintf(buff,reg_optimizzation); break;
+				case 2: pspDebugScreenPrintf(buff,late_hack); break;
+				case 3: pspDebugScreenPrintf(buff,OptmizedWriting); break;
+				case 4: pspDebugScreenPrintf(buff,OptmizedReading); break;
+				case 5: pspDebugScreenPrintf(buff,!jit); break;
+			} 	
+		}
+
+		
+		if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
+		if (pad.Buttons == old.Buttons) 		continue;
+
+		old = pad;
+
+
+		if (pad.Buttons & PSP_CTRL_LEFT)
+		{	if (pad_index == 0) sel--;
+			else if (pad_index == 1) reg_optimizzation = 0;
+			else if (pad_index == 2) late_hack = 0;
+			else if (pad_index == 3) OptmizedWriting = 0;
+			else if (pad_index == 4) OptmizedReading = 0;
+			else jit = 1;
+		}
+
+		if (pad.Buttons & PSP_CTRL_RIGHT)
+		{
+			if (pad_index == 0) sel++;
+			else if (pad_index == 1) reg_optimizzation = 1;
+			else if (pad_index == 2) late_hack = 1;
+			else if (pad_index == 3) OptmizedWriting = 1;
+			else if (pad_index == 4) OptmizedReading = 1;
+			else jit = 0;
+		}
+
+		if (pad.Buttons & PSP_CTRL_UP)
+		{
+			pad_index--;
+		}
+		if (pad.Buttons & PSP_CTRL_DOWN)
+		{
+			pad_index++;
+		}
+
+		if (pad.Buttons & PSP_CTRL_START)
+		{
+			break;
+		}
+
+	}
+
+	dynarecIdle = dynaloop_val[sel%4];
+
+	CPUType(jit);
+
+	pspguCrear();
+	pspguWaitVblank();
+	pspDebugScreenSetXY(0,0);
+	pspDebugScreenSetTextColor(0x7F7F7F7F);
+	pspDebugScreenPrintf("\n\n\n\n\tBOOTING: %s\n\n", rom);
+
+	return;
+}
+
 int os_GetFile(char *szFileName, char *szParse,u32 flags)
 {
 	printf("Doing GD list\n");
@@ -411,7 +530,8 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 	}
 	bool usb=true;
 	int selection=0;
-	SceCtrlData old={0};
+
+	SceCtrlData pad, old;
 
 	for(;;)
 	{
@@ -424,7 +544,7 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 		if (selection< 0) selection = dirs.size() - 1;
 		else if (selection>=dirs.size()) selection=0;
 
-		pspDebugScreenPrintf("Select a file with up/dn/X, /\\ means no disc,O tries usbhostfs,[] relists ./gdroms/, HOME Exits to xmb\n>>%s<<\n\nDynarec max idle = %d\n\n",dirs[selection].name.c_str(),dynarecIdle);
+		pspDebugScreenPrintf("\nSelect a file with up/dn/X, /\\ means no disc, HOME Exits to xmb\n\n");
 
 		u32 filec=0;
 		for (size_t i=0;i<dirs.size();i++)
@@ -438,44 +558,21 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 		}
 
 
-		SceCtrlData pad;
-		if(sceCtrlPeekBufferPositive(&pad, 1)){
-
-		if (pad.Buttons == old.Buttons){old = pad; continue;}
+		
+		if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
+		if (pad.Buttons == old.Buttons)			continue;
 
 		if (pad.Buttons & PSP_CTRL_CROSS)
 		{
 			break;
 		}
-		if (pad.Buttons & PSP_CTRL_LTRIGGER)
-		{
-			dynarecIdle -= 56;
-		}
-
-		if (pad.Buttons & PSP_CTRL_RTRIGGER)
-		{
-			dynarecIdle += 56;
-		}
-
+	
 		if (pad.Buttons & PSP_CTRL_TRIANGLE)
 		{
-			printf("Selected NO DISC\n");
+			Settings("BIOS");
 			return 0;
 		}
-		if (pad.Buttons & PSP_CTRL_CIRCLE)
-		{
-			dirs.clear();
-			if (usb){
-			ListFiles(dirs,"./gdroms/");
-			TryUSBHFS(dirs);
-			}
-			else{
-				ListFiles(dirs,"discs/");
-			}
-			usb = !usb;
-			selection=0;
-		}
-
+		
 		if (pad.Buttons & PSP_CTRL_HOME)
 		{
 			sceKernelExitGame();
@@ -491,12 +588,15 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 
 		old = pad;
 		sceKernelDelayThread(100);
-		}
+		
 	}
 
 	printf("Selected %d file\n",selection);
 	strcpy(szFileName,dirs[selection].path.c_str());
 	printf("Selected %s file\n",szFileName);
+
+	Settings(dirs[selection].name.c_str());
+	
 	pspDebugScreenSetTextColor(0x7F7F7F7F);
 	return 1;
 }

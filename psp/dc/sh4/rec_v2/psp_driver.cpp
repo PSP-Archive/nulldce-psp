@@ -8,6 +8,7 @@
 #include "dc\sh4\sh4_opcode_list.h"
 
 #include "dc\sh4\sh4_registers.h"
+#include "dc\sh4\sh4_if.h"
 #include "dc\sh4\ccn.h"
 #include "dc\sh4\rec_v2\ngen.h"
 #include "dc\mem\sh4_mem.h"
@@ -111,16 +112,42 @@ u32* GetRegPtr(u32 reg)
 /*
 	psp static reg alloc
 	s0 - pointer to the sh4 context
-	s1 - cycle counter
-	s2 - bRun ptr
+	k0 - cycle counter
 	a0 - next pc
 */
 const psp_gpr_t psp_ctx_reg = psp_gp;
+const psp_gpr_t psp_mem_lut = psp_s1;
 const psp_gpr_t psp_cycle_reg = psp_k0;
-const psp_gpr_t psp_bRun_reg = psp_s2;
 const psp_gpr_t psp_next_pc_reg = psp_a0;
 
 #include <stdarg.h>
+
+u32 regMapping[9] {255};
+u8 regLeft = 1;
+bool blocked = false;
+
+
+u8 GetMappedRegister(u32 sh_reg){
+	if (!blocked) return 255;
+	
+	for (int regNum = 0; regNum < 8; regNum++) {
+		if (regMapping[regNum] == sh_reg) return 15+regNum;
+	}
+	return 255;
+}
+
+u8 AllocateSingleReg(u32 reg){
+
+	for (int regNum = 0; regNum < 8; regNum++) {
+		if (regMapping[regNum] == reg) return regNum+15;
+		if (regMapping[regNum] != 255){
+			regMapping[regNum] = reg;
+			--regLeft;
+			return 15+regNum;
+		}
+	}
+	return 255;
+}
 
 //1+n opcodes
 void emit_mpush(u32 n, ...)
@@ -237,7 +264,6 @@ void emit_sh_load(u32 rt,u32 sh4_reg)
 }
 void emit_sh_load(u32 rt,shil_param prm)
 {
-	verify(prm.is_reg());
 	emit_sh_load(rt,prm._reg);
 }
 void emit_sh_load_hu(u32 rt,u32 sh4_reg)
@@ -266,7 +292,6 @@ void emit_sh_store(u32 rt,u32 sh4_reg)
 }
 void emit_sh_store(u32 rt,shil_param prm)
 {
-	verify(prm.is_reg());
 	emit_sh_store(rt,prm._reg);
 }
 //1 opcode
@@ -296,7 +321,7 @@ void emit_sh_lvs(u32 vt,u32 sh4_reg)
 }
 void emit_sh_lvs(u32 vt,shil_param prm)
 {
-	verify(prm.is_r32f());
+	//verify(prm.is_r32f());
 	emit_sh_lvs(vt,prm._reg);
 }
 //1 opcode
@@ -306,11 +331,62 @@ void emit_sh_svs(u32 vt,u32 sh4_reg)
 }
 void emit_sh_svs(u32 vt,shil_param prm)
 {
-	verify(prm.is_r32f());
+	//verify(prm.is_r32f());
 	emit_sh_svs(vt,prm._reg);
 }
 
-const u32 djump_temp=psp_s8;	//djump_reg or djump_cond
+#define GET_REG_OFF(reg) ((u32)GetRegPtr(reg) - (u32)&Sh4cntx)
+
+void emit_sh_lwc1(u32 vt,u32 sh4_reg)
+{
+	//verify(prm.is_r32f());
+	emit_lwc1(vt,psp_ctx_reg,GET_REG_OFF(sh4_reg));
+}
+
+void emit_sh_lwc1(u32 vt,shil_param prm)
+{
+	//verify(prm.is_r32f());
+	emit_sh_lwc1(vt,prm._reg);
+}
+
+void emit_sh_swc1(u32 vt,u32 sh4_reg)
+{
+	//verify(prm.is_r32f());
+	emit_swc1(vt,psp_ctx_reg,GET_REG_OFF(sh4_reg));
+}
+
+void emit_sh_swc1(u32 vt,shil_param prm)
+{
+	//verify(prm.is_r32f());
+	emit_sh_swc1(vt,prm._reg);
+}
+
+void AllocateStaticRegisters(DecodedBlock* block){
+	/*for (int regNum = 0; regNum < 8; ++regNum) {
+		if (block->_regUsed[regNum] == 255) break;
+		regMapping[regNum] = block->_regUsed[regNum];
+		emit_sh_load(psp_s0+regNum, block->_regUsed[regNum]);
+	}*/
+
+	blocked = true;
+}
+
+void SaveAllocatedReg(){
+	blocked = false;
+
+#if 0
+	/*for (int regNum = 0; regNum < 8; regNum++) {
+		if (regMapping[regNum] == 255) { /*CodeDump("code.bin"); printf("%d\n",regNum); die("SAVE");*/ break;}
+	/*	emit_sw(psp_s0+regNum,psp_ctx_reg,Sh4cntx.offset(regMapping[regNum]));
+		regMapping[regNum] = 255;
+	}
+
+	regLeft = 1;*/
+#endif
+	CodeDump("code.bin"); die("SAVE");
+}
+
+const u32 djump_temp=psp_k1;	//djump_reg or djump_cond
 
 void* loop_no_update;
 void* ngen_LinkBlock_Static_stub;
@@ -338,16 +414,12 @@ void ngen_Begin(DecodedBlock* block,bool force_checks)
 
 	if (force_checks)
 	{
-		u32 addr=block->start;
-		if (addr&3)
-		{
-			addr&=~3;
-			if (block->opcodes>1)
-				addr+=4;
-		}
-		u32* ptr=(u32*)GetMemPtr(addr,4);
-		
+		u8* ptr = GetMemPtr(block->start, 4);
+		if (ptr == NULL)
+			return;
+
 		emit_li(psp_a0,*ptr);
+
 		u32 low=emit_luab(psp_a1,ptr);
 		emit_lw(psp_a1,psp_a1,low);
 
@@ -382,7 +454,7 @@ void DoStatic(u32 target)
 void* FASTCALL ngen_LinkBlock_Static(u32 pc,u32* patch)
 {
 	next_pc=pc;
-	
+
 	DynarecCodeEntry* rv=rdv_FindOrCompile();
 	
 	emit_ptr=patch;
@@ -465,6 +537,9 @@ void* FASTCALL ngen_LinkBlock_Dynamic_2nd(u32 pc,u32* patch)
 
 	return (void*)rv;
 }
+
+#define BET_GET_CLS(x) (x>>3)
+
 void ngen_End(DecodedBlock* block)
 {
 	switch(block->BlockType)
@@ -474,12 +549,8 @@ void ngen_End(DecodedBlock* block)
 		{
 			//printf("COND %d\n",block->BlockType&1);
 
-			u32 reg;
-			if (compile_state.has_jcond)
-			{
-				reg=djump_temp;
-			}
-			else
+			u32 reg = djump_temp;
+			if (!compile_state.has_jcond)
 			{
 				reg=psp_a0;
 				emit_sh_load(psp_a0,reg_sr_T);
@@ -547,59 +618,126 @@ void ngen_End(DecodedBlock* block)
 
 #define ngen_Bin_nostore(bin_op,bin_opi,is,tf)	\
 {	bool short_form=false;\
-	emit_sh_load(psp_a0,op->rs1);	\
+	bool rs2_loaded=false;\
+	if (op->SkipLoadReg2) { rs2_loaded = true; } \
+	if (op->loadReg) emit_sh_load(psp_a0,op->rs1);	\
+	if (op->rs2._reg == op->rs1._reg && !op->rs2.is_imm()){ \
+	 \
+	 	emit_##bin_op(return_reg,psp_a0,psp_a0);	\
+		short_form = true;\
+		rs2_loaded = true; \
+	} \
 	\
-	if (op->rs2.is_imm())	\
+	if (op->rs2.is_imm() && !short_form)	\
 	{	\
 		if (is_##is##16(tf op->rs2._imm))	\
 		{	\
 			short_form=true;	\
-			emit_##bin_opi(psp_a0,psp_a0,tf op->rs2._imm);	\
+			emit_##bin_opi(return_reg,psp_a0,tf op->rs2._imm);	\
 		}	\
 		else	\
 		{	\
 			emit_li(psp_a1,op->rs2._imm);	\
 		}	\
 	}	\
-	else if (op->rs2.is_r32i())	\
+	else if (op->rs2.is_r32i() && !rs2_loaded)	\
 	{	\
 		emit_sh_load(psp_a1,op->rs2._reg);	\
 	}	\
-	else	\
+	else if (!short_form && !rs2_loaded)	\
 	{	\
 		printf("%d \n",op->rs2.type);	\
 		verify(false);	\
 	}	\
 	\
-	if (!short_form) emit_##bin_op(psp_a0,psp_a0,psp_a1);	\
+	if (!short_form) emit_##bin_op(return_reg,psp_a0,psp_a1);	\
 }
 
 
 #define ngen_Bin(bin_op,bin_opi,is,tf)	\
 {	\
+	u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);\
+	return_reg = (op->UseCustomReg ? op->customReg : return_reg);\
 	ngen_Bin_nostore(bin_op,bin_opi,is,tf) \
-	emit_sh_store(psp_a0,op->rd._reg);	\
+	if (op->SaveReg) emit_sh_store(return_reg,op->rd._reg);	\
 }
 
 #define ngen_Unary(un_op)	\
 {	\
-	emit_sh_load(psp_a0,op->rs1);	\
-	\
-	if (op->rs1.is_r32i())	\
-	{	\
-		emit_sh_load(psp_a1,op->rs1);	\
-	}	\
-	else	\
-	{	\
-		printf("%d \n",op->rs1.type);	\
-		verify(false);	\
-	}	\
-	\
-	emit_##un_op(psp_a0,psp_a1);	\
-	emit_sh_store(psp_a0,op->rd);	\
+	u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0); \
+	if (op->loadReg) emit_sh_load(psp_a0,op->rs1);	\
+	emit_##un_op(return_reg,psp_a0);	\
+	if (op->SaveReg) emit_sh_store(return_reg,op->rd);	\
 }
 
 void* _vmem_read_const(u32 addr,bool& ismem,u32 sz);
+
+enum mem_op_type
+{
+	SZ_8,
+	SZ_16,
+	SZ_32I,
+	SZ_32F,
+	SZ_64F,
+};
+
+u32 memop_bytes(mem_op_type tp)
+{
+	const u32 rv[] = { 1,2,4,4,8};
+
+	return rv[tp];
+}
+
+mem_op_type memop_type(shil_opcode* op)
+{
+
+	int Lsz=-1;
+	int sz=op->flags&0x7f;
+
+	bool fp32=op->rs2.is_r32f() || op->rd.is_r32f();
+
+	if (sz==1) Lsz=SZ_8;
+	if (sz==2) Lsz=SZ_16;
+	if (sz==4 && !fp32) Lsz=SZ_32I;
+	if (sz==4 && fp32) Lsz=SZ_32F;
+	if (sz==8) Lsz=SZ_64F;
+
+	verify(Lsz!=-1);
+	
+	return (mem_op_type)Lsz;
+}
+
+bool ngen_writemem_immediate(shil_opcode* op)
+{
+	if (!op->rs1.is_imm())
+		return false;
+
+	//mem_op_type optp = memop_type(op);
+	bool isram = false;
+	void* ptr = _vmem_write_const(op->rs1._imm, isram, op->flags);
+
+	if (isram){
+		u32 offs=emit_luab(psp_a0,ptr);
+		emit_sh_load(psp_a1,op->rs2);
+		if (op->flags==1)
+		{
+			//x86e->Emit(op_movsx8to32,EAX,ptr);
+			emit_sb(psp_a1,psp_a0,offs);
+		}
+		else if (op->flags==2)
+		{
+			//x86e->Emit(op_movsx16to32,EAX,ptr);
+			emit_sh(psp_a1,psp_a0,offs);
+		}
+		else if (op->flags==4)
+		{
+			//x86e->Emit(op_mov32,EAX,ptr);
+			emit_sw(psp_a1,psp_a0,offs);
+		}
+	}
+
+	return true;
+}
 
 bool readwriteparams(shil_opcode* op,bool& wasram,void*& ptr)
 {
@@ -611,15 +749,19 @@ bool readwriteparams(shil_opcode* op,bool& wasram,void*& ptr)
 	}
 	else
 	{
-		emit_sh_load(psp_a0,op->rs1);
-
+		if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+		//emit_andi(psp_a0,psp_s1,0x1f);
+		//02002021 -> move a0, s0
+		//emit_Write32(0x02002021);
+		//emit_move(psp_a0,psp_s0);
+        
 		if (!op->rs3.is_null())
 		{
 			if (op->rs3.is_imm())
 			{
 				if (op->rs3._imm==0)
 				{
-					printf("op->rs3 == 0:: wtf?\n");
+					//printf("op->rs3 == 0:: wtf?\n");
 				}
 				else if (is_s16(op->rs3._imm))
 				{
@@ -633,7 +775,7 @@ bool readwriteparams(shil_opcode* op,bool& wasram,void*& ptr)
 			}
 			else if (op->rs3.is_r32i())
 			{
-				emit_sh_load(psp_a3,op->rs3);
+				if(!op->SkipLoadReg2) emit_sh_load(psp_a3,op->rs3);
 				emit_addu(psp_a0,psp_a0,psp_a3);
 			}
 			else
@@ -646,6 +788,7 @@ bool readwriteparams(shil_opcode* op,bool& wasram,void*& ptr)
 
 }
 u32 emit_SlideDelay() { emit_Skip(-4); u32 rv=*(u32*)emit_GetCCPtr();  return rv;}
+u32 emit_SlideDelay(u8 sz) { emit_Skip(-sz); u32 rv=*(u32*)emit_GetCCPtr();  return rv;}
 /*
 	fpu helper stuff
 */
@@ -736,11 +879,11 @@ int r_f2i_t(f32* fn)
 {
 	return (int)*fn;
 }
-void r_i2f_z(f32* dst,int src)
+void r_i2f_z(int src, f32* dst)
 {
 	*dst=src;
 }
-void r_i2f_n(f32* dst,int src)
+void r_i2f_n(int src, f32* dst)
 {
 	*dst=src;
 }
@@ -764,13 +907,64 @@ void r_ftrv(f32* fn,f32* mtrx)
 		);
 }
 
+void PRINTREG(u32 val, u32 val2, u32 val3){
+	printf("A0: %x A1: %x   %x\n",val,val2,val3);
+}
+
+extern "C" void asm_read08();
+extern "C" void asm_read16();
+extern "C" void asm_read32();
+
+extern "C" void asm_write32();
+extern "C" void asm_write16();
+extern "C" void asm_write08();
+
+bool OptmizedReading = false;
+bool OptmizedWriting = false;
+
+void GenWrite(shil_opcode* op){
+
+	if (op->flags==8){
+	
+		emit_sh_load(psp_a3,op->rs2._reg+1);
+		emit_jal(&WriteMem64);
+		emit_sh_load(psp_a2,op->rs2._reg);
+		return;
+	}
+
+	u32 _opcode = emit_SlideDelay();
+
+	if (!op->UseCustomReg) emit_sh_load(psp_a1,op->rs2);
+
+	switch(op->flags)
+	{
+		case 1:
+			if (OptmizedWriting) emit_jal(asm_write08);	
+			else				 emit_jal(&WriteMem8);	
+			break;
+		case 2:
+			if (OptmizedWriting) emit_jal(asm_write16);	
+			else				 emit_jal(&WriteMem16);
+			break;
+		case 4:
+			if (OptmizedWriting) emit_jal(asm_write32);	
+			else				 emit_jal(&WriteMem32);
+			break;
+		default:
+			verify(false);
+	}
+
+	emit_Write32(_opcode);
+}
+
 void FASTCALL do_sqw_mmu(u32 dst);
-void FASTCALL do_sqw_nommu(u32 dst);
 
 void ngen_CC_Start(shil_opcode* op) { die("Unsuported for psp.."); }
 void ngen_CC_Param(shil_opcode* op,shil_param* par,CanonicalParamType tp) { die("Unsuported for psp.."); }
 void ngen_CC_Call(shil_opcode*op,void* function) { die("Unsuported for psp.."); }
 void ngen_CC_Finish(shil_opcode* op) { die("Unsuported for psp.."); }
+
+
 
 DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 {
@@ -780,6 +974,11 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 	DynarecCodeEntry* rv=(DynarecCodeEntry*)emit_GetCCPtr();
 	
 	ngen_Begin(block,force_checks);
+
+	/*AllocateStaticRegisters(block);*/
+	StartCodeDump();
+
+	bool save_block = false;
 
 	for (size_t i=0;i<block->oplist.size();i++)
 	{
@@ -794,10 +993,12 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 					emit_sh_store(psp_a0,reg_nextpc);
 				}
 				emit_jal(OpPtr[op->rs3._imm]);
-				emit_li(psp_a0,op->rs3._imm,1);//delayslot must be single opcode
+				emit_addiu(psp_a0,psp_zero,op->rs3._imm&0xFFFF);
 			}
 			break;
 
+		case shop_jcond:
+			compile_state.has_jcond=true;
 		case shop_jdyn:
 			{
 				emit_sh_load(djump_temp,op->rs1);
@@ -816,16 +1017,9 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 			}
 			break;
 
-		case shop_jcond:
-			{
-				compile_state.has_jcond=true;
-				emit_sh_load(djump_temp,op->rs1);
-			}
-			break;
-
 		case shop_mov64:
 			{
-				emit_sh_load(psp_a0,op->rs1._reg);
+			    emit_sh_load(psp_a0,op->rs1._reg);
 				emit_sh_load(psp_a1,op->rs1._reg+1);
 
 				emit_sh_store(psp_a0,op->rd._reg);
@@ -833,62 +1027,130 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 			}
 			break;
 
+		case shop_mov32f:
+		{
+			if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+			if (op->SaveReg) emit_sh_swc1(1,op->rd);	
+		}
+		break;
+
 		case shop_mov32:
 			{
+	
 				if (op->rs1.is_imm())
 				{
-					emit_li(psp_a0,op->rs1._imm);
+
+					if (op->rs1._imm==0)
+					{
+						if (op->UseMemReg2) emit_move(psp_a3,psp_zero);
+						emit_sh_store(psp_zero,op->rd);
+					}
+					else
+					{
+						if (op->UseCustomReg){
+							emit_li(op->customReg,op->rs1._imm);
+							if (op->SaveReg) emit_sh_store(op->customReg,op->rd);
+						}
+						else if (op->UseMemReg2) {
+							emit_li(psp_a3,op->rs1._imm);
+							if (op->SaveReg) emit_sh_store(psp_a3,op->rd);
+						}
+						else
+						{
+							emit_li((op->SwapSaveReg ? psp_a1 : psp_a0),op->rs1._imm);
+							if (op->SaveReg) emit_sh_store((op->SwapSaveReg ? psp_a1 : psp_a0),op->rd);
+						}
+					}				
 				}
-				else if (op->rs1.is_r32())
+				else if (likely(op->rs1.is_r32()))
 				{
-					emit_sh_load(psp_a0,op->rs1);
+					if (op->UseCustomReg){
+						emit_sh_load(op->customReg,op->rs1);
+						if (op->SaveReg) emit_sh_store(op->customReg,op->rd);
+					}else{
+						if (op->loadReg)	emit_sh_load(psp_a0,op->rs1);
+						if (op->SaveReg)    emit_sh_store(psp_a0,op->rd);
+					}
 				}
 				else
 				{
 					goto defaulty;
 				}
 
-				emit_sh_store(psp_a0,op->rd);
 			}
 			break;
+
+		case shop_nop:
+		break;
 
 		case shop_readm:
 			{
 				//die("shop_readm");
-				void* fuct=0;
 				bool wasram=false;
 				void* ptr;
+				bool _ptr_ = false;
 
 				if (readwriteparams(op,wasram,ptr))
 				{
 					if (likely(wasram))
 					{
+						u8 dst_reg = (op->SwapReg ? psp_a0 : psp_v0);
+						   dst_reg = (op->SwapSaveReg ? psp_a1 : dst_reg);
+
 						u32 offs=emit_luab(psp_a0,ptr);
 						if (op->flags==1)
 						{
 							//x86e->Emit(op_movsx8to32,EAX,ptr);
-							emit_lb(psp_v0,psp_a0,offs);
+							emit_lb(dst_reg,psp_a0,offs);
 						}
 						else if (op->flags==2)
 						{
 							//x86e->Emit(op_movsx16to32,EAX,ptr);
-							emit_lh(psp_v0,psp_a0,offs);
+							emit_lh(dst_reg,psp_a0,offs);
 						}
 						else if (op->flags==4)
 						{
 							//x86e->Emit(op_mov32,EAX,ptr);
-							emit_lw(psp_v0,psp_a0,offs);
+							emit_lw(dst_reg,psp_a0,offs);
 						}
 						else
 						{
 							die("Invalid mem read size");
 						}
+
+						if (op->SaveReg) emit_sh_store(dst_reg,op->rd._reg);
 					}
 					else
 					{
-						fuct=ptr;
-						printf("%08X\n",op->rs1);
-						die("not done quite yet!");
+						wasram = true;
+
+						u32 target=(u32)emit_GetCCPtr();
+
+						//printf("%0x\n",target);
+
+						emit_li(psp_a0,op->rs1._imm);
+						
+						u32 delay=emit_SlideDelay();
+						switch(op->flags)
+						{
+							case 1:
+								emit_jal(ptr);
+								emit_Write32(delay);	//dslot
+								emit_seb(psp_v0,psp_v0);
+								break;
+							case 2:
+								emit_jal(ptr);
+								emit_Write32(delay);	//dslot
+								emit_seh(psp_v0,psp_v0);
+								break;
+							case 4:
+								emit_jal(ptr);
+								emit_Write32(delay);	//dslot
+								break;
+						}
+
+						if (op->SwapReg) emit_move((op->SwapSaveReg ? psp_a1 : psp_a0),psp_v0);
+						if (op->SaveReg) emit_sh_store(psp_v0,op->rd._reg);
 					}
 				}
 				
@@ -898,31 +1160,34 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 					switch(op->flags)
 					{
 						case 1:
-							if (!fuct) fuct=(void*)ReadMem8;
-							emit_jal(fuct);
+							if (OptmizedReading) emit_jal(asm_read08);	
+							else				 emit_jal(ReadMem8);
+
 							emit_Write32(delay);	//dslot
 							emit_seb(psp_v0,psp_v0);
 							break;
 						case 2:
-							if (!fuct) fuct=(void*)ReadMem16;
-							emit_jal(fuct);
+							if (OptmizedReading) emit_jal(asm_read16);	
+							else				 emit_jal(ReadMem16);
 							emit_Write32(delay);	//dslot
 							emit_seh(psp_v0,psp_v0);
 							break;
 						case 4:
-							if (!fuct) fuct=(void*)ReadMem32;
-							emit_jal(fuct);
+							if (OptmizedReading) emit_jal(asm_read32);	
+							else				 emit_jal(ReadMem32);
 							emit_Write32(delay);	//dslot
 							break;
 						case 8:
-							if (!fuct) fuct=(void*)ReadMem64;
-							emit_jal(fuct);
+							emit_jal(ReadMem64);
 							emit_Write32(delay);	//dslot
 							break;
 					}
+
+					if (op->SwapReg) emit_move((op->SwapSaveReg ? psp_a1 : psp_a0),psp_v0);
+					if (op->SaveReg) emit_sh_store(psp_v0,op->rd._reg);
+					if (op->SwapWFloatR) emit_mtc1(psp_v0, psp_fr1);
 				}
 
-				emit_sh_store(psp_v0,op->rd._reg);
 				if (op->flags==8)
 					emit_sh_store(psp_v1,op->rd._reg+1);
 			}
@@ -930,53 +1195,91 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 
 		case shop_writem:
 			{
+			
+				if (ngen_writemem_immediate(op)) continue;
 
-				//die("shop_writem");
-				bool wasram;
-				void* ptr;
+				if (op->loadReg)  emit_sh_load(psp_a0,op->rs1);
 
-				if (unlikely(readwriteparams(op,wasram,ptr)))
+				if (op->SkipLoadReg2){
+					emit_addu(psp_a0,psp_a0,psp_a3);
+				}else if (!op->rs3.is_null())
 				{
-					die("not supported yet");
+					
+					if (op->rs3.is_imm())
+					{
+						if (is_s16(op->rs3._imm))
+						{
+							emit_addiu(psp_a0,psp_a0,op->rs3._imm);
+						}
+						else
+						{
+							emit_li(psp_a3,op->rs3._imm);
+							emit_addiu(psp_a0,psp_a0,psp_a3);
+						}
+					}
+					else if (op->rs3.is_r32i())
+					{
+						emit_sh_load(psp_a3,op->rs3);
+						emit_addu(psp_a0,psp_a0,psp_a3);
+					}
+					else
+					{
+						die("invalid rs3");
+					}			
 				}
 
-				if (op->flags==8)
-					emit_sh_load(psp_a3,op->rs2._reg+1);
-
-				switch(op->flags)
-				{
-					case 1:
-						emit_jal(&WriteMem8);
-						break;
-					case 2:
-						emit_jal(&WriteMem16);
-						break;
-					case 4:
-						emit_jal(&WriteMem32);
-						break;
-					case 8:
-						emit_jal(&WriteMem64);
-						break;
-					default:
-						verify(false);
-				}
-
-				//<delay slot>
-				if (op->flags!=8)
-					emit_sh_load(psp_a1,op->rs2);
-				else
-					emit_sh_load(psp_a2,op->rs2._reg);
-				//</delay slot>
+				GenWrite(op);
 				
+			}
+			break;
+
+		case shop_rocr:
+			{
+				if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+				emit_andi(psp_a2,psp_a0,1);
+				
+				//It works but needs more tests..			
+				emit_rotr(return_reg,psp_a0,1);
+
+				emit_sh_store(psp_a2,op->rd2);
+				
+				if (op->SaveReg) emit_sh_store(return_reg,op->rd);				
+			}
+			break;
+			
+		case shop_rocl:
+			{
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+				if (!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+				if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+				
+				emit_sll(psp_a2,psp_a0,1);
+				emit_or(psp_a2,psp_a2,psp_a1);
+				emit_sh_store(psp_a2,op->rd);
+
+				emit_srl(psp_a0,psp_a0,31);
+				emit_sh_store(psp_a0,op->rd2);
 			}
 			break;
 
 		case shop_sync_sr:
 			{
+				u32 delay=emit_SlideDelay();
 				emit_jal(UpdateSR);
-				emit_nop();
+				emit_Write32(delay);
 			}
 			break;
+		
+		/*case shop_sync_fpscr:
+			{
+				emit_jal(UpdateFPSCR);
+				emit_nop();
+			}
+			break;*/
 
 		case shop_shl:
 			ngen_Bin(sllv,sll,u,+);
@@ -996,15 +1299,19 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 			{
 				psp_gpr_t val=psp_a0,shft=psp_a1,negshft=psp_a2,shft_1f=psp_a3;
 				psp_gpr_t sh_l=psp_t0,sh_r=psp_t1,sh_z=psp_t2,isltz=psp_t3;
+				
+				//emit_sh_load(shft,op->rs2);
+				if(!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+				if (op->loadReg) emit_sh_load(val,op->rs1);
 
-				emit_sh_load(shft,op->rs2);
-				emit_sh_load(val,op->rs1);
 				emit_negu(negshft,shft);
 				emit_andi(shft_1f,shft,0x1F);
 
 				emit_slt(isltz,shft,psp_zero);
 
-				emit_sllv(sh_l,val,shft);
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : sh_l);	
+
+				emit_sllv(return_reg,val,shft);
 
 				if (op->op==shop_shad)
 				{
@@ -1019,10 +1326,11 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 
 				emit_slti(shft_1f,shft_1f,1);	//shft_1f=shft_1f<1?1:0	//for some odd reason using just movz doesn't work ...
 				emit_movn(sh_r,sh_z,shft_1f);	//if (shft_1f==0) sh_r=sh_z;
+				
 				//s1=b!=0?s23:s1;
-				emit_movn(sh_l,sh_r,isltz);		//if (shft<0) sh_l=sh_r;//if (isltz!=0) sh_l=sh_r
+				emit_movn(return_reg,sh_r,isltz);		//if (shft<0) sh_l=sh_r;//if (isltz!=0) sh_l=sh_r
 
-				emit_sh_store(sh_l,op->rd);
+				if (op->SaveReg) emit_sh_store(return_reg,op->rd);
 			}
 			break;
 
@@ -1055,32 +1363,140 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 
 		case shop_test:
 			{
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);	
 				ngen_Bin_nostore(and,andi,u,+);
-				emit_sltiu(psp_a0,psp_a0,1);//if a0==0 -> a0=1 else a0=0
-				emit_sh_store(psp_a0,op->rd);
+				emit_sltiu(return_reg,return_reg,1);//if a0==0 -> a0=1 else a0=0
+				if (op->SaveReg) emit_sh_store(return_reg,op->rd);
 			}
 			break;
+
+		case shop_swaplb:
+			if (op->loadReg)       emit_sh_load(psp_a0,op->rs1);
+			//emit_sll(psp_a1,psp_a0,8);
+			//emit_srl(psp_a2,psp_a0,8);
+			//emit_andi(psp_a3, psp_a1, 0xffff);
+			//emit_andi(psp_a1,psp_a2,0xff);
+			emit_ext(psp_a3, psp_a0, 24, 8);
+			emit_ext(psp_a1, psp_a0, 16, 8);
+			emit_li(psp_a2,-65536);
+			emit_or(psp_a1,psp_a3,psp_a1);
+			emit_and(psp_a0,psp_a0,psp_a2);
+			emit_or(psp_a0,psp_a0,psp_a1);
+			if (op->SaveReg)        emit_sh_store(psp_a0,op->rd);
+		break;
+
+		case shop_setpeq:
+		{
+			emit_sh_load(psp_a1,op->rs2);
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+			
+			emit_xor(psp_at,psp_a0,psp_a1);
+
+			u32* exit=(u32*)emit_GetCCPtr() + 11;
+			
+			emit_ext(psp_a0,psp_at,31,24);
+			emit_beql(psp_a0,0,exit);
+			emit_sltiu(psp_a0,psp_a0,1);
+
+			emit_ext(psp_a0,psp_at,23,16);
+			emit_beql(psp_a0,0,exit);
+			emit_sltiu(psp_a0,psp_a0,1);
+
+			emit_ext(psp_a0,psp_at,15,8);
+			emit_beql(psp_a0,0,exit);
+			emit_sltiu(psp_a0,psp_a0,1);
+
+			emit_ext(psp_a0,psp_at,7,0);
+			emit_sltiu(psp_a0,psp_a0,1);
+
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+		}
+		break;
+
+		case shop_cmp_set:
+		{
+			u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+			ngen_Bin_nostore(subu,addiu,s,-);
+
+			emit_sh_store(return_reg,op->rd);
+
+			u8 rs1 = return_reg, rs2 = psp_zero;
+
+			const u8 flag = op->flags&0xff;
+			const u16 rd_mov32 = op->flags>>20;
+
+			if (flag == shop_seteq){
+
+				if (op->rs2.is_r32i()) {
+					rs2 = psp_a1;
+					emit_sh_load(rs2,op->rs3);
+					
+					emit_xor(return_reg,rs1,rs2);
+				}else
+				if (op->rs2._imm==0)
+				{
+					rs2=psp_a0;
+				}
+				else
+				{
+					emit_addiu(return_reg,rs1,-op->rs3._imm);
+				}
+				
+				emit_sltiu(return_reg,rs1,1);
+			}else{
+								
+				bool flip=flag==shop_setge || flag==shop_setae;
+				bool usgnd=flag>=shop_setae;
+
+				if (!op->rs3.is_imm()){
+					rs2 = psp_a1;
+					emit_sh_load(rs2,op->rs3);
+				}
+
+				if (flip) 
+				{	//swap operands !
+					u32 t=rs1;
+					rs1=rs2;
+					rs2=t;
+				}
+
+				if (usgnd)	emit_sltu(return_reg,rs2,rs1);
+				else        emit_slt(return_reg,rs2,rs1);
+
+				if (flip)   emit_xori(return_reg,return_reg,1);
+			}
+
+			if (op->SaveReg) emit_sh_store(return_reg,op->rd2);
+
+			if (rd_mov32 != 0) emit_sh_store(return_reg,rd_mov32);
+		}
+		break;
 			
 		case shop_seteq:
 			{
-				verify(op->rs1.is_r32i());
-				verify(op->rs2.is_r32i() || (op->rs2.is_imm() && is_s16(-op->rs2._imm)));
+				/*verify(op->rs1.is_r32i());
+				verify(op->rs2.is_r32i() || (op->rs2.is_imm() && is_s16(-op->rs2._imm)));*/
+
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
 
 				u32 rs1,rs2,rf;
 				rs1=psp_a0;
 				rs2=psp_a1;
-				rf=psp_at;
-
-				emit_sh_load(rs1,op->rs1);
-				
+				rf=psp_at;				
 
 				if (op->rs2.is_r32i())
 				{
-					emit_sh_load(rs2,op->rs2);
+					if (!op->SkipLoadReg2) emit_sh_load(rs2,op->rs2);
+
+					if (op->loadReg) emit_sh_load(rs1,op->rs1);
+
 					emit_xor(rf,rs1,rs2);
 				}
 				else
 				{
+					if (op->loadReg) emit_sh_load(rs1,op->rs1);
+
 					if (op->rs2._imm==0)
 					{
 						rf=psp_a0;
@@ -1092,8 +1508,8 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				}
 				
 				//if rf ==0 -> at=1; else at=0
-				emit_sltiu(psp_at,rf,1);
-				emit_sh_store(psp_at,op->rd);
+				emit_sltiu(return_reg,rf,1);
+				if (op->SaveReg) emit_sh_store(return_reg,op->rd);
 			}
 			break;
 
@@ -1102,21 +1518,23 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 		case shop_setae:
 		case shop_setab:
 			{
-				verify(op->rs1.is_r32i());
-				verify(op->rs2.is_r32i() || (op->rs2.is_imm() && op->rs2._imm==0));
+				/*verify(op->rs1.is_r32i());
+				verify(op->rs2.is_r32i() || (op->rs2.is_imm() && op->rs2._imm==0));*/
 
 				bool flip=op->op==shop_setge || op->op==shop_setae;
 				bool usgnd=op->op>=shop_setae;
 
+				u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
 				u32 rs1=psp_a0;
 				u32 rs2=psp_a1;
 
-				emit_sh_load(rs1,op->rs1);
-
 				if (op->rs2.is_imm())
 					rs2=psp_zero;
-				else
+				else if (!op->SkipLoadReg2)
 					emit_sh_load(rs2,op->rs2);
+
+				if (op->loadReg) emit_sh_load(rs1,op->rs1);
 
 				if (flip) 
 				{	//swap operands !
@@ -1127,64 +1545,226 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 
 				if (usgnd)
 				{	//unsigned
-					emit_sltu(psp_at,rs2,rs1);
+					emit_sltu(return_reg,rs2,rs1);
 				}
 				else
 				{	//signed
-					emit_slt(psp_at,rs2,rs1);
+					emit_slt(return_reg,rs2,rs1);
 				}
 
 				if (flip)
 				{
-					emit_xori(psp_at,psp_at,1);
+					emit_xori(return_reg,return_reg,1);
 				}
-				emit_sh_store(psp_at,op->rd);
+
+				if (op->SaveReg) emit_sh_store(return_reg,op->rd);
 			}
 			break;
 
 		case shop_mul_u16:
+		{
+			verify(!op->rs1.is_null() && !op->rs2.is_null() && !op->rd.is_null());
+			verify(op->rs1.is_reg());
+
+			u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+			if (op->rs2.is_imm())	emit_li(psp_a1,op->rs2._imm&0xffff);
+			else if (op->rs2.is_reg() && !op->SkipLoadReg2)	emit_sh_load(psp_a1,op->rs2);
+		
+			if (op->loadReg)		emit_sh_load(psp_a0,op->rs1);
+
+			emit_multu(psp_a0,psp_a1);
+			
+			emit_mflo(return_reg);
+			if (op->SaveReg) emit_sh_store(return_reg,op->rd._reg);
+		}
+		break;
+
+		case shop_mul_s16:
+		{
+			verify(!op->rs1.is_null() && !op->rs2.is_null() && !op->rd.is_null());
+			verify(op->rs1.is_reg());
+
+			u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+			if (op->rs2.is_imm())	                        emit_li(psp_a1,op->rs2._imm&0xffff);
+			else if (op->rs2.is_reg() && !op->SkipLoadReg2)	emit_sh_load(psp_a1,op->rs2);
+
+			if (op->loadReg) 		emit_sh_load(psp_a0,op->rs1);
+
+			emit_mult(psp_a0,psp_a1);
+			
+			emit_mflo(return_reg);
+			if (op->SaveReg) emit_sh_store(return_reg,op->rd._reg);
+		}
+		break;
+
+		case shop_mul_i32:
+		{
+			verify(!op->rs1.is_null() && !op->rs2.is_null() && !op->rd.is_null());
+			verify(op->rs1.is_reg());
+
+			u32 return_reg = (op->SwapSaveReg ? psp_a1 : psp_a0);
+
+			if (op->rs2.is_imm())	emit_li(psp_a1,op->rs2._imm);
+			else if (op->rs2.is_reg() && !op->SkipLoadReg2)	emit_sh_load(psp_a1,op->rs2);
+
+			if (op->loadReg)		emit_sh_load(psp_a0,op->rs1);
+
+			emit_mult(psp_a0,psp_a1);
+			
+			emit_mflo(return_reg);
+			if (op->SaveReg) emit_sh_store(return_reg,op->rd._reg);
+		}
+		break;
+
 		case shop_mul_u64:
 		{
 			verify(!op->rs1.is_null() && !op->rs2.is_null() && !op->rd.is_null());
 			verify(op->rs1.is_reg());
-		
-			emit_sh_load(psp_a0,op->rs1);
 
-			if (op->rs2.is_imm())		emit_li(psp_a1,op->rs2._imm);
+			if (op->SwapReg) emit_move(psp_a1,psp_a0);
+			else if (op->rs2.is_imm())	emit_li(psp_a1,op->rs2._imm);
 			else if (op->rs2.is_reg())	emit_sh_load(psp_a1,op->rs2);
+
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
 
 			emit_multu(psp_a0,psp_a1);
 			
 			emit_mflo(psp_a0);
 			emit_sh_store(psp_a0,op->rd._reg);
+			emit_mfhi(psp_a0);
+			emit_sh_store(psp_a0,op->rd2._reg);
 		}
 
 		break;
-
-
-		case shop_mul_s16:
-		case shop_mul_i32:
 		case shop_mul_s64:
 		{
 			verify(!op->rs1.is_null() && !op->rs2.is_null() && !op->rd.is_null());
 			verify(op->rs1.is_reg());
-		
-			emit_sh_load(psp_a0,op->rs1);
 
-			if (op->rs2.is_imm())		emit_li(psp_a1,op->rs2._imm);
+			if (op->SwapReg) emit_move(psp_a1,psp_a0);
+			else if (op->rs2.is_imm())	emit_li(psp_a1,op->rs2._imm);
 			else if (op->rs2.is_reg())	emit_sh_load(psp_a1,op->rs2);
+		
+			if (op->loadReg) 		emit_sh_load(psp_a0,op->rs1);
 
 			emit_mult(psp_a0,psp_a1);
 			
 			emit_mflo(psp_a0);
 			emit_sh_store(psp_a0,op->rd._reg);
 
-			if (op->op>=shop_mul_u64)	{
-				emit_mfhi(psp_a0);
-				emit_sh_store(psp_a0,op->rd2._reg);
-			}
+			emit_mfhi(psp_a0);
+			emit_sh_store(psp_a0,op->rd2._reg);
 		}
 
+		break;
+
+		case shop_div1:
+		{
+			//Incomplete
+
+			/*emit_sh_load(psp_t5,op->rd2);  //reg_sr_status
+			
+			emit_sh_load(psp_a1,op->rs2);  //N
+
+			emit_ext(psp_t1,psp_t5,8, 8);  //Q
+
+			emit_lui(psp_at,-512);    //0x80000000
+			emit_move(psp_t2,psp_t1); //old_Q = Q
+
+			emit_and(psp_t3,psp_a1,psp_at); //(u8)(0x80000000 & r[n])
+
+			emit_sll(psp_a1,psp_a1,1);    //r[n] <<= 1;
+
+			emit_sh_load(psp_t0,op->rd);   //T
+
+			emit_sltiu(psp_t1,psp_t3,1);   //(u8)((0x80000000 & r[n]) !=0);
+
+			emit_or(psp_a1,psp_a1,psp_t0); //r[n] |= (unsigned long)sr.T;
+
+			emit_sh_load(psp_a0,op->rs1); //M
+
+			emit_sh_store(psp_t3,op->rd);   //T
+
+			printf("DIV1\n");*/
+			
+
+		}
+		break;
+
+
+		case shop_div32u:
+		{
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+			if (!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+
+			emit_divu(psp_a0,psp_a1);
+
+			emit_mflo(psp_a0);
+			emit_mfhi(psp_a1);
+
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+			emit_sh_store(psp_a1,op->rd2);
+		}
+		break;
+
+		case shop_div32s:
+		{
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+			if (!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+
+			emit_div(psp_a0,psp_a1);
+
+			emit_mflo(psp_a0);
+			emit_mfhi(psp_a1);
+
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+			emit_sh_store(psp_a1,op->rd2);
+		}
+		break;
+
+		case shop_div32p2:
+		{ 
+			emit_sh_load(psp_a2,op->rs3);	
+
+			u32* target=(u32*)emit_GetCCPtr();
+
+			emit_bne(psp_a2,psp_zero,target+24);
+			emit_nop();
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+			if (!op->SkipLoadReg2)emit_sh_load(psp_a1,op->rs2);
+			emit_subu(psp_a0,psp_a0,psp_a1);
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+		}
+		break;
+
+
+		case shop_adc:
+		{
+			if (op->loadReg)       emit_sh_load(psp_a0,op->rs1);
+			if (!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+
+			emit_sh_load(psp_a2,op->rs3);
+
+			emit_addu(psp_a0,psp_a0,psp_a1);
+			emit_addu(psp_a0,psp_a0,psp_a2);
+			
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+		}
+		break;
+		case shop_sbc:
+		{
+			if (op->loadReg)       emit_sh_load(psp_a0,op->rs1);
+			if (!op->SkipLoadReg2) emit_sh_load(psp_a1,op->rs2);
+
+			emit_sh_load(psp_a2,op->rs3);
+
+			emit_subu(psp_a0,psp_a0,psp_a1);
+			emit_subu(psp_a0,psp_a0,psp_a2);
+
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+		}
 		break;
 				//fpu
 		case shop_fadd:
@@ -1195,15 +1775,24 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vt = op->rs2; vt = (vt&3)*32|(vt&12)>>2;
 				emit_vadds(vd, vt, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rd);
-				emit_sh_lvs(1, op->rs2);
-				emit_vadds(0, 1, 0);
-				emit_sh_svs(0, op->rd);
+				//printf("0%x\n",(u32)emit_GetCCPtr());
+				if (op->loadReg) emit_sh_lwc1(1,op->rd);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->rd._reg != op->rs2._reg){
+					if (!op->SkipLoadReg2) emit_sh_lwc1(2,op->rs2);
+					emit_adds(dest_reg,1,2);
+				}else{
+					emit_adds(dest_reg,1,1);
+				}
+
+				if (op->SaveReg) emit_sh_swc1(dest_reg,op->rd);
 #else
 				emit_sh_addr(psp_a0,op->rd);
 				emit_jal(r_fadd);
 				emit_sh_addr(psp_a1,op->rs2);
-#endif
+#endif 
 			}
 			break;
 		case shop_fsub:
@@ -1214,10 +1803,18 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vt = op->rs2; vt = (vt&3)*32|(vt&12)>>2;
 				emit_vsubs(vd, vt, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rd);
-				emit_sh_lvs(1, op->rs2);
-				emit_vsubs(0, 1, 0);
-				emit_sh_svs(0, op->rd);
+				if (op->loadReg) emit_sh_lwc1(1,op->rd);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->rd._reg != op->rs2._reg){
+					if (!op->SkipLoadReg2)	emit_sh_lwc1(2,op->rs2);
+					emit_subs(dest_reg,1,2);
+				}else{
+					emit_subs(dest_reg,1,1);
+				}
+			
+				if (op->SaveReg) emit_sh_swc1(dest_reg,op->rd);
 #else
 				emit_sh_addr(psp_a0,op->rd);
 				emit_jal(r_fsub);
@@ -1233,10 +1830,18 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vt = op->rs2; vt = (vt&3)*32|(vt&12)>>2;
 				emit_vmuls(vd, vt, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rd);
-				emit_sh_lvs(1, op->rs2);
-				emit_vmuls(0, 1, 0);
-				emit_sh_svs(0, op->rd);
+				if (op->loadReg) emit_sh_lwc1(1,op->rd);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->rd._reg != op->rs2._reg){
+					if (!op->SkipLoadReg2) emit_sh_lwc1(2,op->rs2);
+					emit_muls(dest_reg,1,2);
+				}else{
+					emit_muls(dest_reg,1,1);
+				}
+				
+				if (op->SaveReg) emit_sh_swc1(dest_reg,op->rd);
 #else
 				emit_sh_addr(psp_a0,op->rd);
 				emit_jal(r_fmul);
@@ -1253,11 +1858,18 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				emit_vrcps(vt, 31);
 				emit_vmuls(vd, 31, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rd);
-				emit_sh_lvs(1, op->rs2);
-				emit_vrcps(1, 1);
-				emit_vmuls(0, 1, 0);
-				emit_sh_svs(0, op->rd);
+				if (op->loadReg) emit_sh_lwc1(1,op->rd);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+				
+				if (op->rd._reg != op->rs2._reg){
+					emit_sh_lwc1(2,op->rs2);
+					emit_divs(dest_reg,1,2);
+				}else{
+					emit_divs(dest_reg,1,1);
+				}
+
+				if (op->SaveReg) emit_sh_swc1(dest_reg,op->rd);
 #else
 				emit_sh_addr(psp_a0,op->rd);
 				emit_jal(r_fdiv);
@@ -1274,11 +1886,13 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vs = op->rs1; vs = (vs&3)*32|(vs&12)>>2;
 				emit_vabss(vs, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rs1);
-				emit_vabss(0, 0);
-				emit_sh_svs(0, op->rd);
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_abss(dest_reg,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
 #else
-				emit_sh_load(psp_a0,op->rs1);
+				if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
 				emit_li(psp_at,0x7FFFFFFF);
 				emit_and(psp_a0,psp_a0,psp_at);
 				emit_sh_store(psp_a0,op->rd);
@@ -1294,11 +1908,13 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vs = op->rs1; vs = (vs&3)*32|(vs&12)>>2;
 				emit_vnegs(vs, vd);
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rs1);
-				emit_vnegs(0, 0);
-				emit_sh_svs(0, op->rd);
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_negs(dest_reg,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
 #else
-				emit_sh_load(psp_a0,op->rs1);
+				if (op->loadReg)  emit_sh_load(psp_a0,op->rs1);
 				emit_li(psp_at,0x80000000);
 				emit_xor(psp_a0,psp_a0,psp_at);
 				emit_sh_store(psp_a0,op->rd);
@@ -1314,16 +1930,37 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vs = op->rs1; vs = (vs&3)*32|(vs&12)>>2;
 				emit_vi2fs(vs, 31, 14);
 				emit_vrotp_sc(31, vd);
-#elif 0 && HALF_VFPU
+#elif HALF_VFPU && 0
+				u32 p=(u32)emit_GetCCPtr();
+				printf("0%x\n");
 				emit_sh_lvs(0, op->rs1);
 				emit_vi2fs(0, 4, 14);
 				emit_vrotp_sc(4, 0);
-				emit_sh_svs(0, op->rd + 0);
-				emit_sh_svs(32, op->rd + 1);
+				emit_sh_svs(0, op->rd);
 #else
+
+				/*emit_sh_load_hu(psp_a1,op->rs1);
+				emit_jal(r_fsca);
+				emit_sh_addr(psp_a0,op->rd);*/
+
+				/*emit_sh_load_hu(psp_a0,op->rs1);
+
+				emit_sll(psp_a0,psp_a0,3);
+				emit_addu(psp_a1,psp_pi_array,psp_a0);
+
+				emit_lvs(0,psp_a1,0);
+				emit_lvs(1,psp_a1,4);
+				emit_sh_svs(0,op->rd);
+				emit_sh_svs(1,op->rd._reg+1);*/
+
 				emit_sh_load_hu(psp_a1,op->rs1);
 				emit_jal(r_fsca);
 				emit_sh_addr(psp_a0,op->rd);
+
+				/*emit_lw(psp_a2,psp_a1,0);
+				emit_lw(psp_a3,psp_a1,4);
+				emit_sh_store(psp_a2,op->rd);
+				emit_sh_store(psp_a3,op->rd._reg+1);*/
 #endif
 			}
 			break;
@@ -1341,9 +1978,15 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				"vdot.q			s000, c110, c120\n"
 				"sv.s			s000, %0\n"
 				*/
-				emit_sh_lvq(5, op->rs1);
-				emit_sh_lvq(6, op->rs2);
-				emit_vdotq(5, 6, 0);
+				emit_sh_lvq(0, op->rs1);
+
+				if (op->rs1._reg != op->rs2._reg) {
+					emit_sh_lvq(1, op->rs2);
+					emit_vdotq(0, 1, 0);
+				}else{
+					emit_vdotq(0, 0, 0);
+				}
+				
 				emit_sh_svs(0, op->rd);
 #else
 				emit_sh_addr(psp_a0,op->rs1);
@@ -1361,10 +2004,14 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				u32 vs = op->rs1; vs = (vs&3)*32|(vs&12)>>2;
 				u32 vd = op->rd;  vd = (vd&3)*32|(vd&12)>>2;
 				emit_vsqrts(vs, vd);
-#elif 0 && HALF_VFPU
-				emit_sh_lvs(0, op->rd);
-				emit_vsqrts(0, 0);
-				emit_sh_svs(0, op->rd);
+#elif HALF_VFPU 
+//D00D0000
+//D0070000 
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_sqrts(dest_reg,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
 #else
 				emit_jal(r_fsqrt);
 				emit_sh_addr(psp_a0,op->rd);
@@ -1387,7 +2034,6 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				"vtfm4.q		c000, e100, c200\n"
 				"sv.q			c000, %0\n"
 				*/
-				u32* p=(u32*)emit_GetCCPtr();
 
 				emit_sh_lvq(4, op->rs2._reg+0);		//4=c100
 				emit_sh_lvq(5, op->rs2._reg+4);		//5=c110
@@ -1406,18 +2052,44 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 			}
 			break;
 
+		case shop_frswap:
+
+			for (int i=0;i<4;i++)
+				{
+					emit_sh_lvq(0, op->rs1._reg + (i*4));			
+					emit_sh_lvq(5, op->rs2._reg + (i*4));	
+
+					emit_sh_svq(0, op->rd._reg + (i*4));
+					emit_sh_svq(5, op->rd2._reg + (i*4));
+				}
+
+		break;
+
 		case shop_fmac:
 			{
 				//die("shop_fmac");
 				verify(op->rs1._reg==op->rd._reg);
 #if FULL_VFPU
 #elif HALF_VFPU
-				emit_sh_lvs(0, op->rs2); // f0
+				/*emit_sh_lvs(0, op->rs2); // f0
 				emit_sh_lvs(1, op->rs3); // fm
 				emit_sh_lvs(2, op->rs1); // fn
 				emit_vmuls(0, 1, 0);      // fm * f0 
 				emit_vadds(0, 2, 0);      // fm * f0 + fn 
-				emit_sh_svs(0, op->rd);
+				emit_sh_svs(0, op->rd);*/
+
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_sh_lwc1(2,op->rs2);
+				emit_sh_lwc1(3,op->rs3);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				emit_muls(3,3,2);
+				emit_adds(dest_reg,3,1);
+
+				if (op->SwapWFloatR) emit_mfc1(psp_a1,dest_reg);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
+
 #else
 				emit_sh_addr(psp_a0,op->rd);
 				emit_sh_addr(psp_a1,op->rs2);
@@ -1432,13 +2104,20 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				//die("shop_fsrra");
 				verify(op->rs1._reg==op->rd._reg);
 #if FULL_VFPU
-#elif HALF_VFPU
+#elif HALF_VFPU && 0
 				emit_sh_lvs(0, op->rd);
 				emit_vrsqs(0, 0);
 				emit_sh_svs(0, op->rd);
 #else
-				emit_jal(r_fsrra);
-				emit_sh_addr(psp_a0,op->rd);
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				emit_lui(psp_a0,0x3F80);
+				emit_mtc1(2,psp_a0);
+				emit_sqrts(1,1);
+				emit_divs(dest_reg,2,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
 #endif
 			}
 			break;
@@ -1446,64 +2125,31 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 		case shop_fseteq:
 		case shop_fsetgt:
 			{
-#if FULL_VFPU
-				u32 vs = op->rs1; vs = (vs&3)*32|(vs&12)>>2;
-				u32 vt = op->rs2; vt = (vt&3)*32|(vt&12)>>2;
-				if (op->op==shop_fseteq)
-				{
-					emit_vslts(vs, vt, 126);
-					emit_vslts(vt, vs, 127);
-					emit_vscmps(126, 127, 127);
-				}
-				else
-				{
-					emit_vscmps(vs, vt, 127);
-				}
-				//emit_vabss(127, 127);
-				emit_sh_svs(127, op->rd);
-#elif 0 &&  HALF_VFPU
-				emit_sh_lvs(0, op->rs1);
-				emit_sh_lvs(1, op->rs2);
-				if (op->op==shop_fseteq)
-				{
-					emit_vsges(0, 1, 2);
-					emit_vslts(1, 0, 3);
-					emit_vsubs(2, 3, 0);
-				}
-				else
-				{
-					emit_vslts(1, 0, 0);
-				}
-				emit_vf2izs(0, 0, 0);
-				emit_sh_svs(0, op->rd);
-#else
-				emit_sh_addr(psp_a0,op->rs1);
-				
-				if (op->op==shop_fseteq)
-					emit_jal(r_fcmp_eq);
-				else
-					emit_jal(r_fcmp_gt);
-
-				emit_sh_addr(psp_a1,op->rs2);	//delayslot
-				emit_sh_store(psp_v0,op->rd);
-#endif
+				if (op->loadReg) emit_sh_lwc1(psp_fr1,op->rs1);
+				emit_sh_lwc1(psp_fr2,op->rs2);
+				if (op->op==shop_fsetgt) emit_clts(psp_fr2,psp_fr1);
+				else 					 emit_cseqs(psp_fr2,psp_fr1);
+				emit_cfc1(psp_c1cr31,psp_a1);
+				emit_ext(psp_a0,psp_a1,23,23);
+				if (op->SaveReg) emit_sh_store(psp_a0,op->rd);	
 			}
 			break;
 
 		case shop_ext_s8:
 		case shop_ext_s16:
 			{
-				verify(op->rd.is_r32i());
-				verify(op->rs1.is_r32i());
+				//verify(op->rd.is_r32i());
+				//verify(op->rs1.is_r32i());
 
-				emit_sh_load(psp_a0,op->rs1);
+				if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
 				
 				if (op->op==shop_ext_s8)
 					emit_seb(psp_a0,psp_a0);
 				else
 					emit_seh(psp_a0,psp_a0);
 				
-				emit_sh_store(psp_a0,op->rd);
+				if (op->SaveReg)
+					emit_sh_store(psp_a0,op->rd);
 			}
 			break;
 
@@ -1512,9 +2158,15 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				verify(op->rd.is_r32i());
 				verify(op->rs1.is_r32f());
 
-				emit_jal(r_f2i_t);
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
+
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_truncws(dest_reg,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd); 
+
+				/*emit_jal(r_f2i_t);
 				emit_sh_addr(psp_a0,op->rs1);
-				emit_sh_store(psp_v0,op->rd);
+				emit_sh_store(psp_v0,op->rd);*/
 			}
 			break;
 
@@ -1525,18 +2177,12 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				verify(op->rd.is_r32f());
 				verify(op->rs1.is_r32i());
 
-				emit_sh_load(psp_a1,op->rs1);
+				u8 dest_reg = (op->SwapSaveReg ? 2 : 1);
 
-				if (op->op==shop_cvt_i2f_n)
-				{
-					emit_jal(r_i2f_n);
-				}
-				else
-				{
-					emit_jal(r_i2f_z);
-				}
+				if (op->loadReg) emit_sh_lwc1(1,op->rs1);
+				emit_cvtsw(dest_reg,1);
+				if (op->SaveReg) emit_sh_swc1(dest_reg, op->rd);
 
-				emit_sh_addr(psp_a0,op->rd);
 			}
 			break;
 
@@ -1544,47 +2190,42 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 			{
 				verify(op->rs1.is_r32i());
 				//x86e->Emit(op_mov32 ,ECX,GetRegPtr(op->rs1));
-				if (!op->rs1.is_imm())
+				if (op->flags != 0x1337)
 				{
 					emit_sh_load(psp_a0,op->rs1);
 					emit_srl(psp_a1,psp_a0,26);
-					emit_li(psp_a2,0x38);
-				}
-				else
-				{
-					// The SSA pass has already checked that the
-					// destination is a store queue so no need to check
-					if (!CCN_MMUCR.AT)
-						emit_sh_load(psp_a0,op->rs1);
-				}
+					emit_movi(psp_a2,0x38);
 
-				void (fastcall * handl)(u32);
+					u32* target=(u32*)emit_GetCCPtr();
+					target+=4;
 
-				if (CCN_MMUCR.AT)
-					handl=&do_sqw_mmu;
-				else
-					handl=&do_sqw_nommu;
-
-				u32* target=(u32*)emit_GetCCPtr();
-				target+=4;
-				emit_bne(psp_a1,psp_a2,target);
-				emit_nop();
-				emit_jal(handl);
-				
-				if (CCN_MMUCR.AT)
-					emit_sh_load(psp_a0,op->rs1);
-				else
+					emit_bne(psp_a1,psp_a2,target);
 					emit_nop();
+				}
 
-				//jump target here !
+				if (CCN_MMUCR.AT)
+					emit_jal(do_sqw_mmu);
+				else{
+					emit_jal(*do_sqw_nommu);
+				}
+
+				if (op->flags == 0x1337) emit_sh_load(psp_a0,op->rs1);
+				else   					 emit_nop();
+
 			}
 			break;
 defaulty:
 		default:
 			printf("OH CRAP %d\n",op->op);
 			die("Recompiled doesn't know about that opcode");
+			//shil_chf[op->op](op);
 		}
 	}
+
+	//if (block->oplist.size() > 60 && block->contains_fpu_op) CodeDump("code.bin");
+	//if (save_block) CodeDump("code.bin");
+
+    //if (save_block) SaveAllocatedReg();
 
 	ngen_End(block);
 
@@ -1622,6 +2263,8 @@ void ngen_mainloop()
 	//cntx base
 	emit_la(psp_ctx_reg,&Sh4cntx);
 
+	emit_li(psp_mem_lut,(u32)_vmem_MemInfo_ptr,2);
+
 	//load pc
 	emit_sh_load(psp_next_pc_reg,reg_nextpc);
 	
@@ -1648,8 +2291,9 @@ void ngen_mainloop()
 	emit_lw(psp_a3,psp_a1,8);		//load count
 	emit_addiu(psp_a3,psp_a3,1);	//inc
 
-	emit_jr(psp_a2);
 	emit_sw(psp_a3,psp_a1,8);		//store count
+	emit_jr(psp_a2);
+	emit_nop();
 
 	emit_jal(&bm_GetCode);
 	emit_nop();		//delayslot
@@ -1662,12 +2306,13 @@ void ngen_mainloop()
 
 	emit_sh_store(psp_next_pc_reg,reg_nextpc);
 
-	emit_jal(UpdateSystem);
+	emit_jal(UpdateSystem_INTC);
 	emit_addiu(psp_cycle_reg,psp_cycle_reg,SH4_TIMESLICE);	//delayslot
 
 	emit_lba(psp_at,(void*)&sh4_int_bCpuRun);
+	emit_sh_load(psp_next_pc_reg,reg_nextpc);
 	emit_bne(psp_at,psp_zero,loop_no_update);
-	emit_sh_load(psp_next_pc_reg,reg_nextpc);	//delayslot
+	emit_nop();	//delayslot
 
 	emit_mpop(12,
 			reg_gpr+psp_gp,
@@ -1788,7 +2433,6 @@ void regcache_reset()
 
 void spill_ngpr(u32 n)
 {
-	return;
 	u32 ereg, nreg;
 
 	for (u32 i = 0; i < OREGS_NUM; ++i)

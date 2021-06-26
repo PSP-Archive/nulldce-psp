@@ -5,3 +5,5 @@
 #include "types.h"
 #include "sh4_if.h"
 #include "sh4_interpreter.h"
+
+sqw_fp* do_sqw_nommu;

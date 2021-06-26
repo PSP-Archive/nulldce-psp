@@ -156,14 +156,32 @@ shil_compile( \
 #endif
 
 #include "sinTable.h"
+#include "../../mem/sh4_internal_reg.h"
 
 
 
 SHIL_START
 
 
+shil_opc(nop)
+shil_recimp()
+shil_opc_end()
+
+shil_opc(maddu)
+shil_recimp()
+shil_opc_end()
+
+shil_opc(msubu)
+shil_recimp()
+shil_opc_end()
+
 //shop_mov32
 shil_opc(mov32)
+shil_recimp()
+shil_opc_end()
+
+//shop_mov32 float
+shil_opc(mov32f)
 shil_recimp()
 shil_opc_end()
 
@@ -262,6 +280,68 @@ shil_opc(sar)
 BIN_OP_I2(s32,>>)
 shil_opc_end()
 
+//shop_sbc	// substract with carry
+shil_opc(sbc)
+shil_canonical
+(
+u64,f1,(u32 r1,u32 r2,u32 C),
+	u64 res=(u64)r1-r2-C;
+
+	u64 rv;
+	((u32*)&rv)[0]=(u32)res;
+	((u32*)&rv)[1]=(res>>32)&1; //alternatively: res>>63
+
+	/*
+	//Damn macro magic//
+#if HOST_CPU==CPU_X86
+	verify(((u32*)&rv)[1]<=1);
+	verify(C<=1);
+#endif
+	*/
+
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs3);
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+shil_opc_end()
+
+//shop_adc	//add with carry
+shil_opc(adc)
+shil_canonical
+(
+u64,f1,(u32 r1,u32 r2,u32 C),
+	u64 res=(u64)r1+r2+C;
+
+	u64 rv;
+	((u32*)&rv)[0]=res;
+	((u32*)&rv)[1]=res>>32;
+
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs3);
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+
+shil_opc_end()
+
+
+shil_opc(div1)
+shil_recimp()
+shil_opc_end()
+
 //shop_ror
 shil_opc(ror)
 shil_canonical
@@ -277,6 +357,65 @@ shil_compile
 	shil_cf(f1);
 	shil_cf_rv_u32(rd);
 	//die();
+)
+
+shil_opc_end()
+
+//shop_rocl
+shil_opc(rocl)
+shil_canonical
+(
+u64,f1,(u32 r1,u32 r2),
+	u64 rv;
+	((u32*)&rv)[0]=(r1<<1)|r2;
+	((u32*)&rv)[1]=r1>>31;
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+
+shil_opc_end()
+
+//shop_rocr
+shil_opc(rocr)
+shil_canonical
+(
+u64,f1,(u32 r1,u32 r2),
+	u64 rv;
+	((u32*)&rv)[0]=(r1>>1)|(r2<<31);
+	((u32*)&rv)[1]=r1&1;
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+
+shil_opc_end()
+
+//shop_swaplb -- swap low bytes
+shil_opc(swaplb)
+shil_canonical
+(
+u32,f1,(u32 r1),
+	return (r1 & 0xFFFF0000) | ((r1&0xFF)<<8) | ((r1>>8)&0xFF);
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u32(rd);
 )
 
 shil_opc_end()
@@ -400,6 +539,80 @@ shil_opc(mul_s64)
 BIN_OP_I4(s64,*,u64,s32)
 shil_opc_end()
 
+//shop_div32u	//divide 32 bits, unsigned
+shil_opc(div32u)
+shil_canonical
+(
+u64,f1,(u32 r1,u32 r2),
+	u32 quo=r1/r2;
+	u32 rem=r1%r2;
+
+	u64 rv;
+	((u32*)&rv)[0]=quo;
+	((u32*)&rv)[1]=rem;
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+
+shil_opc_end()
+
+
+//shop_div32s	//divide 32 bits, signed
+shil_opc(div32s)
+shil_canonical
+(
+u64,f1,(s32 r1,s32 r2),
+	u32 quo=r1/r2;
+	u32 rem=r1%r2;
+
+	u64 rv;
+	((u32*)&rv)[0]=quo;
+	((u32*)&rv)[1]=rem;
+	return rv;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u64(rd);
+)
+
+shil_opc_end()
+
+//shop_div32p2	//div32, fixup step (part 2)
+shil_opc(div32p2)
+shil_canonical
+(
+u32,f1,(s32 a,s32 b,s32 T),
+	if (!T)
+	{
+		a-=b;
+	}
+
+	return a;
+)
+
+shil_compile
+(
+	shil_cf_arg_u32(rs3);
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u32(rd);
+)
+
+shil_opc_end()
+
+
 //shop_cvt_f2i_t	//float to integer : turnicate
 shil_opc(cvt_f2i_t)
 shil_canonical
@@ -513,6 +726,33 @@ shil_opc_end()
 //shop_setab	//>, unsined (above)
 shil_opc(setab)
 BIN_OP_I2(u32,>)
+shil_opc_end()
+
+shil_opc(cmp_set)
+shil_recimp()
+shil_opc_end()
+
+//shop_setpeq //set if any pair of bytes is equal
+shil_opc(setpeq)
+shil_canonical
+(
+u32,f1,(u32 r1,u32 r2),
+	u32 temp = r1 ^ r2;
+
+	if ( (temp&0xFF000000) && (temp&0x00FF0000) && (temp&0x0000FF00) && (temp&0x000000FF) )
+		return 0;
+	else
+		return 1;		
+)
+
+shil_compile
+(
+ 	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u32(rd);
+)
+
 shil_opc_end()
 
 //here come the moving points
@@ -694,6 +934,34 @@ shil_opc(fsetgt)
 BIN_OP_FU(>)
 shil_opc_end()
 
+//shop_frswap
+shil_opc(frswap)
+shil_canonical
+(
+void,f1,(u64* fd1,u64* fd2,u64* fs1,u64* fs2),
+
+	u64 temp;
+	for (int i=0;i<8;i++)
+	{
+		temp=fs1[i];
+		fd1[i]=fs2[i];
+		fd2[i]=temp;
+	}
+)
+shil_compile
+(
+	shil_cf_arg_ptr(rs2);
+	shil_cf_arg_ptr(rs1);
+	shil_cf_arg_ptr(rd);
+	shil_cf_arg_ptr(rd2);
+	shil_cf(f1);
+)
+shil_opc_end()
+
+shil_opc(native_mov)
+shil_recimp()
+shil_opc_end()
+
 
 SHIL_END
 
@@ -722,3 +990,4 @@ SHIL_END
 #undef UN_OP_F
 #undef BIN_OP_FU
 #undef shil_recimp
+
