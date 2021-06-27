@@ -11,10 +11,6 @@
 
 #define tmu_underflow	0x0100
 #define tmu_UNIE		0x0020
-u32 tmu_prescaler[3];
-u32 tmu_prescaler_shift[3];
-u32 tmu_prescaler_mask[3];
-const u32 tmu_ch_bit[3]={1,2,4};
 
 u32 tmu_regs_CNT[3];
 u32 tmu_regs_COR[3];

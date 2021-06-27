@@ -1,7 +1,7 @@
 #pragma once
 #include "EmptyAICA.h"
 #include "aica_hax.h"
-namespace AICA
+namespace HACK_AICA
 {
 void ARM_Katana_Driver_Info();
 

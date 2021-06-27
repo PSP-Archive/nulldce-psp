@@ -9,6 +9,10 @@
 
 #include "dc/arm7/vbaARM.h"
 
+#include "plugs/nullAICA/aica.h"
+
+#include "dc/arm7/arm7.h"
+
 //arm 7 is emulated within the aica implementation
 //RTC is emulated here tho xD
 //Gota check what to do about the rest regs that are not aica olny .. pfftt [display mode , any other ?]
@@ -17,7 +21,10 @@
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
-int dma_sched_id;
+int dma_sched_id = -1;
+int aica_schid 	 = -1;
+
+const int AICA_TICK = 145124;
 
 VArray2 aica_ram;
 u32 VREG;//video reg =P
@@ -77,7 +84,7 @@ void WriteMem_aica_rtc(u32 addr,u32 data,u32 sz)
 		{
 			settings.dreamcast.RTC&=0xFFFF0000;
 			settings.dreamcast.RTC|= data&0xFFFF;
-			//rtc_cycles=SH4_CLOCK;	//clear the internal cycle counter ;)
+			rtc_cycles=SH4_CLOCK;	//clear the internal cycle counter ;)
 		}
 		return;
 	case 8:	
@@ -87,6 +94,7 @@ void WriteMem_aica_rtc(u32 addr,u32 data,u32 sz)
 
 	return;
 }
+
 u32 FASTCALL ReadMem_aica_reg(u32 addr,u32 sz)
 {
 	addr&=0x7FFF;
@@ -136,21 +144,27 @@ void aica_periodical(u32 cycl)
 	}
 }
 
+void ArmSetRST()
+{
+	ARMRST&=1;
+	SetResetState(ARMRST);
+}
 void FASTCALL WriteMem_aica_reg(u32 addr,u32 data,u32 sz)
 {
+	addr&=0x7FFF;
+	
 	if (sz==1)
 	{
-		if ((addr & 0x7FFF)==0x2C01)
+		if (addr==0x2C01)
 		{
 			VREG=data;
-			//printf("VREG = %02X\n",VREG);
+			printf("VREG = %02X\n",VREG);
 		}
 		else if (addr==0x2C00)
 		{
 			ARMRST=data;
-			//log("ARMRST = %02X\n",ARMRST);
-			ARMRST&=1;
-			SetResetState(ARMRST);
+			printf("ARMRST = %02X\n",ARMRST);
+			ArmSetRST();
 		}
 		else
 		{
@@ -164,12 +178,12 @@ void FASTCALL WriteMem_aica_reg(u32 addr,u32 data,u32 sz)
 			VREG=(data>>8)&0xFF;
 			ARMRST=data&0xFF;
 			printf("VREG = %02X ARMRST %02X\n",VREG,ARMRST);
-			ARMRST&=1;
-			//SetResetState(ARMRST);
-			libAICA_WriteMem_aica_reg(addr,data&(~0xFF00),sz);
+			ArmSetRST();
 		}
 		else
-		libAICA_WriteMem_aica_reg(addr,data,sz);
+		{
+			libAICA_WriteMem_aica_reg(addr,data,sz);
+		}
 	}
 }
 //Init/res/term
@@ -334,6 +348,29 @@ void Write_SB_E2ST(u32 data)
 	}
 }
 
+int AicaUpdate(int tag, int c, int j)
+{
+	//gpc_counter=0;
+	//bm_Periodical_14k();
+
+	//static int aica_sample_cycles=0;
+	//aica_sample_cycles+=14336*AICA_SAMPLE_GCM;
+
+	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
+	const u16 Cycles = 512 * 32;
+
+	{
+		for (int i = 0; i < 32; i++)
+		{
+			arm_Run(Cycles / 32 / arm_sh4_bias);
+			libAICA_TimeStep();
+		}
+		//aica_sample_cycles-=AICA_SAMPLE_CYCLES;
+	}
+
+	return AICA_TICK;
+}
+
 void aica_sb_Init()
 {
 	//NRM
@@ -350,6 +387,9 @@ void aica_sb_Init()
 	sb_regs[((SB_E2ST_addr-SB_BASE)>>2)].writeFunction=Write_SB_E2ST;
 
 	dma_sched_id = sh4_sched_register(0, dma_end_sched);
+
+	aica_schid = sh4_sched_register(0, AicaUpdate);
+    sh4_sched_request(aica_schid, AICA_TICK);
 }
 
 void aica_sb_Reset(bool Manual)

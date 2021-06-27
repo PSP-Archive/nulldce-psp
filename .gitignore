@@ -1,0 +1,7 @@
+
+*.o
+*.elf
+*.SFO
+*.PBP
+*.lnk
+.vscode/settings.json

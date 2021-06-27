@@ -194,62 +194,12 @@ u32 update_cnt = 0;
 u32 gcp_timer=0;
 u32 aica_sample_cycles=0;
 
-
-//14336 Cycles
-void FASTCALL VerySlowUpdate()
-{
-	//gpc_counter=0;
-	/*gcp_timer++;
-	rtc_cycles-=14336;
-	if (rtc_cycles<=0)
-	{
-		rtc_cycles+=SH4_CLOCK;
-		settings.dreamcast.RTC++;
-	}*/
-	
-}
-
-//7168 Cycles
-void FASTCALL SlowUpdate()
-{
-	/*UpdateGDRom();
-
-	if (!(update_cnt&0x10))
-		VerySlowUpdate();*/
-}
+bool clc_fk = false;
 
 extern void aica_periodical(u32 cycl);
 
 #define AICA_SAMPLE_GCM 441
 #define AICA_SAMPLE_CYCLES (SH4_CLOCK/(44100/AICA_SAMPLE_GCM))
-
-bool late_hack = false;
-
-//3584 Cycles
-void FASTCALL MediumUpdate()
-{
-	/*aica_sample_cycles+=3584*AICA_SAMPLE_GCM;
-
-	if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
-	{
-		UpdateArm(512);
-		UpdateAica(1);
-		aica_sample_cycles-=AICA_SAMPLE_CYCLES;
-	}
-		
-	aica_periodical(3584);*/
-
-	//AICA::Hle_process();
-
-	/*if (late_hack) UpdatePvr(3640);
-	
-	maple_Update(3584);
-
-	//libExtDevice_Update(3584);
-	//UpdateDMA();
-	if (!(update_cnt&0x8))
-		SlowUpdate();*/
-}
 
 //448 Cycles (fixed)
 int FASTCALL UpdateSystem()

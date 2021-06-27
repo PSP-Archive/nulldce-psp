@@ -5,7 +5,7 @@
 #include "aica_hax.h"
 #include "aica_hle.h"
 
-using namespace AICA;
+using namespace HACK_AICA;
 s32 FASTCALL libAICA_Load()
 {
 	return rv_ok;
@@ -15,7 +15,7 @@ void FASTCALL libAICA_Unload()
 {
 }
 aica_init_params aparam;
-s32 FASTCALL libAICA_Init(aica_init_params* param)
+s32 FASTCALL HACK_libAICA_Init(aica_init_params* param)
 {
 	aparam=*param;
 	aica_ram=param->aica_ram;
@@ -25,13 +25,13 @@ s32 FASTCALL libAICA_Init(aica_init_params* param)
 	return rv_ok;
 } 
 
-void FASTCALL libAICA_Term()
+void FASTCALL HACK_libAICA_Term()
 {
 	term_mem();
 	TermHLE();
 }
 
-void FASTCALL libAICA_Reset(bool Manual)
+void FASTCALL HACK_libAICA_Reset(bool Manual)
 {
 		ResetHLE();
 }

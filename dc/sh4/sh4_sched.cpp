@@ -103,8 +103,6 @@ u64 sh4_sched_now64()
 }
 void sh4_sched_request(int id, int cycles)
 {
-	verify(cycles== -1 || (cycles >= 0 && cycles <= SH4_MAIN_CLOCK));
-
 	sch_list[id].start=sh4_sched_now();
 
 	if (cycles == -1) {

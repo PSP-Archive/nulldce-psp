@@ -3,12 +3,12 @@
 #include "dc/mem/sh4_mem.h"
 
 
-namespace AICA
+namespace HACK_AICA
 {
 u8 *aica_reg;
 u8 *aica_ram;
 }
-using namespace AICA;
+using namespace HACK_AICA;
 
 
 #define 	ReadMemArrRet(arr,addr,sz)				\
@@ -34,7 +34,7 @@ using namespace AICA;
 			else if (sz==4)							\
 			{*(u32*)&arr[addr]=data;}}	
 
-void FASTCALL  libAICA_WriteMem_aica_reg(u32 addr,u32 data,u32 sz){
+void FASTCALL  HACK_libAICA_WriteMem_aica_reg(u32 addr,u32 data,u32 sz){
 	if ((addr & 0xFFFF) == 0x2c00)
 	{
 		printf("Write to ARM reset, value= %x\n",data);
@@ -51,7 +51,7 @@ void FASTCALL  libAICA_WriteMem_aica_reg(u32 addr,u32 data,u32 sz){
 	WriteMemArrRet(aica_reg,addr&0x7FFF,data,sz);
 }
 
-u32 libAICA_ReadMem_aica_ram(u32 addr,u32 size)
+u32 HACK_libAICA_ReadMem_aica_ram(u32 addr,u32 size)
 {
 
 	//Some infos here:
@@ -83,11 +83,13 @@ u32 libAICA_ReadMem_aica_ram(u32 addr,u32 size)
 	//here we hack the first and last comands
 	//seems to fix everything ^^
 
+	if (addr==0x81000C || addr==0x81FFFF) return 0x1;
+
 	//Games like Code Veronica waits for this to give 0(?). Currently I don't know how can this be detected
-	if (addr>=0x81000C && addr<0x81FFFD){
+	/*if (addr>=0x81000C && addr<0x81FFFD){
 		//printf("GOT IT: %x\n",addr);
 		return 0x1;			//hack kos command que
-	}
+	}*/
 	//printf("addr: %x\n",addr);
 
 	//crazy taxi / doa2 /*
@@ -202,7 +204,7 @@ u32 libAICA_ReadMem_aica_ram(u32 addr,u32 size)
 	return 0;
 }
  
-void libAICA_WriteMem_aica_ram(u32 addr,u32 data,u32 size)
+void HACK_libAICA_WriteMem_aica_ram(u32 addr,u32 data,u32 size)
 {
 	if (size==1)
 		aica_ram[addr&AICA_MEM_MASK]=(u8)data;
@@ -214,7 +216,7 @@ void libAICA_WriteMem_aica_ram(u32 addr,u32 data,u32 size)
 
 
 int calls=0;
-namespace AICA
+namespace HACK_AICA
 {
 void init_mem()
 {

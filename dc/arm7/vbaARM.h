@@ -35,6 +35,5 @@
 extern arm_init_params arm_params;
 extern aica_init_params aica_params;
 
-s32 FASTCALL libAICA_Init_LLE(aica_init_params* param);
-void FASTCALL libAICA_Reset_LLE(bool Manual);
 void FASTCALL SetResetState(u32 state);
+void FASTCALL ArmInterruptChange(u32 bits,u32 L);

@@ -93,6 +93,8 @@ void NotifyEvent_gdrom(u32 info,void* param);
 //************************ AICA ************************
 //******************************************************
 
+typedef void FASTCALL ArmInterruptChangeFP(u32 bits,u32 L);
+
 //passed on AICA init call
 struct aica_init_params
 {
@@ -101,6 +103,8 @@ struct aica_init_params
 	u8*				aica_ram;
 	u32*			SB_ISTEXT;			//SB_ISTEXT register , so that aica can cancel interrupts =)
 	HollyCancelInterruptFP* CancelInterrupt;
+
+	ArmInterruptChangeFP*	ArmInterruptChange;	//called when the arm interrupt vectors may have changed.Parameter is P&M
 };
 
 typedef u32 FASTCALL ReadMemFP(u32 addr,u32 size);

@@ -13,7 +13,7 @@ aica_init_params aica_params;
 arm_init_params arm_params;
 
 
-s32 FASTCALL libAICA_Init_LLE(aica_init_params* param)
+s32 FASTCALL libAICA_Init(aica_init_params* param)
 {
 	memcpy(&aica_params,param, sizeof(aica_params));
 
@@ -30,14 +30,14 @@ s32 FASTCALL libAICA_Init_LLE(aica_init_params* param)
 } 
 
 //called when plugin is unloaded by emu , olny if dcInit is called (eg , not called to enumerate plugins)
-void FASTCALL Term()
+void FASTCALL libAICA_Term()
 {
 	term_mem();
 	//arm7_Term ?
 }
 
 //It's suposed to reset anything 
-void FASTCALL libAICA_Reset_LLE(bool Manual)
+void FASTCALL libAICA_Reset(bool Manual)
 {
 	arm_Reset();
 }

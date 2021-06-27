@@ -173,8 +173,6 @@ class RegValue : public std::pair<Sh4RegType, u32>
 		RegValue(const shil_param& param, int index = 0)
 			: std::pair<Sh4RegType, u32>((Sh4RegType)(param._reg + index), param.version[index])
 		{
-			verify(param.is_reg());
-			verify(index >= 0 && index < (int)param.count());
 		}
 		RegValue(Sh4RegType reg, u32 version)
 			: std::pair<Sh4RegType, u32>(reg, version) { }

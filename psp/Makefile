@@ -59,6 +59,9 @@ OBJS = \
  ../plugs/EmptyAICA/aica_hax.o \
  ../plugs/EmptyAICA/aica_hle.o \
  ../plugs/EmptyAICA/EmptyAICA.o \
+ ../plugs/nullAICA/aica.o \
+ ../plugs/nullAICA/mem.o \
+ ../plugs/nullAICA/sgc_if.o \
  ../plugs/ImgReader/ioctl.o \
  ../plugs/ImgReader/cdi.o \
  ../plugs/ImgReader/gdi.o \

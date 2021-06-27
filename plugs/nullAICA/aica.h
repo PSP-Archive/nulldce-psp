@@ -1,7 +1,7 @@
 #pragma once
 #include "nullAICA.h"
-#include "audiostream.h"
-#include "assert.h"
+#include "plugins/plugin_header.h"
+#include "types.h"
 
 #define SCIEB_addr 0x289C
 #define SCIPD_addr (0x289C+4)
@@ -302,7 +302,19 @@ extern InterruptInfo* SCIRE;
 extern CommonData_struct* CommonData;
 extern DSPData_struct*	  DSPData;
 
+extern aica_init_params aica_params;
+
+extern u8 * aica_reg;
+
 void FASTCALL UpdateAICA(u32 Cycles);
+
+void update_arm_interrupts();
+void UpdateSh4Ints();
+
+void ReadCommonReg(u32 reg,bool byte);
+void WriteCommonReg8(u32 reg,u32 data);
+
+void WriteChannelReg8(u32 channel,u32 reg);
 
 void AICA_Init();
 void AICA_Term();
@@ -313,3 +325,7 @@ extern bool e68k_out;
 
 template<u32 sz>
 void WriteAicaReg(u32 reg,u32 data);
+
+
+void libAICA_TimeStep();
+void LIBAICA_init_mem();

@@ -191,6 +191,7 @@ s32 plugins_Init_()
 	aica_info.SB_ISTEXT=&SB_ISTEXT;
 	aica_info.CancelInterrupt=asic_CancelInterrupt;
 	aica_info.aica_ram=aica_ram.data;
+	aica_info.ArmInterruptChange = ArmInterruptChange;
 
 	if (s32 rv = libAICA_Init(&aica_info))
 		return rv;
@@ -304,7 +305,7 @@ void plugins_Reset(bool Manual)
 {
 	libPvr_Reset(Manual);
 	g_GDRDisc->Reset(Manual);
-	libAICA_Reset_LLE(Manual);
+	libAICA_Reset(Manual);
 	libExtDevice_Reset(Manual);
 }
 

@@ -55,7 +55,7 @@ void map_area1_init()
 void map_area1(u32 base)
 {
 	//map vram
-	
+
 	//Lower 32 mb map
 	//64b interface
 	_vmem_map_block(vram.data,0x04 | base,0x04 | base,VRAM_SIZE-1);
@@ -66,9 +66,9 @@ void map_area1(u32 base)
 	//Upper 32 mb mirror
 	//0x0600 to 0x07FF
 	_vmem_mirror_mapping(0x06|base,0x04|base,0x02);
-
-	//_vmem_map_block(aica_ram.data,0x08 | base,0x0F | base,aica_ram.size - 1);
 }
+
+
 
 //AREA 2
 void map_area2_init()
@@ -180,6 +180,11 @@ void mem_map_defualt()
 	map_area5_init();
 	map_area6_init();
 	map_area7_init();
+
+	/*for (int i=0x0;i<0xE;i+=0x2)
+		_vmem_map_block_mirror(aica_ram.data,0x0080|(i << 12),0x00FF|(i << 12),ARAM_SIZE);
+
+	printf("HHHHHHHHH\n");*/
 
 	//0x0-0xD : 7 times the normal memmap mirrors :)
 	//some areas can be customised :)

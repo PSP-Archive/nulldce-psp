@@ -143,17 +143,17 @@ T FASTCALL ReadMem_area0(u32 addr)
 		return (T)ReadMem_aica_rtc(addr,sz);
 	}
 	//map 0x0080 to 0x00FF
-	else if ((base >=0x0080) && (base <=0x00FF) ) //	:AICA- Wave Memory
+	else if ((base >=0x0080) && (base <=0x00FF)) //	:AICA- Wave Memory
 	{
 		//EMUERROR2("Read from area0_32 not implemented [AICA- Wave Memory], addr=%x",addr);
-		return (T)libAICA_ReadMem_aica_ram(addr,sz);
+		ReadMemArrRet(aica_ram.data, addr & ARAM_MASK, sz);
 	}
 	//map 0x0100 to 0x01FF
-	else if (base >= 0x0100 && base <= 0x01FF) //	:Ext. Device
+	/*else if (base >= 0x0100 && base <= 0x01FF) //	:Ext. Device
 	{
 	//	EMUERROR2("Read from area0_32 not implemented [Ext. Device], addr=%x",addr);
 		return (T)libExtDevice_ReadMem_A0_010(addr,sz);
-	}
+	}*/
 	//rest of it ;P
 	/*else 
 	{
@@ -226,13 +226,13 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 		return;
 	}
 	//map 0x0080 to 0x00FF
-	/*else if ((base >=0x0080) && (base <=0x00FF)) //	:AICA- Wave Memory
+	else if ((base >=0x0080) && (base <=0x00FF)) //	:AICA- Wave Memory
 	{
 		//EMUERROR4("Write to area0_32 not implemented [AICA- Wave Memory], addr=%x,data=%x,size=%d",addr,data,sz);
 		//aica_writeram(addr,data,sz);
-		libAICA_WriteMem_aica_ram(addr,data,sz);
+		WriteMemArrRet(aica_ram.data, addr & ARAM_MASK, data, sz);
 		return;
-	}*/
+	}
 	//map 0x0100 to 0x01FF
 	/*else if (base >= 0x0100 && base <= 0x01FF) //	:Ext. Device
 	{

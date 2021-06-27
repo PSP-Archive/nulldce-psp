@@ -1,9 +1,7 @@
 #include "mem.h"
-#include "dsp.h"
 #include "sgc_if.h"
 
-u8 *aica_reg;
-u8 *aica_ram;
+u8 * aica_reg;
 
 //00000000~007FFFFF @DRAM_AREA* 
 //00800000~008027FF @CHANNEL_DATA 
@@ -87,13 +85,13 @@ void WriteReg(u32 addr,u32 data)
 		if (sz==1)
 		{
 			WriteMemArr(aica_reg,addr,data,1);
-			dsp_writenmem(addr);
+			//dsp_writenmem(addr);
 		}
 		else
 		{
 			WriteMemArr(aica_reg,addr,data,2);
-			dsp_writenmem(addr);
-			dsp_writenmem(addr+1);
+			//dsp_writenmem(addr);
+			//dsp_writenmem(addr+1);
 		}
 	}
 	if (sz==1)
@@ -122,15 +120,15 @@ void FASTCALL aica_WriteMem_reg(u32 addr,u32 data,u32 size)
 }
 
 //Map using _vmem .. yay
-void init_mem()
+void LIBAICA_init_mem()
 {
-	aica_ram=aica_params.aica_ram;
+	//aica_ram=aica_params.aica_ram;
 	aica_reg=(u8*)malloc(0x8000);
-	memset(aica_ram,0,AICA_RAM_SIZE);
+	//memset(aica_ram,0,AICA_RAM_SIZE);
 	memset(aica_reg,0,0x8000);
 }
 //kill mem map & free used mem ;)
-void term_mem()
+void LIBAICA_term_mem()
 {
 	free(aica_reg);
 }

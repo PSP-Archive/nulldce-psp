@@ -3,7 +3,7 @@
 //Many thanks to ZeZu & CyRus 64 , most of the code here is based/derived from Icarus hle :)
 
 #include "aica_hle.h"
-namespace AICA
+namespace HACK_AICA
 {
 _audio_drv_header *aud_drv;
 bool arm7_on;

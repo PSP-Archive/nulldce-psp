@@ -229,6 +229,7 @@ void WriteAicaReg(u32 reg,u32 data)
 template void WriteAicaReg<1>(u32 reg,u32 data);
 template void WriteAicaReg<2>(u32 reg,u32 data);
 
+
 //misc :p
 void AICA_Init()
 {
@@ -250,6 +251,20 @@ void AICA_Init()
 	sgc_Init();
 	for (int i=0;i<3;i++)
 		timers[i].Init(aica_reg,i);
+}
+
+void libAICA_TimeStep() {
+
+	//AICA_Sample();
+
+	for (int i = 0; i < 3; i++)
+			timers[i].StepTimer();
+
+		SCIPD->SAMPLE_DONE = 1;
+
+		//Make sure sh4/arm interrupt system is up to date :)
+		update_arm_interrupts();
+		UpdateSh4Ints();
 }
 
 
