@@ -59,7 +59,7 @@ u32 total_blocks;
 u32 REMOVED_OPS;
 
 bool supportedOP (shil_opcode op){
-	if ((int)op.op >= 11 && (int)op.op < 25) return true;
+	if ((int)op.op >= shop_and && (int)op.op < shop_ror) return true;
 	if (   op.op == shop_mul_i32
 		|| op.op == shop_mul_s16 || op.op == shop_mul_u16  || op.op == shop_writem
 		|| op.op == shop_setge || op.op == shop_setgt || op.op == shop_setae || op.op == shop_setgt || op.op == shop_seteq
@@ -79,14 +79,14 @@ bool supportedFPU_OP (shil_opcode op){
 }
 
 bool supportednoSave (shil_opcode op){
-	if ((int)op.op >= 11 && (int)op.op < 38) return true;
+	if ((int)op.op >= shop_and && (int)op.op < shop_ror) return true;
 	if (op.op == shop_mov32) return true;
 	return false;
 }
 
 bool supportedSwapRs2 (shil_opcode op){
-	if ((int)op.op >= 11 && (int)op.op < 17) return true;
-	if ((int)op.op >= 34 && (int)op.op < 38) return true;
+	if ((int)op.op >= shop_and && (int)op.op < shop_add) return true;
+	if ((int)op.op >= shop_mul_u16 && (int)op.op < shop_div32u) return true;
 	return false;
 }
 
@@ -667,7 +667,7 @@ void AnalyseBlock(DecodedBlock* blk)
 {
 	sq_pref(blk);
 
-	if (!reg_optimizzation) return;
+	if (!reg_optimizzation || blk->oplist.size() < 2) return;
 
 	constprop(blk);
 	
@@ -714,53 +714,103 @@ void AnalyseBlock(DecodedBlock* blk)
 	#if 1
 
 	//Special case
-	/*for (int opnum = 0; opnum < (int)blk->oplist.size() - 3; opnum++){
-		if (blk->oplist[opnum].op == shop_mov32 && blk->oplist[opnum + 1].op == shop_mov32 && blk->oplist[opnum + 2].op == shop_mov32) {
-			//printf("TRIPLE MOVE\n");
-			if (blk->oplist[opnum].rd._reg == blk->oplist[opnum + 2].rs1._reg && !blk->oplist[opnum + 2].rs1.is_imm()) 
-				if (blk->oplist[opnum].rd._reg != blk->oplist[opnum + 1].rs1._reg){
-					shil_opcode tmp_op = blk->oplist[opnum + 1];
-					blk->oplist[opnum + 1] = blk->oplist[opnum + 2];
-					blk->oplist[opnum + 2] = tmp_op;
-					if (blk->oplist[opnum].rd._reg != blk->oplist[opnum + 1].rs1._reg) printf("Someting bad happened\n");
-					printf("1 - 3\n");
-				}
-		}*/
 
-		
-		/*if (blk->oplist[opnum].op == shop_sub){
-			if (blk->oplist[opnum + 1].op >= shop_seteq && blk->oplist[opnum + 1].op <= shop_setab){
+	//printf("BEFORE: %d\n", (int)blk->oplist.size());
 
-				const bool do_move = blk->oplist[opnum + 2].op == shop_mov32 && blk->oplist[opnum + 2].rs1._reg == blk->oplist[opnum + 1].rd._reg;
-				const bool do_shift = blk->oplist[opnum + 3].op == shop_shr && blk->oplist[opnum + 2].rs1._reg == blk->oplist[opnum + 1].rd._reg;
-
-				if (do_move) blk->oplist[opnum + 2].op = shop_nop; 
-				if (do_shift) printf("DO SHIFT\n");
-				blk->oplist[opnum].op = shop_cmp_set;
-				blk->oplist[opnum].rs3 = blk->oplist[opnum + 1].rs2;
-				blk->oplist[opnum].rd2 = blk->oplist[opnum + 1].rd;
-
-				blk->oplist[opnum].flags = (do_move ? blk->oplist[opnum + 2].rd._reg << 20 : 0);
-				blk->oplist[opnum].flags |= blk->oplist[opnum + 1].op;
-
-				blk->oplist[opnum + 1].op = shop_nop;
-				continue;
-			}
-		}
-	}*/
-
-	/*for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
+	for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
 	{
 		shil_opcode& op = blk->oplist[opnum];
 		shil_opcode& next_op = blk->oplist[opnum + 1];
-		if (next_op.op == shop_writem && supportednoSave(op)){
+
+		//printf("%d :: %d -> %d\n", op.op , next_op.op, opnum);
+
+		if (op.op == shop_shl && next_op.op == shop_shl) {
+			if (op.rd._reg == next_op.rs1._reg){
+				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
+				op.rd._reg = next_op.rd._reg;
+				blk->oplist.erase(blk->oplist.begin()+opnum+1);
+				opnum--;
+			}
+			continue;
+		}
+
+		if (op.op == shop_shr && next_op.op == shop_shr) {
+			if (op.rd._reg == next_op.rs1._reg){
+				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
+				op.rd._reg = next_op.rd._reg;
+				blk->oplist.erase(blk->oplist.begin()+opnum+1); 
+				opnum--;
+			}
+			continue;
+		}
+
+		if (op.op == shop_mov32  && next_op.op == shop_mov32 && op.rd._reg == next_op.rd._reg && !(op.rs1._reg == next_op.rs1._reg)){
+			blk->oplist.erase(blk->oplist.begin()+opnum); 
+			opnum--;
+			continue;
+		}
+
+		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_sub && op.rd._reg == next_op.rs1._reg){
+			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm - next_op.rs2._imm);
+			next_op.op = shop_mov32;
+			blk->oplist.erase(blk->oplist.begin()+opnum); 
+			opnum--;
+			continue;
+		}
+
+		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_shl && op.rd._reg == next_op.rs1._reg){
+			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm << next_op.rs2._imm);
+			next_op.op = shop_mov32;
+			blk->oplist.erase(blk->oplist.begin()+opnum); 
+			opnum--;
+			continue;
+		}
+
+		if (op.op == shop_mov32  && next_op.op == shop_readm)
+			if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm() && op.rd._reg == next_op.rd._reg){
+				next_op.rs1._reg = op.rs1._reg;
+				blk->oplist.erase(blk->oplist.begin()+opnum); 
+				opnum--;
+				continue;
+			}
+
+		if (op.op == shop_mov32  && supportednoSave(next_op))
+			if (op.rd._reg == next_op.rs1._reg && op.rd._reg == next_op.rd._reg && !op.rs1.is_imm()){
+				next_op.rs1._reg = op.rs1._reg;
+				blk->oplist.erase(blk->oplist.begin()+opnum); 
+				opnum--;
+				continue;
+			}
+
+		if (op.op == shop_mov32  && next_op.op == shop_writem)
+			if (!next_op.rs3.is_imm() && next_op.rs3._reg == op.rd._reg && !op.rs1.is_imm()){
+				next_op.rs3._reg = op.rs1._reg;
+				blk->oplist.erase(blk->oplist.begin()+opnum); 
+				opnum--;
+				continue;
+			}
+	}
+
+	//printf("After: %d\n", (int)blk->oplist.size());
+
+	/*for (int opnum = 0; opnum < (int)blk->oplist.size() - 2; opnum++)
+	{
+		shil_opcode& op = blk->oplist[opnum];
+		shil_opcode& next_op = blk->oplist[opnum + 1];
+
+		if ((op.rd._reg == blk->oplist[opnum + 2].rs1._reg) && supportedOP(blk->oplist[opnum + 2])){
+			
 				if (   next_op.rs1._reg != op.rd._reg 
-					&& next_op.rs2._reg != op.rd._reg 
-					&& next_op.rs3.is_imm()){
+				    && !op.rs1.is_imm() && !next_op.rs1.is_imm() 
+					&& supportednoSave(op) && supportednoSave(next_op)){
+						printf("CHI BBOI %d\n", opnum);
 	//If the current op isn't important for the next one, swap them and try to optmize it later
-						shil_opcode tmp_op = blk->oplist[opnum + 1];
-						blk->oplist[opnum + 1] = blk->oplist[opnum];
-						blk->oplist[opnum] = tmp_op;
+						shil_opcode tmp_op = blk->oplist[opnum];
+						op = next_op;
+						next_op = tmp_op;
+
+						opnum+= 2;
+
 					}
 			}
 	}*/
@@ -771,23 +821,8 @@ void AnalyseBlock(DecodedBlock* blk)
 		shil_opcode& op = blk->oplist[opnum];
 		shil_opcode& next_op = blk->oplist[opnum + 1];
 
-		/*UpdateRegStatus(op.rs1._reg);
-		UpdateRegStatus(op.rd._reg);*/
-
 		const bool fpu_op = supportedFPU_OP(op);
 
-		/*if (next_op.op == shop_fmul  && next_op.op == op.op){
-			
-			if (next_op.rs1._reg == op.rs2._reg){
-				printf("MULF\n");
-				shil_param tmp = op.rs1;
-				op.rs1 = op.rs2;
-				op.rs2 = tmp;
-				next_op.loadReg = false;
-				continue;
-			}
-		}*/
-		
 		if(fpu_op && supportedFPU_OP(next_op)){
 			if (op.rd._reg == next_op.rs1._reg) next_op.loadReg = false;
 			if (op.rs2._reg == next_op.rs2._reg) { next_op.SkipLoadReg2 = true; }
@@ -804,30 +839,16 @@ void AnalyseBlock(DecodedBlock* blk)
 			continue;
 		}
 
-		if (op.op == shop_mov32  && (next_op.op == shop_fadd || next_op.op == shop_fsub || next_op.op == shop_fmac || next_op.op == shop_fabs || next_op.op == shop_fneg || next_op.op == shop_fsqrt)){
+		if (op.op == shop_mov32  && (next_op.op == shop_fmac || next_op.op == shop_fabs || next_op.op == shop_fneg || next_op.op == shop_fsqrt)){
 			if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm()){
-				
-				/*if (op.rd._reg != next_op.rd._reg)*/{
 					op.op = shop_mov32f;
 					next_op.loadReg = false;
 					if (op.rd._reg == next_op.rd._reg && next_op.op != shop_fmac) op.SaveReg = false;
-				}/*else if (op.rd._reg == next_op.rd._reg){
-					op.op = shop_nop;
-					next_op.rs1._reg = op.rs1._reg;
-				}*/
 			}
 			continue;
 		}
 
-		if (fpu_op) continue;
-
-		/*if (op.op == shop_ifb){
-
-			if (op.rs3._imm == 16398) { 
-				op.op = shop_nop;
-				printf("Warning\n");
-			}
-		}*/
+		if (fpu_op) { continue; }
 
 		if (op.op == shop_mov32  && next_op.op == shop_mov32){
 
@@ -836,20 +857,23 @@ void AnalyseBlock(DecodedBlock* blk)
 				continue;
 			}
 
-			//Hard to believe but this can happen...
-			if (op.rd._reg == next_op.rd._reg ){  
-				op.op = shop_nop; 
-			}
-			/*if (op.rd._reg != next_op.rs1._reg && blk->oplist[opnum + 2].op == shop_mov32){  
+			if (blk->oplist[opnum + 2].op == shop_mov32){  
 				if (op.rd._reg == blk->oplist[opnum + 2].rs1._reg && !blk->oplist[opnum + 2].rs1.is_imm() && !op.rs1.is_imm()){
 					op.UseCustomReg = true;
 					op.customReg = psp_a1;
 					blk->oplist[opnum + 2].UseCustomReg = true;
 					blk->oplist[opnum + 2].customReg	= psp_a1;
 					blk->oplist[opnum + 2].loadReg 		= false;
-					//opnum+=2;
+					if (op.rd._reg == next_op.rs1._reg) {
+						next_op.loadReg = false;
+						next_op.UseCustomReg = true;
+						next_op.customReg = psp_a1;
+					}
+					opnum+=2;
+					continue;
 				}
-			}*/
+			}
+
 			if (!op.UseCustomReg){
 				op.UseCustomReg = true;
 				op.customReg = psp_a1;
@@ -863,43 +887,8 @@ void AnalyseBlock(DecodedBlock* blk)
 
 		const bool nextop_SUP = supportednoSave(next_op);
 
-		/*if (MapRegister(blk,op.rs1._reg) && nextop_SUP){
-			op.UseCustomReg = true;
-			u8 reg = GetmappedReg(op.rs1._reg);
-			op.UseStaticReg = reg;
-			
-			if (!dirtyMipsRegs[reg]){
-				dirtyMipsRegs[reg] = true;
-			}else op.loadReg = false;
-
-			u8 dst_reg = GetmappedReg(op.rd._reg);
-
-			if (dst_reg != 0){
-				if (!dirtyMipsRegs[dst_reg]){
-					dirtyMipsRegs[dst_reg] = true;
-				}else if (dst_reg != reg) op.SaveReg = false;
-			}
-			continue;
-		}*/
-
-		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_sub && op.rd._reg == next_op.rs1._reg){
-			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm - next_op.rs2._imm);
-			next_op.op = shop_mov32;
-			op.op = shop_nop;
-		}
-
-		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_shl && op.rd._reg == next_op.rs1._reg){
-			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm << next_op.rs2._imm);
-			next_op.op = shop_mov32;
-			op.op = shop_nop;
-		}
-
 		if (op.op == shop_mov32  && nextop_SUP){
-			if (op.rd._reg == next_op.rs1._reg && op.rd._reg == next_op.rd._reg && !op.rs1.is_imm()){
-				op.op = shop_nop;
-				next_op.rs1._reg = op.rs1._reg;
-			}
-			
+						
 			if (!next_op.rs2.is_imm() && next_op.rs2._reg == op.rd._reg && op.rs1.is_imm() && op.rs1._imm != 0){
 				if (supportedSwapRs2(next_op)){
 					op.SwapSaveReg = true;
@@ -929,10 +918,6 @@ void AnalyseBlock(DecodedBlock* blk)
 
 	
 		if (op.op == shop_mov32  && next_op.op == shop_readm){
-			if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm() && op.rd._reg == next_op.rd._reg){
-				op.op = shop_nop;
-				next_op.rs1._reg = op.rs1._reg;
-			}
 			if (op.rd._reg == next_op.rs1._reg && op.rs1._imm != 0){
 				next_op.loadReg = false;
 				if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
@@ -958,44 +943,22 @@ void AnalyseBlock(DecodedBlock* blk)
 					if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
 					continue;
 				}
-				
-				op.op = shop_nop;
-				next_op.rs3._reg = op.rs1._reg;
 			}
 
-			/*if (next_op.rs2._reg == op.rd._reg && !op.rs1.is_imm() && next_op.flags != 8){
+			if (next_op.rs2._reg == op.rd._reg && !op.rs1.is_imm() && next_op.flags != 8){
 				op.UseCustomReg = true;
 				next_op.UseCustomReg = true;
 				op.customReg = psp_a1;
-			}*/
+				continue;
+			}
 
 			if (op.rd._reg == next_op.rs1._reg && op.rs1._imm != 0){
 				next_op.loadReg = false;
 			}
 
-			//printf("STILL SOME CASE TO DISCOVER\n");
-			
 			continue;
 		}
 
-
-		if (op.op == shop_shl && next_op.op == shop_shl) {
-			if (op.rd._reg == next_op.rs1._reg){
-				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-				op.rd._reg = next_op.rd._reg;
-				next_op.op = shop_nop; 
-			}
-			continue;
-		}
-
-		if (op.op == shop_shr && next_op.op == shop_shr) {
-			if (op.rd._reg == next_op.rs1._reg){
-				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-				op.rd._reg = next_op.rd._reg;
-				next_op.op = shop_nop; 
-			}
-			continue;
-		}
 
 		if ((op.op == shop_shr || op.op == shop_shl) && next_op.op == shop_writem) {
 			if (op.rd._reg == next_op.rs2._reg){

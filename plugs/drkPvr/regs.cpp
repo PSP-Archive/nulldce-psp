@@ -3,8 +3,6 @@
 #include "../../dc/pvr/pvr_if.h"
 #include "ta.h"
 #include "spg.h"
-
-#include "dc/sh4/sh4_sched.h"
 /*
 	Basic PVR emulation -- much more work is needed for real TA emulation
 */
@@ -25,7 +23,7 @@ u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size)
 }
 
 void PrintfInfo();
-extern int render_end_schid;
+
 
 void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 {
@@ -46,8 +44,6 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 
 		case STARTRENDER_addr:
 			//start render
-			
-			sh4_sched_request(render_end_schid, 100000);
 			
 			rend_start_render();
 			render_end_pending=true;

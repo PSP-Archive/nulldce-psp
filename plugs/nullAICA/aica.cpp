@@ -255,8 +255,6 @@ void AICA_Init()
 
 void libAICA_TimeStep() {
 
-	//AICA_Sample();
-
 	for (int i = 0; i < 3; i++)
 			timers[i].StepTimer();
 

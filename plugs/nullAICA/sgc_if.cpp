@@ -1,6 +1,7 @@
 #include "sgc_if.h"
-//#include "dsp.h"
-//#include "aica_mem.h"
+#include "dc/arm7/SoundOut.h"
+#include "dc/aica/aica_if.h"
+
 #include <math.h>
 #undef FAR
 
@@ -556,6 +557,7 @@ struct ChannelEx
 				this->SetAegState(EG_Attack);
 		}
 
+
 		clip_verify(((s16)oLeft)==oLeft);
 		clip_verify(((s16)oRight)==oRight);
 		clip_verify(((s16)oDsp)==oDsp);
@@ -563,7 +565,7 @@ struct ChannelEx
 		clip_verify(sample*oRight>=0);
 		clip_verify(sample*oDsp>=0);
 
-		*VolMix.DSPOut+=oDsp;
+		//*VolMix.DSPOut+=oDsp;
 		mixl+=oLeft;
 		mixr+=oRight;
         
@@ -612,7 +614,6 @@ struct ChannelEx
 			SetFegState(EG_Attack);
 			//set values and crap
 
-
 			//Reset sampling state
 			CA=0;
 			step.full=0;
@@ -660,7 +661,7 @@ struct ChannelEx
 		if (ccd->PCMS==0)
 			addr&=~1;	//0: 16 bit
 		
-		//SA=&aica_ram_l[addr];
+		SA=&aica_ram.data[addr];
 	}
 	//LSA,LEA
 	void UpdateLoop()
@@ -1226,9 +1227,12 @@ void sgc_Init()
 		AEG_ATT_SPS[i]=CalcAegSteps(AEG_Attack_Time[i]);
 		AEG_DSR_SPS[i]=CalcAegSteps(AEG_DSR_Time[i]);
 	}
+
 	for (int i=0;i<64;i++)
 		Chans[i].Init(i,aica_reg);
 	dsp_out_vol=(DSP_OUT_VOL_REG*)&aica_reg[0x2000];
+
+	PSP_InitAudio();
 
 	//dsp_init();
 }
@@ -1372,6 +1376,6 @@ void AICA_Sample()
 	pl=mixl;
 	pr=mixr;
 
-	//xenon_WriteSample(mixr,mixl);
+	PSP_WriteSample(mixr,mixl);
 }
 

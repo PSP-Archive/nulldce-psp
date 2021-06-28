@@ -401,7 +401,7 @@ void pspguWaitVblank();
 
 const char * setting_txt[] {"  Dynarec max idle","  Enable unsafe optimizations", "  Enable Optimized Writing", "  Enable Optimized Reading","  Run with interpreter (ONLY FOR DEBUGGING)" , " "};
 const char * dynaloop_txt[] {"  Perfect","  Light","  Medium", "  High"};
-const u8     dynaloop_val[] {0, 2, 20, 50};
+const u8     dynaloop_val[] {0, 2, 15, 30};
 
 u16 overClockPVRval;
 

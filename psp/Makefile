@@ -7,6 +7,7 @@ OBJS = \
  ../dc/aica/aica_if.o \
  ../dc/arm7/arm7.o \
  ../dc/arm7/mem.o \
+ ../dc/arm7/SoundOut.o \
  ../dc/arm7/vbaARM.o \
  ../dc/asic/asic.o \
  ../dc/dc.o \
@@ -114,7 +115,7 @@ EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_ICON = ICON0.PNG
 
 LIBDIR = ./libs
-LIBS =  -lme -lzlib -lpspdmac -lpspgum -lpspgu -lm -lstdc++ -lpsprtc -lpsppower -lpspusb
+LIBS =  -lme -lzlib -lpspdmac -lpspgum -lpspgu -lpspaudio -lm -lstdc++ -lpsprtc -lpsppower -lpspusb
 LDFLAGS =
 
 #PSP_FW_VERSION=390

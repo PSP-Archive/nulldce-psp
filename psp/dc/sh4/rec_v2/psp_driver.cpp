@@ -2227,6 +2227,8 @@ defaulty:
 
     //if (save_block) SaveAllocatedReg();
 
+	//SaveAllocatedReg();
+
 	ngen_End(block);
 
 	make_address_range_executable((u32)rv, (u32)emit_GetCCPtr());

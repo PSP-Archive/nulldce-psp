@@ -12,6 +12,7 @@
 #include "plugs/nullAICA/aica.h"
 
 #include "dc/arm7/arm7.h"
+#include "plugs/nullAICA/sgc_if.h"
 
 //arm 7 is emulated within the aica implementation
 //RTC is emulated here tho xD
@@ -158,12 +159,12 @@ void FASTCALL WriteMem_aica_reg(u32 addr,u32 data,u32 sz)
 		if (addr==0x2C01)
 		{
 			VREG=data;
-			printf("VREG = %02X\n",VREG);
+			//printf("VREG = %02X\n",VREG);
 		}
 		else if (addr==0x2C00)
 		{
 			ARMRST=data;
-			printf("ARMRST = %02X\n",ARMRST);
+			//printf("ARMRST = %02X\n",ARMRST);
 			ArmSetRST();
 		}
 		else
@@ -177,7 +178,7 @@ void FASTCALL WriteMem_aica_reg(u32 addr,u32 data,u32 sz)
 		{
 			VREG=(data>>8)&0xFF;
 			ARMRST=data&0xFF;
-			printf("VREG = %02X ARMRST %02X\n",VREG,ARMRST);
+			//printf("VREG = %02X ARMRST %02X\n",VREG,ARMRST);
 			ArmSetRST();
 		}
 		else
@@ -348,6 +349,9 @@ void Write_SB_E2ST(u32 data)
 	}
 }
 
+extern int RAMAMOUNT();
+
+
 int AicaUpdate(int tag, int c, int j)
 {
 	//gpc_counter=0;
@@ -357,16 +361,19 @@ int AicaUpdate(int tag, int c, int j)
 	//aica_sample_cycles+=14336*AICA_SAMPLE_GCM;
 
 	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
-	const u16 Cycles = 512 * 32;
+	const u16 Cycles = 512 * 2;
 
 	{
-		for (int i = 0; i < 32; i++)
+		for (int i = 0; i < 2; i++)
 		{
-			arm_Run(Cycles / 32 / arm_sh4_bias);
+			arm_Run(Cycles /*/ 32*/ / arm_sh4_bias);
 			libAICA_TimeStep();
+			//AICA_Sample();
 		}
 		//aica_sample_cycles-=AICA_SAMPLE_CYCLES;
 	}
+
+	
 
 	return AICA_TICK;
 }
