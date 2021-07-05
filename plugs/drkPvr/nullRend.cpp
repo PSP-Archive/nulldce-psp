@@ -97,9 +97,12 @@ float PSP_DC_AR[][2] =
 
 static unsigned int ALIGN16 list[262144];
 bool PSP_720_480 = false;
+bool pal_needs_update=true;
 u32 BUF_WIDTH=512;
 u32 SCR_WIDTH=480;
 u32 SCR_HEIGHT=272;
+
+int palette_index = 0;
 
 ScePspFMatrix4 curr_mtx;
 float dc_width,dc_height;
@@ -107,7 +110,7 @@ float dc_width,dc_height;
 void* fbp0;
 void* fbp1;
 void* zbp;
-u32 ALIGN16 palette_lut[1024];
+u32 __attribute__((aligned(16))) palette_lut[1024];
 
 const u32 MipPoint[8] =
 {
@@ -169,6 +172,8 @@ bool global_regd;
 float vtx_min_Z;
 float vtx_max_Z;
 
+bool _doRender = true;
+
 //no rendering .. yay (?)
 namespace NORenderer
 {
@@ -226,6 +231,8 @@ namespace NORenderer
 			dc_width=PSP_DC_AR[settings.Enhancements.AspectRatioMode%PSP_DC_AR_COUNT][0];
 			dc_height=PSP_DC_AR[settings.Enhancements.AspectRatioMode%PSP_DC_AR_COUNT][1];
 		}
+
+		if (FB_R_CTRL.fb_enable && !VO_CONTROL.blank_video) _doRender = true;
 	}
 
 	//pixel convertors !
@@ -343,6 +350,46 @@ namespace NORenderer
 		//1,1
 		pb_prel(pb,pbw,1,1,ABGR0565(p_in[3]));
 	}
+	pixelcvt_next(convPAL4_TW,4,4)
+	{
+		u8* p_in=(u8*)data;
+		u32* pal=&palette_lut[palette_index];
+
+		pb_prel(pb,pbw,0,0,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,0,1,pal[(p_in[0]>>4)&0xF]);p_in++;
+		pb_prel(pb,pbw,1,0,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,1,1,pal[(p_in[0]>>4)&0xF]);p_in++;
+				
+		pb_prel(pb,pbw,0,2,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,0,3,pal[(p_in[0]>>4)&0xF]);p_in++;
+		pb_prel(pb,pbw,1,2,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,1,3,pal[(p_in[0]>>4)&0xF]);p_in++;
+				
+		pb_prel(pb,pbw,2,0,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,2,1,pal[(p_in[0]>>4)&0xF]);p_in++;
+		pb_prel(pb,pbw,3,0,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,3,1,pal[(p_in[0]>>4)&0xF]);p_in++;
+				
+		pb_prel(pb,pbw,2,2,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,2,3,pal[(p_in[0]>>4)&0xF]);p_in++;
+		pb_prel(pb,pbw,3,2,pal[p_in[0]&0xF]);
+		pb_prel(pb,pbw,3,3,pal[(p_in[0]>>4)&0xF]);p_in++;
+	}
+	pixelcvt_next(convPAL8_TW,2,4)
+	{
+		u8* p_in=(u8*)data;
+		u32* pal=&palette_lut[palette_index];
+
+		pb_prel(pb,pbw,0,0,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,0,1,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,1,0,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,1,1,pal[p_in[0]]);p_in++;
+
+		pb_prel(pb,pbw,0,2,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,0,3,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,1,2,pal[p_in[0]]);p_in++;
+		pb_prel(pb,pbw,1,3,pal[p_in[0]]);p_in++;
+	}
 	pixelcvt_next(conv1555_TW,2,2)
 	{
 		//convert 4x1 1555 to 4x1 8888
@@ -438,7 +485,7 @@ namespace NORenderer
 		return R | (G<<4) | (B<<8)  | (A<<12);
 	}
 
-	pixelcvt_nextVQ(convYUV422_VQ,2,2)
+	pixelcvt_nextVQ(convYUV422_VQ,4,1)
 	{
 		//convert 4x1 4444 to 4x1 8888
 		u16* p_in=(u16*)data;
@@ -678,17 +725,80 @@ void BuildTwiddleTables()
 
 	u8* GPU_mem;
 
+	char texFormatName[8][30]=
+	{
+		"1555",
+		"565",
+		"4444",
+		"YUV422",
+		"Bump Map",
+		"4 BPP Palette",
+		"8 BPP Palette",
+		"Reserved	, 1555"
+	};
+
+	void PrintTextureName(PolyParam* mod)
+		{
+			printf(texFormatName[mod->tcw.NO_PAL.PixelFmt]);
+	
+			if (mod->tcw.NO_PAL.VQ_Comp)
+				printf(" VQ");
+
+			if (mod->tcw.NO_PAL.ScanOrder==0)
+				printf(" TW");
+
+			if (mod->tcw.NO_PAL.MipMapped)
+				printf(" MM");
+
+			if (mod->tcw.NO_PAL.StrideSel)
+				printf(" Stride");
+
+			if (mod->tcw.NO_PAL.StrideSel)
+				printf(" %d[%d]x%d @ 0x%X",(TEXT_CONTROL&31)*32,8<<mod->tsp.TexU,8<<mod->tsp.TexV,mod->tcw.NO_PAL.TexAddr<<3);
+			else
+				printf(" %dx%d @ 0x%X",8<<mod->tsp.TexU,8<<mod->tsp.TexV,mod->tcw.NO_PAL.TexAddr<<3);
+			printf("\n");
+		}
+
 	void SetupPaletteForTexture(u32 palette_index,u32 sz)
 	{
-		palette_index&=~(sz-1);
 		u32 fmtpal=PAL_RAM_CTRL&3;
-
-		if (fmtpal<3)
-			palette_index>>=1;
 
 		sceGuClutMode(PalFMT[fmtpal],0,0xFF,0);//or whatever
 		sceGuClutLoad(sz/8,&palette_lut[palette_index]);
 	}
+
+
+	inline bool is_fmt_supported(TSP tsp,TCW tcw) {
+			const s32 sw = (s32)((u32)(8<<tsp.TexU));
+			const s32 sh = (s32)((u32)(8<<tsp.TexV));
+			if (( (sw + sh) << 1) > VRAM_SIZE) { //Minimum of 2components
+				//printf("Unsupported texture(OUT OF RANGE) w %u h %u fmt %u vq %u\n",8<<tsp.TexU,8<<tsp.TexV,tcw.NO_PAL.VQ_Comp);
+				return false;
+			}
+
+			switch (tcw.NO_PAL.PixelFmt) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 7:
+				if (tcw.NO_PAL.ScanOrder) {
+					return (tcw.NO_PAL.VQ_Comp == 0);
+				} 
+				return true;
+
+				case 4:
+					return false;
+
+				case 5:
+					return (tcw.NO_PAL.VQ_Comp==0);
+				case 6:
+					return (tcw.NO_PAL.VQ_Comp==0);
+			}
+		return false;
+	}
+
 	static void SetTextureParams(PolyParam* mod)
 	{
 
@@ -732,12 +842,17 @@ void BuildTwiddleTables()
 
 		#define norm_text(format) \
 		u32 sr = w; \
-		if (mod->tcw.NO_PAL.StrideSel) sr=512; \
+		if (mod->tcw.NO_PAL.StrideSel) sr=(TEXT_CONTROL&31)*32;; \
 			if (mod->tcw.NO_PAL.StrideSel || *(u32*)&params.vram[sa-0]!=0xDEADC0DE)\
 			{	\
 			ARGB##format##_((u8*)&params.vram[sa],sr,h);	\
 				*(u32*)&params.vram[sa-0]=0xDEADC0DE;\
 			}
+
+
+		if (!is_fmt_supported(mod->tsp,mod->tcw)) {
+			return;
+		}
 
 		u32 sa=((mod->tcw.NO_PAL.TexAddr<<3) & VRAM_MASK);
 		u32 FMT;
@@ -747,6 +862,8 @@ void BuildTwiddleTables()
 		u32 h=8<<mod->tsp.TexV;
 
 		bool Palette_setup_done = false;
+
+		//if (mod->tcw.NO_PAL.PixelFmt != 5) PrintTextureName(mod);
 
 		switch (mod->tcw.NO_PAL.PixelFmt)
 		{
@@ -804,7 +921,7 @@ void BuildTwiddleTables()
 		case 3:
 			if (mod->tcw.NO_PAL.ScanOrder)
 			{
-				//normPL_text(texture_PL<convYUV_PL>);
+					normPL_text(texture_PL<convYUV_PL>);
 					//norm_text(ANYtoRAW);
 			}
 			else
@@ -822,12 +939,27 @@ void BuildTwiddleTables()
 			verify(mod->tcw.PAL.VQ_Comp==0);
 			if (mod->tcw.NO_PAL.MipMapped)
 				sa+=MipPoint[mod->tsp.TexU]<<1;
+
+
+			palette_index = mod->tcw.PAL.PalSelect<<4;
+
+			normPL_text(texture_TW<convPAL4_TW>)/*
 			
-			//Palette_setup_done =true;
+			if (*(u32*)&params.vram[sa-0]!=0xDEADC0DE)	
+			{	
+				texture_TW<convPAL4_TW>((u8*)&params.vram[sa],w,h);
+				*(u32*)&params.vram[(sa&(~0x3))-0]=0xDEADC0DE;
+			}*/
 
-			//SetupPaletteForTexture(mod->tcw.PAL.PalSelect<<4,0);
+			FMT=GU_PSM_4444; //PalFMT[PAL_RAM_CTRL&3];
 
-			FMT=GU_PSM_T4;//wha? the ?
+			
+
+			/*sceGuClutMode(GU_PSM_T16,1,0x3F,0);//or whatever
+			sceGuClutLoad(8,&palette_lut[palette_index]);
+
+			FMT=GU_PSM_T4;*/
+
 			break;
 		case 6:
 			{
@@ -836,11 +968,13 @@ void BuildTwiddleTables()
 				if (mod->tcw.NO_PAL.MipMapped)
 					sa+=MipPoint[mod->tsp.TexU]<<2;
 
+				normPL_text(texture_TW<convPAL8_TW>)
+
 				//Palette_setup_done =true;
 
 				//SetupPaletteForTexture(mod->tcw.PAL.PalSelect<<4,256);
 
-				FMT=GU_PSM_T8;//wha? the ? FUCK!
+				FMT=GU_PSM_4444;//wha? the ? FUCK!
 			}
 			break;
 		default:
@@ -987,8 +1121,10 @@ void BuildTwiddleTables()
 
 	#define VTX_TFX(x) (x)
 	#define VTX_TFY(y) (y)
-	bool pal_needs_update=true;
+	
 	//480*(480/272)=847.0588 ~ 847, but we'l use 848.
+
+	const u32 unpack_1_to_8[2]={0,0xFF};
 
 	#define ARGB8888(a,r,g,b) \
 			(a|r|g|b)
@@ -1008,7 +1144,7 @@ void BuildTwiddleTables()
 	#define ARGB1555_TW( word )	 word
 
 	#define ARGB565_TW( word )		\
-		ARGB8888(0xFF,unpack_5_to_8_tw[(word>>11) & 0x1F],	\
+		ARGB8888(unpack_4_to_8_tw[(word&0xF000)>>(12)],unpack_5_to_8_tw[(word>>11) & 0x1F],	\
 		unpack_6_to_8_tw[(word>>5) & 0x3F],unpack_5_to_8_tw[word&0x1F])
 	
 	#define ARGB4444_TW( word )	\
@@ -1080,6 +1216,8 @@ void BuildTwiddleTables()
 		sceGuSync(GU_SYNC_FINISH,GU_SYNC_WHAT_DONE);
 
 		fbp0 = sceGuSwapBuffers();
+
+		palette_update();
 
 		//--BG poly
 		u32 param_base=PARAM_BASE & 0xF00000;
@@ -1197,7 +1335,7 @@ void BuildTwiddleTables()
 		sceGuDisable(GU_BLEND);
 		sceGuDisable(GU_ALPHA_TEST);
 
-		sceKernelDcacheWritebackAll();
+		sceKernelDcacheWritebackInvalidateAll();
 
 		for (;drawLST != crLST;drawLST++)
 		{
@@ -1245,14 +1383,16 @@ void BuildTwiddleTables()
 
 		VertexCount+=VtxCnt;
 		
-		render_end_pending_cycles = (VtxCnt * 60) + 500000 * 3;
+		FrameCount++;
 
-		sh4_sched_request(render_end_schid, render_end_pending_cycles);
-		
 		if (FB_W_SOF1 & 0x1000000)
 			return;
 
-		FrameCount++;
+		if (!_doRender) { printf("CAPITO'\n"); return;}
+
+		render_end_pending_cycles = (VtxCnt * 60) + 500000 * 3;
+
+		sh4_sched_request(render_end_schid, render_end_pending_cycles);
 
 	    DoRender();
 	}

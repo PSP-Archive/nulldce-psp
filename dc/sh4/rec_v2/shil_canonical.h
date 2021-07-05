@@ -962,6 +962,22 @@ shil_opc(native_mov)
 shil_recimp()
 shil_opc_end()
 
+//shop_xtrct
+shil_opc(xtrct)
+shil_canonical
+(
+u32,f1,(u32 r1, u32 r2),
+	return (r1 >> 16) | (r2 << 16);
+)
+shil_compile
+(
+	shil_cf_arg_u32(rs2);
+	shil_cf_arg_u32(rs1);
+	shil_cf(f1);
+	shil_cf_rv_u32(rd);
+)
+shil_opc_end()
+
 
 SHIL_END
 

@@ -23,6 +23,7 @@ u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size)
 }
 
 void PrintfInfo();
+extern bool pal_needs_update;
 
 
 void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
@@ -111,10 +112,10 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 			}*/
 	}
 
-	/*if (addr >= PALETTE_RAM_START_addr && PvrReg(addr, u32) != data)
+	if (addr >= PALETTE_RAM_START_addr && PvrReg(addr, u32) != data)
     {
             pal_needs_update = true;
-    }*/
+    }
 
 	PvrReg(addr,u32)=data;
 }
@@ -145,7 +146,7 @@ void Regs_Reset(bool Manual)
 	SPG_LOAD.full		= 0x01060359;
 	SPG_VBLANK.full		= 0x01500104;
 	SPG_WIDTH.full		= 0x07F1933F;
-	VO_CONTROL			= 0x00000108;
+	VO_CONTROL.full		= 0x00000108;
 	VO_STARTX			= 0x0000009D;
 	VO_STARTY			= 0x00000015;
 	SCALER_CTL.full		= 0x00000400;

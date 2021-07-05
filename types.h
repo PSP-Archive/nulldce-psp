@@ -172,7 +172,7 @@ using namespace std;
 
 #define VER_EMUNAME		"nullDC|Reicast/" VER_TARGET
 
-#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " pre-1 (built " __DATE__ "@" __TIME__ ")"
+#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " beta 2 (built " __DATE__ "@" __TIME__ ")"
 #define VER_SHORTNAME	VER_EMUNAME " " PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) "p1"
 
 #define dbgbreak {__debugbreak(); for(;;);}

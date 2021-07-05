@@ -351,6 +351,23 @@ union FB_Y_CLIP_type
 	u32 full;
 };
 
+union VO_CONTROL_type
+{
+	struct
+	{
+		u32 hsync_pol:1;		//0
+		u32 vsync_pol:1;		//1
+		u32 blank_pol:1;		//2
+		u32 blank_video:1;		//3
+		u32 field_mode:4;		//4
+		u32 pixel_double:1;		//8
+		u32 res_1:7;			//9
+		u32 pclk_delay:6;		//16
+		u32 res_2:10;			//22
+	};
+	u32 full;
+};
+
 
 /*	
 	TA registers
@@ -446,7 +463,7 @@ union FB_Y_CLIP_type
 #define SPG_VBLANK			PvrReg(SPG_VBLANK_addr,SPG_VBLANK_type)	//	RW	V-blank control	
 #define SPG_WIDTH			PvrReg(SPG_WIDTH_addr,SPG_WIDTH_type)	//	RW	Sync width control	
 #define TEXT_CONTROL		PvrReg(TEXT_CONTROL_addr,u32)	//	RW	Texturing control	
-#define VO_CONTROL			PvrReg(VO_CONTROL_addr,u32)	//	RW	Video output control	
+#define VO_CONTROL			PvrReg(VO_CONTROL_addr,VO_CONTROL_type)	//	RW	Video output control	
 #define VO_STARTX			PvrReg(VO_STARTX_addr,u32)	//	RW	Video output start X position	
 #define VO_STARTY			PvrReg(VO_STARTY_addr,u32)	//	RW	Video output start Y position	
 #define SCALER_CTL			PvrReg(SCALER_CTL_addr,SCALER_CTL_type)	//	RW	X & Y scaler control	

@@ -2,6 +2,8 @@
 #include "coreio.h"
 #include "stdio.h"
 
+#include <pspkernel.h>
+
 struct CoreFile
 {
 	size_t seek_ptr = 0;
@@ -55,55 +57,11 @@ struct CoreFileLocal: CoreFile
 	~CoreFileLocal() { fclose(f); }
 };
 
-/*struct CoreFileHTTP: CoreFile
-{
-	string url;
-	
-	static CoreFile* open(const char* path)
-	{
-		string p = path;
-
-		if (p.substr(0,7)!="http://" && p.substr(0,8)!="https://")
-			return nullptr;
-
-		CoreFileHTTP* rv = new CoreFileHTTP();
-
-		rv->url = p;
-
-		return rv;
-	}
-
-	size_t read(void* buff, size_t len)
-	{
-		return HTTP(HM_GET, url, seek_ptr, len, buff);
-	}
-
-	void seek() { }
-
-	size_t size()
-	{
-		return HTTP(HM_HEAD, url, 0, 0,0);
-	}
-
-	~CoreFileHTTP() { }
-};*/
-
-static CoreFile* (*vfs[])(const char* path) =
-{
-	nullptr,
-	&CoreFileLocal::open,
-	nullptr
-};
-
 extern "C" core_file* core_fopen(const char* filename)
 {
 	CoreFile* rv = nullptr;
-	//for (int i = 0; vfs[i] != nullptr; i++)
-	{
-		auto fs_open = vfs[1];
 
-		rv = fs_open(filename);
-	}
+	rv = CoreFileLocal::open(filename);
 
 	if (rv)
 	{

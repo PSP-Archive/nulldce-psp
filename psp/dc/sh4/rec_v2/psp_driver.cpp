@@ -13,6 +13,9 @@
 #include "dc\sh4\rec_v2\ngen.h"
 #include "dc\mem\sh4_mem.h"
 #include "psp\psp_emit.h"
+
+#include "ssa_regalloc.h"
+
 void __debugbreak() { fflush(stdout); *(int*)0=1;}
 
 void make_address_range_executable(u32 address_start, u32 address_end)
@@ -336,6 +339,7 @@ void emit_sh_svs(u32 vt,shil_param prm)
 }
 
 #define GET_REG_OFF(reg) ((u32)GetRegPtr(reg) - (u32)&Sh4cntx)
+#define GET_VAR_OFF(var) ((u32)&var - (u32)&Sh4cntx)
 
 void emit_sh_lwc1(u32 vt,u32 sh4_reg)
 {
@@ -370,6 +374,47 @@ void AllocateStaticRegisters(DecodedBlock* block){
 
 	blocked = true;
 }
+
+struct mips_reg_alloc: RegAlloc<int, int>
+{
+	/*void Preload(u32 reg, int nreg) override
+	{
+		emit_sh_load(Register(nreg), reg);
+	}
+	void Writeback(u32 reg, int nreg) override
+	{
+		if (reg == reg_pc_dyn)
+			// reg_pc_dyn has been stored in r4 by the jdyn op implementation
+			// No need to write it back since it won't be used past the end of the block
+			; //ass.Mov(r4, Register(nreg));
+		else
+			storeSh4Reg(Register(nreg), reg);
+	}
+
+	void Preload_FPU(u32 reg, int nreg) override
+	{
+		const s32 shRegOffs = (u8*)GetRegPtr(reg) - sh4_dyna_context;
+
+		ass.Vldr(SRegister(nreg), MemOperand(r8, shRegOffs));
+	}
+	void Writeback_FPU(u32 reg, int nreg) override
+	{
+		const s32 shRegOffs = (u8*)GetRegPtr(reg) - sh4_dyna_context;
+
+		ass.Vstr(SRegister(nreg), MemOperand(r8, shRegOffs));
+	}
+
+	SRegister mapFReg(const shil_param& prm)
+	{
+		return SRegister(mapf(prm));
+	}
+	Register mapReg(const shil_param& prm)
+	{
+		return Register(mapg(prm));
+	}*/
+};
+
+//static mips_reg_alloc reg;
 
 void SaveAllocatedReg(){
 	blocked = false;
@@ -1512,6 +1557,17 @@ DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks)
 				if (op->SaveReg) emit_sh_store(return_reg,op->rd);
 			}
 			break;
+		
+		case shop_xtrct:
+			if (op->loadReg) emit_sh_load(psp_a0,op->rs1);
+			emit_sh_load(psp_a1,op->rs2);
+
+			emit_srl(psp_a0,psp_a0,16);
+			emit_sll(psp_a1,psp_a1,16);
+			emit_or(psp_a0,psp_a1,16);
+
+			if (op->SaveReg) emit_sh_store(psp_a0,op->rd);
+		break;
 
 		case shop_setge:
 		case shop_setgt:
@@ -2241,10 +2297,14 @@ void ngen_ResetBlocks()
 {
 }
 
+u16 CUSTOM_SH4_TIMESLICE = 448;
+
 void ngen_mainloop()
 {
 	if (unlikely(loop_code==0))
 	{
+
+		//Sh4cntx.is_runnning = &sh4_int_bCpuRun;
 
 		loop_code=(void(*)())emit_GetCCPtr();
 		{
@@ -2271,7 +2331,7 @@ void ngen_mainloop()
 	emit_sh_load(psp_next_pc_reg,reg_nextpc);
 	
 	//and cycles
-	emit_li(psp_cycle_reg, SH4_TIMESLICE);
+	emit_li(psp_cycle_reg, CUSTOM_SH4_TIMESLICE);
 			
 	//next_pc _MUST_ be on ecx
 	//no_update
@@ -2306,15 +2366,17 @@ void ngen_mainloop()
 	//do_update_write
 	loop_do_update_write=emit_GetCCPtr();
 
+	emit_jal(UpdateSystem);
 	emit_sh_store(psp_next_pc_reg,reg_nextpc);
 
-	emit_jal(UpdateSystem_INTC);
-	emit_addiu(psp_cycle_reg,psp_cycle_reg,SH4_TIMESLICE);	//delayslot
+	emit_blez(psp_v0,((u32)emit_GetCCPtr() + 12));
+	emit_addiu(psp_cycle_reg,psp_cycle_reg,CUSTOM_SH4_TIMESLICE);	//delayslot
 
-	emit_lba(psp_at,(void*)&sh4_int_bCpuRun);
+	emit_jal(UpdateINTC);
+	
+	emit_lba(psp_s7,(void*)&sh4_int_bCpuRun);
+	emit_bgtz(psp_s7,loop_no_update);
 	emit_sh_load(psp_next_pc_reg,reg_nextpc);
-	emit_bne(psp_at,psp_zero,loop_no_update);
-	emit_nop();	//delayslot
 
 	emit_mpop(12,
 			reg_gpr+psp_gp,

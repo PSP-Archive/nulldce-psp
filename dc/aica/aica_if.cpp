@@ -14,6 +14,9 @@
 #include "dc/arm7/arm7.h"
 #include "plugs/nullAICA/sgc_if.h"
 
+#include "melib.h"
+#include "me.h"
+
 //arm 7 is emulated within the aica implementation
 //RTC is emulated here tho xD
 //Gota check what to do about the rest regs that are not aica olny .. pfftt [display mode , any other ?]
@@ -25,7 +28,8 @@
 int dma_sched_id = -1;
 int aica_schid 	 = -1;
 
-const int AICA_TICK = 145124;
+u8 	UnderclockAica = 1;
+int AICA_TICK = 145124;
 
 VArray2 aica_ram;
 u32 VREG;//video reg =P
@@ -351,7 +355,36 @@ void Write_SB_E2ST(u32 data)
 
 extern int RAMAMOUNT();
 
+volatile bool start = false;
 
+int ME_function(int arg){
+
+	while(true){
+
+		while (!PSP_UC(start)) asm("nop");
+
+		MeDcacheWritebackInvalidateAll();
+
+		const u16 Cycles = 512 * 2;
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				arm_Run(Cycles / arm_sh4_bias);
+				libAICA_TimeStep();
+				//AICA_Sample();
+
+				MeDcacheWritebackInvalidateAll();
+			}
+		}
+
+		PSP_UC(start) = false;
+
+	}
+
+	return 0;
+}
+
+bool sonicHax = false;
 int AicaUpdate(int tag, int c, int j)
 {
 	//gpc_counter=0;
@@ -361,19 +394,42 @@ int AicaUpdate(int tag, int c, int j)
 	//aica_sample_cycles+=14336*AICA_SAMPLE_GCM;
 
 	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
-	const u16 Cycles = 512 * 2;
 
+	static const u16 Cycles = 512;
 	{
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 4; i++)
 		{
-			arm_Run(Cycles /*/ 32*/ / arm_sh4_bias);
+			arm_Run(Cycles / 4);
 			libAICA_TimeStep();
-			//AICA_Sample();
 		}
-		//aica_sample_cycles-=AICA_SAMPLE_CYCLES;
+
+		
 	}
 
-	
+	return AICA_TICK;
+}
+
+int AicaUpdateHack(int tag, int c, int j)
+{
+	//gpc_counter=0;
+	//bm_Periodical_14k();
+
+	//static int aica_sample_cycles=0;
+	//aica_sample_cycles+=14336*AICA_SAMPLE_GCM;
+
+	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
+
+	static const u16 Cycles = 512 * 2;
+	{
+		for (int i = 0; i < 8; i++)
+		{
+			arm_Run(Cycles / 4);
+			libAICA_TimeStep();
+			AICA_Sample();
+		}
+
+		
+	}
 
 	return AICA_TICK;
 }
@@ -395,8 +451,20 @@ void aica_sb_Init()
 
 	dma_sched_id = sh4_sched_register(0, dma_end_sched);
 
-	aica_schid = sh4_sched_register(0, AicaUpdate);
-    sh4_sched_request(aica_schid, AICA_TICK);
+	if (sonicHax)
+		aica_schid = sh4_sched_register(0, AicaUpdateHack);
+	else
+		aica_schid = sh4_sched_register(0, AicaUpdate);
+
+    sh4_sched_request(aica_schid, AICA_TICK*UnderclockAica);
+
+	AICA_TICK = AICA_TICK*UnderclockAica;
+
+	printf("Underclock AICA TICK: %d\n", UnderclockAica);
+
+	/*ME_Init();
+	InitFunction(ME_function, 0);
+	StartFunction();*/
 }
 
 void aica_sb_Reset(bool Manual)
@@ -405,4 +473,5 @@ void aica_sb_Reset(bool Manual)
 
 void aica_sb_Term()
 {
+	//ME_End();
 }

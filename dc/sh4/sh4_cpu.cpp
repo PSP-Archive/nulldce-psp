@@ -65,7 +65,7 @@ void cpu_iNimp(u32 op, const char* info)
 
 	//0100 1101 1100 1000
 
-	//sh4_cpu.Stop();
+	sh4_cpu.Stop();
 }
 
 void cpu_iWarn(u32 op, const char* info)

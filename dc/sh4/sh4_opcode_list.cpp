@@ -152,7 +152,7 @@ sh4_opcodelistentry opcodes[]=
 	{0							,i0010_nnnn_mmmm_1010	,Mask_n_m	,0x200A	,Normal				,"xor <REG_M>,<REG_N>"					,1,1,EX,fix_none	,dec_Bin_rNrM(shop_xor)},	//xor <REG_M>,<REG_N>
 	{0							,i0010_nnnn_mmmm_1011	,Mask_n_m	,0x200B	,Normal				,"or <REG_M>,<REG_N>"					,1,1,EX,fix_none	,dec_Bin_rNrM(shop_or)},	//or <REG_M>,<REG_N>
 	{0							,i0010_nnnn_mmmm_1100	,Mask_n_m	,0x200C	,Normal		|NO_FP	,"cmp/str <REG_M>,<REG_N>"				,1,1,MT,fix_none    ,dec_cmp(shop_setpeq,PRM_RN,PRM_RM)},//cmp/str <REG_M>,<REG_N>
-	{0							,i0010_nnnn_mmmm_1101	,Mask_n_m	,0x200D	,Normal		|NO_FP	,"xtrct <REG_M>,<REG_N>"				,1,1,EX,fix_none},	//xtrct <REG_M>,<REG_N>
+	{0							,i0010_nnnn_mmmm_1101	,Mask_n_m	,0x200D	,Normal		|NO_FP	,"xtrct <REG_M>,<REG_N>"				,1,1,EX,fix_none	,dec_Bin_rNrM(shop_xtrct)},//xtrct <REG_M>,<REG_N>
 	{0							,i0010_nnnn_mmmm_1110	,Mask_n_m	,0x200E	,Normal				,"mulu.w <REG_M>,<REG_N>"				,1,4,CO,fix_none	,dec_mul(16)},	//mulu.w <REG_M>,<REG_N>
 	{0							,i0010_nnnn_mmmm_1111	,Mask_n_m	,0x200F	,Normal				,"muls.w <REG_M>,<REG_N>"				,1,4,CO,fix_none	,dec_mul(-16)},	//muls.w <REG_M>,<REG_N>
 	{0							,i0011_nnnn_mmmm_0000	,Mask_n_m	,0x3000	,Normal				,"cmp/eq <REG_M>,<REG_N>"				,1,1,MT,fix_none	,dec_cmp(shop_seteq,PRM_RN,PRM_RM)},	// cmp/eq <REG_M>,<REG_N>

@@ -13,8 +13,6 @@
 #include "plugins/plugin_manager.h"
 #include "dc/asic/asic.h"
 
-#include "pspDmac.h"
-#include "melib.h"
 
  
 //YUV converter code :)

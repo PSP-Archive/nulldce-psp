@@ -14,7 +14,6 @@
 #include "Protothread.h"
 
 #include "me.h"
-#include "melib.h"
 
 PSP_SECTION_START(sc_write)
 PSP_SECTION_START(me_write)
@@ -131,22 +130,8 @@ void threaded_TASQ(u32* data)
     threaded_ImmediateIRQ(data);
 }
 
-void meUtilityDcacheWritebackInvalidateAll(void)
-{
-    unsigned int cachesize_bits;
-    asm volatile("mfc0 %0, $16; ext %0, %0, 6, 3" : "=r" (cachesize_bits));
-    const unsigned int cachesize = 4096 << cachesize_bits;
 
-    unsigned int i;
-    for (i = 0; i < cachesize; i += 64) {
-        asm volatile("cache 0x14, 0(%0)" : : "r" (i));
-    }
-
-    asm volatile("sync");
-}
-
-
-int threaded_task(JobData data)
+int threaded_task(int data)
 {
     u32 ta_cache_idx = 0;
 
@@ -163,7 +148,7 @@ int threaded_task(JobData data)
 
             libPvr_TaDMA(PSP_UCPTR(TA_cached[ta_cache_idx]),_sz);   
 
-            meUtilityDcacheWritebackInvalidateAll();
+            //meUtilityDcacheWritebackInvalidateAll();
 
             //PSP_UC(ta_working)=false; 
 
@@ -177,13 +162,13 @@ void threaded_init()
 	PSP_UC(running) = true;
 
     if (threaded_pvr){
-        J_Init(false);
-        J_EXECUTE_ME_ONCE(&threaded_task, 0);
+        /*J_Init(false);
+        J_EXECUTE_ME_ONCE(&threaded_task, 0);*/
     }
 }
 
 void threaded_term()
 {
 	PSP_UC(running) = false;
-	KILL_ME();
+	//KILL_ME();
 }

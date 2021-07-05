@@ -268,7 +268,7 @@ bool spg_Init()
 	vblank_schid = sh4_sched_register(0, spg_line_sched);
 	time_sync = sh4_sched_register(0, elapse_time);
 
-	sh4_sched_request(time_sync, 8 * 1000 * 1000);
+	sh4_sched_request(time_sync, 17 * 500 * 1000);
 
 	vblank_count_monotonic = 0;
 		

@@ -188,7 +188,7 @@ void maple_DoDma()
 	/*maple_dma_pending= (xfer_count*763);
 	SB_MDST = 1;*/
 
-	sh4_sched_request(maple_schid, xfer_count * (SH4_CLOCK / (2 * 1024 * 1024 / 8)));
+	sh4_sched_request(maple_schid, std::min((u64)xfer_count * (SH4_CLOCK / (2 * 1024 * 1024 / 8)), (u64)SH4_CLOCK));
 }
 
 void maple_Update(u32 cycles)

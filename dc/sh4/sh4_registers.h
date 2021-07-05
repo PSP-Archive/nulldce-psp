@@ -28,6 +28,8 @@ struct Sh4Context
 
 	int sh4_sched_next;
 	u32 interrupt_pend;
+
+	volatile bool *is_runnning;
 	//u16* pc_ptr;
 
 	sr_type sr;

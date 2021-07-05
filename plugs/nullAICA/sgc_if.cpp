@@ -6,9 +6,9 @@
 #undef FAR
 
 //#define CLIP_WARN
-#define key_printf(x...) /*printf(x);*/
-#define aeg_printf(x...) /*printf(x);*/
-#define step_printf(x...) /*printf(x);*/
+#define key_printf(x...) //printf(x);
+#define aeg_printf(x...) //printf(x);
+#define step_printf(x...)// printf(x);
 
 #ifdef CLIP_WARN
 #define clip_verify(x) verify(x)
@@ -532,7 +532,9 @@ struct ChannelEx
 		if (!enabled)
 			return;
 
-		SampleType sample=InterpolateSample();
+		this->CA ++;
+
+		/*SampleType sample=InterpolateSample();
 
 		//Volume & Mixer processing
 		//All attenuations are added together then applied and mixed :)
@@ -567,14 +569,14 @@ struct ChannelEx
 
 		//*VolMix.DSPOut+=oDsp;
 		mixl+=oLeft;
-		mixr+=oRight;
+		mixr+=oRight;*/
         
 //        if (oLeft || oRight) printf("%08x %08x\n",oLeft,oRight);
 
-		StepAEG(this);
-		StepFEG(this);
-		StepStream(this);
-		lfo.Step(this);
+		/*StepAEG(this);
+		StepFEG(this);*/
+		//StepStream(this);
+		//lfo.Step(this);
 	}
 	INLINE void Generate()
 	{
@@ -583,7 +585,7 @@ struct ChannelEx
 	INLINE static void GenerateAll()
 	{
 		for (int i=0;i<64;i++)
-		{
+		{	
 			Chans[i].Generate();
 		}
 	}
@@ -608,21 +610,21 @@ struct ChannelEx
 
 			// reset AEG
 			SetAegState(EG_Attack);
-			AEG.SetValue(0x3FF);//start from 0x3FF ? .. it seems so !
+			//AEG.SetValue(0x3FF);//start from 0x3FF ? .. it seems so !
 
 			//reset FEG
-			SetFegState(EG_Attack);
+			//SetFegState(EG_Attack);
 			//set values and crap
 
 			//Reset sampling state
 			CA=0;
 			step.full=0;
 
-			loop.looped=false;
+			//loop.looped=false;
 			
-			adpcm.Reset(this);
+			//adpcm.Reset(this);
 
-			StepStreamInitial(this);
+			//StepStreamInitial(this);
 
 			key_printf("[%d] KEY_ON %s @ %f hrz, loop : %d\n",ChanelNumber,stream_names[ccd->PCMS],(44100.0*update_rate)/1024,ccd->LPCTL);
 		}
@@ -773,18 +775,17 @@ struct ChannelEx
 	//WHEE :D!
 	void RegWrite(u32 offset)
 	{
-		return;
         switch(offset)
 		{
 	//	default : printf("@sgc:Unhandled regwrite at addr %x\n",offset); break;
-		case 0x00:	//yay ?
+		/*case 0x00:	//yay ?
 			UpdateStreamStep();
 			UpdateSA();
-			break;
+			break;*/
  
 		case 0x01:	//yay ?
 			UpdateStreamStep();
-			UpdateSA();
+			//UpdateSA();
 			if (ccd->KYONEX)
 			{
 				ccd->KYONEX=0;
@@ -798,7 +799,7 @@ struct ChannelEx
 			}
 			break;
 
-		case 0x04:
+	/*	case 0x04:
 		case 0x05:
 			UpdateSA();
 			break;
@@ -819,14 +820,14 @@ struct ChannelEx
 		case 0x15://DL,KRS,LPSLINK
 			UpdateStreamStep();
 			UpdateAEG();
-			break;
+			break;*/
 
 		case 0x18://FNS
 		case 0x19://FNS,OCT
 			UpdatePitch();
 			break;
 
-		case 0x1C://ALFOS,ALFOWS,PLFOS
+		/*case 0x1C://ALFOS,ALFOWS,PLFOS
 		case 0x1D://PLFOWS,LFOF,RE
 			UpdateLFO();
 			break;
@@ -866,7 +867,7 @@ struct ChannelEx
 		case 0x45:	//FD2R
 			UpdateFEG();
 			break;
-
+*/
 		}
 	} 
 };
@@ -963,11 +964,16 @@ void FASTCALL StepDecodeSampleInitial(ChannelEx* ch)
 template<s32 PCMS,u32 LPCTL,u32 LPSLNK>
 void FASTCALL StreamStep(ChannelEx* ch)
 {
-    ch->step.full+=ch->update_rate;
-	fp_22_10 sp=ch->step;
-	ch->step.ip=0;
+    /*ch->step.full+=ch->update_rate;
+	
+	ch->step.ip=0;*/
+	
+	
+	return;
 
-	while(sp.ip>0)
+	fp_22_10 sp=ch->step;
+
+	//while(sp.ip>0)
 	{
 		sp.ip--;
 
@@ -1006,10 +1012,10 @@ void FASTCALL StreamStep(ChannelEx* ch)
 		ch->CA=CA;
 
 		//keep adpcm up to date
-		if (sp.ip==0)
+		/*if (sp.ip==0)
 			StepDecodeSample<PCMS,true>(ch,CA);
 		else
-			StepDecodeSample<PCMS,false>(ch,CA);
+			StepDecodeSample<PCMS,false>(ch,CA);*/
 	}
 
 
@@ -1303,6 +1309,8 @@ void AICA_Sample()
 	//memset(dsp.MIXS,0,sizeof(dsp.MIXS));
 
 	ChannelEx::GenerateAll();
+
+	return;
 	
 	//OK , generated all Channels  , now DSP/ect + final mix ;p
 	//CDDA EXTS input

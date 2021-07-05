@@ -126,10 +126,10 @@ T FASTCALL ReadMem_area0(u32 addr)
 		//EMUERROR2("Read from area0_32 not implemented [MODEM], addr=%x",addr);
 	}
 	//map 0x0060 to 0x006F
-	else if ((base >=0x0060) && (base <=0x006F) && (addr>= 0x00600800) && (addr<= 0x006FFFFF)) //	:G2 (Reserved)
+	/*else if ((base >=0x0060) && (base <=0x006F) && (addr>= 0x00600800) && (addr<= 0x006FFFFF)) //	:G2 (Reserved)
 	{
 		//EMUERROR2("Read from area0_32 not implemented [G2 (Reserved)], addr=%x",addr);
-	}
+	}*/
 	//map 0x0070 to 0x0070
 	else if ((base ==0x0070) /*&& (addr>= 0x00700000)*/ && (addr<=0x00707FFF)) //	:AICA- Sound Cntr. Reg.
 	{
@@ -203,11 +203,11 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 		}
 	}
 	//map 0x0060 to 0x0060
-	else if ((base ==0x0060) && (addr<= 0x006007FF)) //	:MODEM
+	/*else if ((base ==0x0060) && (addr<= 0x006007FF)) //	:MODEM
 	{
 		//EMUERROR4("Write to area0_32 not implemented [MODEM], addr=%x,data=%x,size=%d",addr,data,sz);
 		libExtDevice_WriteMem_A0_006(addr,data,sz);
-	}
+	}*/
 	//map 0x0060 to 0x006F
 	else if (unlikely((base >=0x0060) && (base <=0x006F) && (addr>= 0x00600800) && (addr<= 0x006FFFFF))) //	:G2 (Reserved)
 	{
@@ -230,6 +230,7 @@ void  FASTCALL WriteMem_area0(u32 addr,T data)
 	{
 		//EMUERROR4("Write to area0_32 not implemented [AICA- Wave Memory], addr=%x,data=%x,size=%d",addr,data,sz);
 		//aica_writeram(addr,data,sz);
+
 		WriteMemArrRet(aica_ram.data, addr & ARAM_MASK, data, sz);
 		return;
 	}
@@ -271,6 +272,19 @@ void map_area0(u32 base)
 {
 	verify(base<0xE0);
 
+/*	{
+		base <<= 8;
+		u32 block_size=(ARAM_SIZE)>>16;
+		for (u32 _maip=(0x0080|base), _raddr = (0x0080|base);_maip<(0x00FF|base);_maip+=block_size, _raddr+=block_size) {
+			_vmem_map_block(aica_ram.data,_raddr,_raddr+block_size-1,ARAM_SIZE-1);
+			printf(":: %d :: _maip -> %d :: %x -- %x\n", block_size, _raddr, (0x0080|base)+1, (0x00FF|base));
+		}
+
+		base >>= 8;
+	}
+*/
+	
+
 	//_vmem_map_handler(area0_handler,start,end);
 	//0x0000-0x001f
 	_vmem_map_handler(area0_handler,0x00|base,0x01|base);
@@ -278,4 +292,7 @@ void map_area0(u32 base)
 	//0x0240 to 0x03FF mirrors 0x0040 to 0x01FF (no flashrom or bios)
 	//0x0200 to 0x023F are unused
 	_vmem_mirror_mapping(0x02|base,0x00|base,0x02);
+
+	//_vmem_map_block_mirror(aica_ram.data,0x0080|base,0x00FF|base,ARAM_SIZE);
+	
 }

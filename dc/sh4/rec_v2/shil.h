@@ -101,29 +101,31 @@ struct shil_param
 	u32 type;
 	u16 version[16];
 
-	bool is_null() { return type==FMT_NULL; }
-	bool is_imm() { return type==FMT_IMM; }
-	bool is_reg() { return type>=FMT_REG_BASE; }
+	bool is_null() const { return type==FMT_NULL; }
+	bool is_imm() const { return type==FMT_IMM; }
+	bool is_reg() const { return type>=FMT_REG_BASE; }
 
-	bool is_r32i() { return type==FMT_I32; }
-	bool is_r32f() { return type==FMT_F32; }
-	u32 is_r32fv()  { return type>=FMT_VECTOR_BASE?count():0; }
-	bool is_r64f() { return type==FMT_F64; }
+	bool is_r32i() const { return type==FMT_I32; }
+	bool is_r32f() const { return type==FMT_F32; }
+	u32 is_r32fv()  const { return type>=FMT_VECTOR_BASE?count():0; }
+	bool is_r64f() const { return type==FMT_F64; }
 
-	bool is_r32() { return is_r32i() || is_r32f(); }
-	bool is_r64() { return is_r64f(); }	//just here for symetry ...
+	bool is_r32() const { return is_r32i() || is_r32f(); }
+	bool is_r64() const { return is_r64f(); }	//just here for symmetry ...
 
-	bool is_imm_s8() { return is_imm() && is_s8(_imm); }
-	bool is_imm_u8() { return is_imm() && is_u8(_imm); }
-	bool is_imm_s16() { return is_imm() && is_s16(_imm); }
-	bool is_imm_u16() { return is_imm() && is_u16(_imm); }
+	bool is_imm_s8() const { return is_imm() && is_s8(_imm); }
+	bool is_imm_u8() const { return is_imm() && is_u8(_imm); }
+	bool is_imm_s16() const { return is_imm() && is_s16(_imm); }
+	bool is_imm_u16() const { return is_imm() && is_u16(_imm); }
 
 	u32* reg_ptr()  { verify(is_reg()); return GetRegPtr(_reg); }
 	u32  reg_ofs()  { verify(is_reg()); return (u8*)GetRegPtr(_reg) - (u8*)GetRegPtr(reg_xf_0); }
 
 	bool is_vector() { return type>=FMT_VECTOR_BASE; }
 
-	int count() { return type==FMT_F64?2:type==FMT_V4?4:type==FMT_V16?16:1; }	//count of hardware regs
+	u32 count() const { return  type==FMT_F64?2:type==FMT_V2?2:
+								type==FMT_V3?3:type==FMT_V4?4:type==FMT_V8?8:
+								type==FMT_V16?16:1; }	//count of hardware regs
 
 	/*	
 		Imms:

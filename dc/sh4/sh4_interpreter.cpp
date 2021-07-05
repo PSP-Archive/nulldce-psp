@@ -26,7 +26,7 @@
 #include <float.h>
 
 #define SH4_TIMESLICE	(448)
-#define CPU_RATIO		(2) 
+#define CPU_RATIO		(4) 
 
 //uh uh
 volatile bool  sh4_int_bCpuRun=false;
@@ -54,11 +54,8 @@ void Sh4_int_Run()
 		
 		// model how the jit works
 		// only check for sh4_int_bCpuRun on interrupts
-		if (UpdateSystem()) {
+		if (UpdateSystem())
 			UpdateINTC();
-			if (!sh4_int_bCpuRun)
-				break;
-		}
 
 	} while(sh4_int_bCpuRun);
 

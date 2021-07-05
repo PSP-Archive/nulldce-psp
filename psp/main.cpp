@@ -21,7 +21,7 @@
 
 PSP_MODULE_INFO(VER_SHORTNAME, PSP_MODULE_USER, VER_MAJOR, VER_MINOR);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER|THREAD_ATTR_VFPU);
-PSP_HEAP_SIZE_KB(-256);
+PSP_HEAP_SIZE_KB(-1024);
 
 #include <pspsdk.h>
 #include <pspkernel.h>
@@ -399,9 +399,9 @@ void TryUSBHFS(vector<FileInfoS>& dirs)
 void pspguCrear();
 void pspguWaitVblank();
 
-const char * setting_txt[] {"  Dynarec max idle","  Enable unsafe optimizations", "  Enable Optimized Writing", "  Enable Optimized Reading","  Run with interpreter (ONLY FOR DEBUGGING)" , " "};
+const char * setting_txt[] {"  Dynarec max idle", "  CPU Cycles Overrun","  Enable unsafe optimizations", "  Enable Optimized Writing", "  Enable Optimized Reading", "  Underclock AICA", "  Sonic AICA HACK","  Run with interpreter (ONLY FOR DEBUGGING)" , " "};
 const char * dynaloop_txt[] {"  Perfect","  Light","  Medium", "  High"};
-const u8     dynaloop_val[] {0, 2, 15, 30};
+const u8     dynaloop_val[] {0, 2, 8, 12};
 
 u16 overClockPVRval;
 
@@ -409,6 +409,9 @@ extern bool reg_optimizzation;
 extern bool clc_fk;
 extern bool OptmizedReading;
 extern bool OptmizedWriting;
+extern bool sonicHax;
+extern u8 	UnderclockAica;
+extern u16  CUSTOM_SH4_TIMESLICE;
 
 void Settings(const char *rom){
 
@@ -429,13 +432,15 @@ void Settings(const char *rom){
 		pspDebugScreenSetTextColor(0x7F7F7F7F);
 
 		if (sel < 0) sel = 0;
+		if (UnderclockAica < 1) UnderclockAica = 1;
+		if (CUSTOM_SH4_TIMESLICE < 400) CUSTOM_SH4_TIMESLICE = 448; 
 
-		if (pad_index >= 5)  	  pad_index = 0;
+		if (pad_index >= 8)  	  pad_index = 0;
 		else if (pad_index < 0)   pad_index = 0;
 
 		pspDebugScreenPrintf("\nBUILD:%s\n\n\nSETTINGS:\n\n",VER_FULLNAME);
 
-		for (int i = 0; i < 5; i++){
+		for (int i = 0; i < 8; i++){
 			strcpy(buff,setting_txt[i]);
 			if (i == 0) strcat(buff," = %s\n");
 			else	    strcat(buff," = %d\n");
@@ -444,11 +449,14 @@ void Settings(const char *rom){
 			else 				pspDebugScreenSetTextColor(0x7F7F7F7F);
 
 			switch(i){
-				case 0: pspDebugScreenPrintf(buff,dynaloop_txt[sel%4]); break;
-				case 1: pspDebugScreenPrintf(buff,reg_optimizzation); break;
-				case 2: pspDebugScreenPrintf(buff,OptmizedWriting); break;
-				case 3: pspDebugScreenPrintf(buff,OptmizedReading); break;
-				case 4: pspDebugScreenPrintf(buff,!jit); break;
+				case 0: pspDebugScreenPrintf(buff,dynaloop_txt[sel%4]); 	break;
+				case 1: pspDebugScreenPrintf(buff,CUSTOM_SH4_TIMESLICE);	break;
+				case 2: pspDebugScreenPrintf(buff,reg_optimizzation); 		break;
+				case 3: pspDebugScreenPrintf(buff,OptmizedWriting); 		break;
+				case 4: pspDebugScreenPrintf(buff,OptmizedReading); 		break;
+				case 5: pspDebugScreenPrintf(buff,UnderclockAica-1); 		break;
+				case 6: pspDebugScreenPrintf(buff,sonicHax); 				break;
+				case 7: pspDebugScreenPrintf(buff,!jit); 					break;
 			} 	
 		}
 
@@ -461,18 +469,24 @@ void Settings(const char *rom){
 
 		if (pad.Buttons & PSP_CTRL_LEFT)
 		{	if (pad_index == 0) sel--;
-			else if (pad_index == 1) reg_optimizzation = 0;
-			else if (pad_index == 2) OptmizedWriting = 0;
-			else if (pad_index == 3) OptmizedReading = 0;
+			else if (pad_index == 1) CUSTOM_SH4_TIMESLICE -= 448;
+			else if (pad_index == 2) reg_optimizzation = 0;
+			else if (pad_index == 3) OptmizedWriting = 0;
+			else if (pad_index == 4) OptmizedReading = 0;
+			else if (pad_index == 5) UnderclockAica--;
+			else if (pad_index == 6) sonicHax = 0;
 			else jit = 1;
 		}
 
 		if (pad.Buttons & PSP_CTRL_RIGHT)
 		{
 			if (pad_index == 0) sel++;
-			else if (pad_index == 1) reg_optimizzation = 1;
-			else if (pad_index == 2) OptmizedWriting = 1;
-			else if (pad_index == 3) OptmizedReading = 1;
+			else if (pad_index == 1) CUSTOM_SH4_TIMESLICE += 448;
+			else if (pad_index == 2) reg_optimizzation = 1;
+			else if (pad_index == 3) OptmizedWriting = 1;
+			else if (pad_index == 4) OptmizedReading = 1;
+			else if (pad_index == 5) UnderclockAica++;
+			else if (pad_index == 6) sonicHax = 1;
 			else jit = 0;
 		}
 
