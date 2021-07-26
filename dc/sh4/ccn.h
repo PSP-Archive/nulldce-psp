@@ -111,37 +111,20 @@ union CCN_CCR_type
 {
 	struct
 	{
-#if HOST_ENDIAN==ENDIAN_LITTLE
-		u32 OCE:1;
-		u32 WT:1;
-		u32 CB:1;
-		u32 OCI:1;
-		u32 res:1;
-		u32 ORA:1;
-		u32 res_1:1;
-		u32 OIX:1;
-		u32 ICE:1;
-		u32 res_2:2;
-		u32 ICI:1;
-		u32 res_3:3;
-		u32 IIX:1;
-		u32 res_4:16;
-#else
-		u32 res_4:16;
-		u32 IIX:1;
-		u32 res_3:3;
-		u32 ICI:1;
-		u32 res_2:2;
-		u32 ICE:1;
-		u32 OIX:1;
-		u32 res_1:1;
-		u32 ORA:1;
-		u32 res:1;
-		u32 OCI:1;
-		u32 CB:1;
-		u32 WT:1;
-		u32 OCE:1;
-#endif
+		u32 OCE   : 1;
+		u32 WT    : 1;
+		u32 CB    : 1;
+		u32 OCI   : 1;
+		u32 res   : 1;
+		u32 ORA   : 1;
+		u32 res_1 : 1;
+		u32 OIX   : 1;
+		u32 ICE   : 1;
+		u32 res_2 : 2;
+		u32 ICI   : 1;
+		u32 res_3 : 3;
+		u32 IIX   : 1;
+		u32 res_4 : 16;
 	};
 	u32 reg_data;
 };
@@ -150,15 +133,9 @@ union CCN_QACR_type
 {
 	struct
 	{
-#if HOST_ENDIAN==ENDIAN_LITTLE
-		u32 res:2;
-		u32 Area:3;
-		u32 res_1:27;
-#else
-		u32 res_1:27;
-		u32 Area:3;
-		u32 res:2;
-#endif
+		u32 res   : 2;
+		u32 Area  : 3;
+		u32 res_1 : 27;
 	};
 	u32 reg_data;
 };

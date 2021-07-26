@@ -30,11 +30,10 @@ u32 		  CCN_QACR_TR[2];
 template<u32 idx>
 void CCN_QACR_write(u32 value)
 {
-	
-	CCN_QACR[idx].reg_data=value;
-	CCN_QACR_TR[idx]=(CCN_QACR[idx].Area<<26)-0xE0000000;
-
+	CCN_QACR[idx].reg_data = value;
 	u32 area = ((CCN_QACR_type&)value).Area;
+
+	CCN_QACR_TR[idx] = (area << 26) - 0xE0000000; //-0xE0000000 because 0xE0000000 is added on the translation again ...
 
 	switch(area)
 	{
@@ -45,7 +44,10 @@ void CCN_QACR_write(u32 value)
 		/*case 4:
 			do_sqw_nommu=&TAWriteSQ_nommu;
 			break;*/
-		default: do_sqw_nommu=&do_sqw_nommu_full;
+
+		default:
+			do_sqw_nommu = &do_sqw_nommu_full;
+			break;
 	}
 }
 
@@ -168,13 +170,11 @@ void ccn_Init()
 	CCN[(CCN_QACR0_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA;
 	CCN[(CCN_QACR0_addr&0xFF)>>2].readFunction=0;
 	CCN[(CCN_QACR0_addr&0xFF)>>2].writeFunction=CCN_QACR_write<0>;
-	CCN[(CCN_QACR0_addr&0xFF)>>2].data32=&CCN_QACR[0].reg_data;
 
 	//CCN QACR1 0xFF00003C 0x1F00003C 32 Undefined Undefined Held Held Iclk
 	CCN[(CCN_QACR1_addr&0xFF)>>2].flags=REG_32BIT_READWRITE | REG_READ_DATA;
 	CCN[(CCN_QACR1_addr&0xFF)>>2].readFunction=0;
 	CCN[(CCN_QACR1_addr&0xFF)>>2].writeFunction=CCN_QACR_write<1>;
-	CCN[(CCN_QACR1_addr&0xFF)>>2].data32=&CCN_QACR[1].reg_data;
 }
 
 void ccn_Reset(bool Manual)

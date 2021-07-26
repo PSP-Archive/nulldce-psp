@@ -140,6 +140,11 @@ struct maple_base: maple_device
 	}
 	u32 r_count() { return dma_count_in; }
 
+	void skip(u32 len) {
+		dma_buffer_in += len;
+		dma_count_in -= len;
+	}
+
 	virtual u32 dma(u32 cmd)=0;
 
 	virtual u32 Dma(u32 Command,u32* buffer_in,u32 buffer_in_len,u32* buffer_out,u32& buffer_out_len)
@@ -613,11 +618,12 @@ struct maple_sega_vmu: maple_base
 						if (write_adr + write_len > sizeof(flash_data))
 						{
 							//INFO_LOG(MAPLE, "Failed to write VMU %s: overflow", logical_port);
-							return MDRE_TransminAgain; //invalid params
+							skip(write_len);
+							return MDRE_FileError; //invalid params
 						}
 						rptr(&flash_data[write_adr],write_len);
 
-						if (file)
+						if (file != nullptr)
 						{
 							fseek(file,write_adr,SEEK_SET);
 							fwrite(&flash_data[write_adr],1,write_len,file);

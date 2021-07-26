@@ -48,6 +48,7 @@ int sh4_sched_elapsed(int id);
 /*
 	Tick for *cycles*
 */
+extern "C"
 void sh4_sched_tick(int cycles);
 
 void sh4_sched_ffts();

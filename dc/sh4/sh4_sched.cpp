@@ -143,6 +143,7 @@ void handle_cb(int id)
 		sh4_sched_request(id, std::max(0, re_sch - jitter));
 }
 
+extern "C"
 void sh4_sched_tick(int cycles)
 {
 	/*

@@ -114,7 +114,7 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 
 	if (addr >= PALETTE_RAM_START_addr && PvrReg(addr, u32) != data)
     {
-            pal_needs_update = true;
+		pal_needs_update=true;
     }
 
 	PvrReg(addr,u32)=data;

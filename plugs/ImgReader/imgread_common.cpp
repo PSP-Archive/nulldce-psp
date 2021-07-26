@@ -41,9 +41,10 @@ Disc* OpenDisc(const wchar* fn)
 {
 	Disc* rv = NULL;
 
-	for (unat i = 0; imgread_drivers[i] && !rv; i++) {  // ;drivers[i] && !(rv=drivers[i](fn));
-		rv = imgread_drivers[i](fn);
+	for (unat i = 0; imgread_drivers[i]; i++) {
+		if (rv = imgread_drivers[i](fn))
+			return rv;
 	}
 
-	return rv;
+	return nullptr;
 }

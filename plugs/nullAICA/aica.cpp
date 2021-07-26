@@ -78,7 +78,6 @@ void UpdateSh4Ints()
 			aica_params.CancelInterrupt(holly_SPU_IRQ);
 		}
 	}
-
 }
 
 ////

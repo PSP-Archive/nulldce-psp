@@ -9,9 +9,11 @@
 
 #include "deps/cdipsr/cdipsr.h"
 
+core_file* fsource = nullptr;
+
 Disc* cdi_parse(const wchar* file)
 {
-	core_file* fsource=core_fopen(file);
+	fsource=core_fopen(file);
 
 	if (!fsource)
 		return 0;
@@ -105,7 +107,7 @@ Disc* cdi_parse(const wchar* file)
 				t.CTRL=track.mode==0?0:4;
 				t.StartFAD=(u32)(track.start_lba+track.pregap_length);
 				t.EndFAD=(u32)(t.StartFAD+track.length-1);
-				t.file = new RawTrackFile(core_fopen(file),(u32)(track.position + track.pregap_length * track.sector_size),(u32)t.StartFAD,(u32)track.sector_size);
+				t.file = new RawTrackFile(/*core_fopen(file)*/fsource,(u32)(track.position + track.pregap_length * track.sector_size),(u32)t.StartFAD,(u32)track.sector_size);
 
 				rv->tracks.push_back(t);
 
@@ -162,7 +164,8 @@ Disc* cdi_parse(const wchar* file)
 
 		image.remaining_sessions--;
 	}
-	core_fclose(fsource);
+	//core_fclose(fsource);
+	core_fseek(fsource, 0, SEEK_SET);
 
 	rv->type=GuessDiscType(CD_M1,CD_M2,CD_DA);
 

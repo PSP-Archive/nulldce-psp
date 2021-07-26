@@ -104,6 +104,9 @@ u32 SCR_HEIGHT=272;
 
 int palette_index = 0;
 
+u8   PaletteUpdate = 0;
+u8   _PaletteUpdate = 1;
+
 ScePspFMatrix4 curr_mtx;
 float dc_width,dc_height;
 
@@ -828,21 +831,19 @@ void BuildTwiddleTables()
 				}\
 			}
 
-		#define normPL_text(format) \
-			u32 sr;\
-			if (mod->tcw.NO_PAL.StrideSel)\
-				{sr=(TEXT_CONTROL&31)*32;}\
-				else\
-				{sr=w;}\
+		#define normPL_text(format) {\
+				u32 sr = w; \
+				if (mod->tcw.NO_PAL.StrideSel) sr=(TEXT_CONTROL&31)*32; \
 				if (mod->tcw.NO_PAL.StrideSel || *(u32*)&params.vram[sa-0]!=0xDEADC0DE)\
 				{ \
 					format((u8*)&params.vram[sa],sr,h); \
 					*(u32*)&params.vram[sa-0]=0xDEADC0DE;\
-				}
+				}\
+		}
 
 		#define norm_text(format) \
 		u32 sr = w; \
-		if (mod->tcw.NO_PAL.StrideSel) sr=(TEXT_CONTROL&31)*32;; \
+		if (mod->tcw.NO_PAL.StrideSel) sr=(TEXT_CONTROL&31)*32; \
 			if (mod->tcw.NO_PAL.StrideSel || *(u32*)&params.vram[sa-0]!=0xDEADC0DE)\
 			{	\
 			ARGB##format##_((u8*)&params.vram[sa],sr,h);	\
@@ -921,7 +922,7 @@ void BuildTwiddleTables()
 		case 3:
 			if (mod->tcw.NO_PAL.ScanOrder)
 			{
-					normPL_text(texture_PL<convYUV_PL>);
+					//normPL_text(texture_PL<convYUV_PL>);
 					//norm_text(ANYtoRAW);
 			}
 			else
@@ -951,7 +952,7 @@ void BuildTwiddleTables()
 				*(u32*)&params.vram[(sa&(~0x3))-0]=0xDEADC0DE;
 			}*/
 
-			FMT=GU_PSM_4444; //PalFMT[PAL_RAM_CTRL&3];
+			FMT=PalFMT[PAL_RAM_CTRL&3];
 
 			
 
@@ -974,7 +975,7 @@ void BuildTwiddleTables()
 
 				//SetupPaletteForTexture(mod->tcw.PAL.PalSelect<<4,256);
 
-				FMT=GU_PSM_4444;//wha? the ? FUCK!
+				FMT=PalFMT[PAL_RAM_CTRL&3];//wha? the ? FUCK!
 			}
 			break;
 		default:
@@ -1021,11 +1022,16 @@ void BuildTwiddleTables()
 		//so bank is Address<<3
 		//bits <4 are <<1 to create space for bank num
 		//bank 0 is mapped at 400000 (32b offset) and after
-		u32 bank=((offset32>>22)&0x1)<<2;//bank will be used as uper offset too
-		u32 lv=offset32&0x3; //these will survive
+		const u32 bank_bit=VRAM_MASK-(VRAM_MASK/2);
+		const u32 static_bits=(VRAM_MASK-(bank_bit*2)+1)|3;
+		const u32 moved_bits=VRAM_MASK-static_bits-bank_bit;
+
+		u32 bank=(offset32&bank_bit)/bank_bit*4;//bank will be used as uper offset too
+		u32 lv=offset32&static_bits; //these will survive
+		offset32&=moved_bits;
 		offset32<<=1;
 		//       |inbank offset    |       bank id        | lower 2 bits (not changed)
-		u32 rv=  (offset32&(VRAM_MASK-7))|bank                  | lv;
+		u32 rv=  offset32 + bank                  + lv;
 
 		return rv;
 	}
@@ -1156,35 +1162,50 @@ void BuildTwiddleTables()
 	
 		if (pal_needs_update==false)
 			return;
+		
+		//if ((_PaletteUpdate<PaletteUpdate)){ _PaletteUpdate++; printf("SJIP\n"); return;}
+
+		_PaletteUpdate = 0;
 
 		pal_needs_update=false;
 		switch(PAL_RAM_CTRL&3)
 		{
 			case 0:
-				for (int i=0;i<1024;i++)
-				{
-					palette_lut[i]=ARGB1555_TW(PALETTE_RAM[i]);
-				}
+			case 8:
+				memcpy_vfpu(palette_lut,PALETTE_RAM,1024 * sizeof(u32));
 			break;
 
 			case 1:
-				for (int i=0;i<1024;i++)
+				for (int i=0;i<1024;i += 4)
 				{
+					/*void* dst = &palette_lut[i];
+					const u32* src = &PALETTE_RAM[i];
+					__asm__ 
+					(
+						"lv.q C000, %1			\n"
+						"vt5650.q C000, C000	\n"
+						"sv.q C000, %0			\n"
+						: "=m"(*palette_lut)
+						: "m"(*src)
+					);*/
 					palette_lut[i]=ARGB565_TW(PALETTE_RAM[i]);
 				}
 			break;
 
 			case 2:
-				for (int i=0;i<1024;i++)
+				for (int i=0;i<1024;i += 4)
 				{
+					/*void* dst = &palette_lut[i];
+					const u32* src = &PALETTE_RAM[i];
+					__asm__ 
+					(
+						"lv.q C000, %1			\n"
+						"vt4444.q C000, C000	\n"
+						"sv.q C000, %0			\n"
+						: "=m"(*palette_lut)
+						: "m"(*src)
+					);*/
 					palette_lut[i]=ARGB4444_TW(PALETTE_RAM[i]);
-				}
-			break;
-
-			case 3:
-				for (int i=0;i<1024;i++)
-				{
-					palette_lut[i]=PALETTE_RAM[i];//argb 8888 :p
 				}
 			break;
 		}
@@ -1303,7 +1324,7 @@ void BuildTwiddleTables()
 			old_vtx_max_Z = vtx_max_Z;
 		}*/
 
-		curr_mtx.z.z= ((1.f/(vtx_max_Z))* 1.001f);
+		curr_mtx.z.z= ((1.f/(vtx_max_Z))* 1.004f);
 		curr_mtx.w.z= -vtx_min_Z;
 		//curr_mtx.z.w=1.1f;
 
@@ -1388,7 +1409,7 @@ void BuildTwiddleTables()
 		if (FB_W_SOF1 & 0x1000000)
 			return;
 
-		if (!_doRender) { printf("CAPITO'\n"); return;}
+		if (!_doRender) { return;}
 
 		render_end_pending_cycles = (VtxCnt * 60) + 500000 * 3;
 
@@ -1882,10 +1903,11 @@ void BuildTwiddleTables()
 		sceGuDepthBuffer(zbp,BUF_WIDTH);
 		sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
 		sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
-		sceGuDepthRange(65535,0);
+		sceGuDepthRange(0xffff, 0);
 		sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
 		sceGuEnable(GU_SCISSOR_TEST);
 		sceGuEnable(GU_DEPTH_TEST);
+		sceGuEnable(GU_CLIP_PLANES);
 		sceGuDepthMask(GU_FALSE);
 		sceGuDepthFunc(GU_GEQUAL);
 		sceGuFrontFace(GU_CW);

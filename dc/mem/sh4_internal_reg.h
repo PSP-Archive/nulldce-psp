@@ -4,8 +4,6 @@
 #define OnChipRAM_SIZE (0x2000)
 #define OnChipRAM_MASK (OnChipRAM_SIZE-1)
 
-extern ALIGN(64) u64 sq_buffer[64/8];
-
 extern ALIGN(32) RegisterStruct CCN[20];		//CCN  : 14 registers
 extern ALIGN(32) RegisterStruct UBC[20];		//UBC  : 9 registers
 extern ALIGN(32) RegisterStruct BSC[20];		//BSC  : 18 registers
@@ -16,8 +14,6 @@ extern ALIGN(32) RegisterStruct INTC[20];		//INTC : 4 registers
 extern ALIGN(32) RegisterStruct TMU[20];		//TMU  : 12 registers
 extern ALIGN(32) RegisterStruct SCI[20];		//SCI  : 8 registers
 extern ALIGN(32) RegisterStruct SCIF[20];		//SCIF : 10 registers
-
-#define sq_both ((u8*)sq_buffer)
 
 //Init/Res/Term
 void sh4_internal_reg_Init();

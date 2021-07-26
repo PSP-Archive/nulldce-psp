@@ -28,7 +28,7 @@
 int dma_sched_id = -1;
 int aica_schid 	 = -1;
 
-u8 	UnderclockAica = 1;
+s8 	UnderclockAica = 1;
 int AICA_TICK = 145124;
 
 VArray2 aica_ram;
@@ -156,40 +156,31 @@ void ArmSetRST()
 }
 void FASTCALL WriteMem_aica_reg(u32 addr,u32 data,u32 sz)
 {
-	addr&=0x7FFF;
-	
-	if (sz==1)
+	addr &= 0x7FFF;
+
+	if (sz == 1)
 	{
-		if (addr==0x2C01)
+		switch (addr)
 		{
-			VREG=data;
-			//printf("VREG = %02X\n",VREG);
-		}
-		else if (addr==0x2C00)
-		{
-			ARMRST=data;
-			//printf("ARMRST = %02X\n",ARMRST);
+		case 0x2C00:
+			ARMRST = data;
 			ArmSetRST();
-		}
-		else
-		{
-			libAICA_WriteMem_aica_reg(addr,data,sz);
+			return;
+		case 0x2C01:
+			VREG = data;
+			return;
+		default:
+			break;
 		}
 	}
-	else
+	else if (addr == 0x2C00)
 	{
-		if (addr==0x2C00)
-		{
-			VREG=(data>>8)&0xFF;
-			ARMRST=data&0xFF;
-			//printf("VREG = %02X ARMRST %02X\n",VREG,ARMRST);
-			ArmSetRST();
-		}
-		else
-		{
-			libAICA_WriteMem_aica_reg(addr,data,sz);
-		}
+		VREG = (data >> 8) & 0xFF;
+		ARMRST = data & 0xFF;
+		ArmSetRST();
+		return;
 	}
+	libAICA_WriteMem_aica_reg(addr, data, sz);
 }
 //Init/res/term
 void aica_Init()
@@ -217,14 +208,14 @@ int dma_end_sched(int tag, int cycl, int jitt)
 	u32 len = SB_ADLEN & 0x7FFFFFFF;
 
 	if (SB_ADLEN & 0x80000000)
-		SB_ADEN = 1;//
+		SB_ADEN = 0;
 	else
-		SB_ADEN = 0;//
+		SB_ADEN = 1;
 
 	SB_ADSTAR += len;
 	SB_ADSTAG += len;
-	SB_ADST = 0x00000000;//dma done
-	SB_ADLEN = 0x00000000;
+	SB_ADST = 0;	// dma done
+	SB_ADLEN = 0;
 
 	// indicate that dma is not happening, or has been paused
 	SB_ADSUSP |= 0x10;
@@ -232,6 +223,23 @@ int dma_end_sched(int tag, int cycl, int jitt)
 	asic_RaiseInterrupt(holly_SPU_DMA);
 
 	return 0;
+}
+
+u32 Read_SB_ADST()
+{
+	// Le Mans and Looney Tunes sometimes send the same dma transfer twice after checking SB_ADST == 0.
+	// To avoid this, we pretend SB_ADST is still set when there is a pending aica-dma interrupt.
+	// This is only done once.
+	if ((SB_ISTNRM & (1 << (u8)holly_SPU_DMA)) && !(SB_ADST & 2))
+	{
+		SB_ADST |= 2;
+		return 1;
+	}
+	else
+	{
+		SB_ADST &= ~2;
+		return SB_ADST;
+	}
 }
 
 void Write_SB_ADST(u32 data)
@@ -245,7 +253,7 @@ void Write_SB_ADST(u32 data)
 	//0x005F7818	SB_ADST	RW	AICA:G2-DMA start 
 	//0x005F781C	SB_ADSUSP	RW	AICA:G2-DMA suspend 
 
-	if (data&1)
+	if ((data & 1) == 1 && (SB_ADST & 1) == 0)
 	{
 		if (SB_ADEN&1)
 		{
@@ -259,6 +267,7 @@ void Write_SB_ADST(u32 data)
 			WriteMemBlock_nommu_dma(dst, src, len);
 
 			// idicate that dma is in progress
+			SB_ADST = 1;
 			SB_ADSUSP &= ~0x10;
 			
 			// Schedule the end of DMA transfer interrupt
@@ -356,28 +365,34 @@ void Write_SB_E2ST(u32 data)
 extern int RAMAMOUNT();
 
 volatile bool start = false;
+volatile u8   sh4IntReq = 1;
 
 int ME_function(int arg){
 
 	while(true){
 
-		while (!PSP_UC(start)) asm("nop");
-
-		MeDcacheWritebackInvalidateAll();
-
-		const u16 Cycles = 512 * 2;
+		if (PSP_UC(start))
 		{
-			for (int i = 0; i < 2; i++)
+
+			MeDcacheWritebackInvalidateAll(true);
+
+			const u16 Cycles = 512 * 32;
 			{
-				arm_Run(Cycles / arm_sh4_bias);
-				libAICA_TimeStep();
-				//AICA_Sample();
+				for (int i = 0; i < 32; i++)
+				{
+					//MeDcacheWritebackInvalidateAll(true);
+					arm_Run(Cycles / 32 / arm_sh4_bias);
 
-				MeDcacheWritebackInvalidateAll();
+					libAICA_TimeStep();
+					MeDcacheWritebackInvalidateAll(true);
+					//AICA_Sample();
+				}
 			}
-		}
 
-		PSP_UC(start) = false;
+			MeDcacheWritebackInvalidateAll(true);
+
+			PSP_UC(start) = false;
+		}
 
 	}
 
@@ -395,16 +410,27 @@ int AicaUpdate(int tag, int c, int j)
 
 	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
 
-	static const u16 Cycles = 512;
+	static const u16 Cycles = 512 / (UnderclockAica + 1);
 	{
-		for (int i = 0; i < 4; i++)
+		for (int i = UnderclockAica-1; i < 32; i++)
 		{
-			arm_Run(Cycles / 4);
+			arm_Run(Cycles);
 			libAICA_TimeStep();
 		}
 
 		
 	}
+
+	return AICA_TICK;
+}
+
+int LittleAicaUpdate(int tag, int c, int j)
+{
+
+	arm_Run(256);
+	libAICA_TimeStep();
+	arm_Run(256);
+	libAICA_TimeStep();
 
 	return AICA_TICK;
 }
@@ -434,11 +460,21 @@ int AicaUpdateHack(int tag, int c, int j)
 	return AICA_TICK;
 }
 
+int AicaUpdateME(int tag, int c, int j)
+{
+	sceKernelDcacheWritebackInvalidateAll();
+
+	PSP_UC(start) = true;
+
+	return AICA_TICK;
+}
+
 void aica_sb_Init()
 {
 	//NRM
 	//6
 	sb_regs[((SB_ADST_addr-SB_BASE)>>2)].flags=REG_32BIT_READWRITE | REG_READ_DATA;
+	sb_regs[((SB_ADST_addr-SB_BASE)>>2)].readFunction=Read_SB_ADST;
 	sb_regs[((SB_ADST_addr-SB_BASE)>>2)].writeFunction=Write_SB_ADST;
 
 	//I realy need to implement G2 dma (and rest dmas actualy) properly
@@ -453,10 +489,18 @@ void aica_sb_Init()
 
 	if (sonicHax)
 		aica_schid = sh4_sched_register(0, AicaUpdateHack);
+	else if (UnderclockAica == -1)
+		aica_schid = sh4_sched_register(0, LittleAicaUpdate);
 	else
 		aica_schid = sh4_sched_register(0, AicaUpdate);
 
-    sh4_sched_request(aica_schid, AICA_TICK*UnderclockAica);
+	//aica_schid = sh4_sched_register(0, AicaUpdateME);
+
+	if (UnderclockAica == -1){
+		sh4_sched_request(aica_schid, AICA_TICK*100);
+		printf("Little AICA mode\n");
+	}else
+    	sh4_sched_request(aica_schid, AICA_TICK*UnderclockAica);
 
 	AICA_TICK = AICA_TICK*UnderclockAica;
 

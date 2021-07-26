@@ -4,7 +4,7 @@
 #include "dc/sh4/intc.h"
 #include "dc/mem/_vmem.h"
 #include "dc/mem/sh4_mem.h"
-#include "dc/mem/sh4_internal_reg.h"
+#include "dc/sh4/sh4_registers.h"
 
 #include "plugs/drkPvr/threaded.h"
 
@@ -261,26 +261,12 @@ void FASTCALL pvr_write_area1_32(u32 addr,u32 data)
 
 void FASTCALL TAWrite(u32 address,u32* data,u32 count)
 {
-	u32 address_w=address&0x1FFFFFF;//correct ?
-	if (address_w<0x800000)//TA poly
-	{
-		libPvr_TaDMA(data,count);		
-	}
-	else if(address_w<0x1000000) //Yuv Converter
-	{
-		YUV_data(data,count);
-	}
-	else //Vram Writef
-	{
-		//This actually works on dc, need to handle lmmodes
-		memcpy_vfpu(&vram.data[address&VRAM_MASK], data, count*32);
-		//int _cont = count*32;
-		/*sceKernelDcacheWritebackRange(&vram.data[address&VRAM_MASK], _cont);
-		sceKernelDcacheWritebackRange(data, _cont);
-		sceKernelDcacheWritebackInvalidateAll();
-		sceDmacMemcpy(&vram.data[address&VRAM_MASK], data, _cont);*/
-		//sceKernelDcacheWritebackInvalidateAll();
-	}
+	if ((address & 0x800000) == 0)
+		// TA poly
+		libPvr_TaDMA(data, count);
+	else
+		// YUV Converter
+		YUV_data(data, count);
 }
 
 void FASTCALL TAWriteSQ(u32 address,u8* sqb)

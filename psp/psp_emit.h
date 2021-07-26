@@ -814,9 +814,10 @@ void emit_insn(psp_insn_t insn);
 //  | (clz|clo) rd, rs
 #define emit_clz(_rd, _rs) emit_special1(clz, _rs, 0, _rd, 0)
 #define emit_clo(_rd, _rs) emit_special1(clo, _rs, 0, _rd, 0)
-//  | (addi|addiu|slti|sltiu|andi|ori|xori) rt, rs, immediate
+//  | (addi|addiu|subiu|slti|sltiu|andi|ori|xori) rt, rs, immediate
 #define emit_addi(_rt, _rs, _imm) emit_imm(addi, _rs, _rt, _imm)
 #define emit_addiu(_rt, _rs, _imm) emit_imm(addiu, _rs, _rt, _imm)
+#define emit_subiu(_rt, _rs, _imm) emit_imm(addiu, _rs, _rt, -_imm)
 #define emit_slti(_rt, _rs, _imm) emit_imm(slti, _rs, _rt, _imm)
 #define emit_sltiu(_rt, _rs, _imm) emit_imm(sltiu, _rs, _rt, _imm)
 #define emit_andi(_rt, _rs, _imm) emit_imm(andi, _rs, _rt, _imm)
@@ -873,6 +874,7 @@ void emit_insn(psp_insn_t insn);
 #define emit_seh(_rd, _rt) emit_special3_bshfl(seh, _rt, _rd)
 #define emit_bitrev(_rd, _rt) emit_special3_bshfl(bitrev, _rt, _rd)
 #define emit_wsbh(_rd, _rt) emit_special3_bshfl(wsbh, _rt, _rd)
+#define emit_wsbw(_rd, _rt) emit_special3_bshfl(wsbw, _rt, _rd)
 
 #define emit_nop() emit_sll(psp_zero, psp_zero, 0)
 #define emit_movi(_rt, _imm) emit_addiu(_rt, 0, _imm)
@@ -936,8 +938,8 @@ void emit_insn(psp_insn_t insn);
 //  | cvt.s.w fd, fs
 #define emit_cvtsw(_fd, _fs) emit_cop1w(cvtsw, _fs, 0, _fd)
 //  | (mfc1|mtc1) rt, fs
-#define emit_mfc1(_rt, _fs) emit_ftype(psp_cop1, psp_mfc1, _rt, _fs, 0, 0)
-#define emit_mtc1(_rt, _fs) emit_ftype(psp_cop1, psp_mtc1, _rt, _fs, 0, 0)
+#define emit_mfc1(_fs, _rt) emit_ftype(psp_cop1, psp_mfc1, _fs, _rt, 0, 0)
+#define emit_mtc1(_rt, _fs) emit_ftype(psp_cop1, psp_mtc1, _fs, _rt, 0, 0)
 
 
 #define emit_vtype_vd_vs_vt(_op, _sub, _vsize, _vs, _vt, _vd) \
@@ -965,7 +967,7 @@ void emit_insn(psp_insn_t insn);
 
 #define emit_vrotp_sc(_vs, _vd) emit_vrotp(1, _vs, _vd)
 
-#define emit_vdivs(_vs, _vt, _vd) vrcps(_vs, _vd); emit_vmuls(_vs, _vt, _vd)
+#define emit_vdivs(_vs, _vt, _vd) emit_vrcps(_vs, _vd); emit_vmuls(_vs, _vt, _vd)
 
 #define emit_lvs(_vt, _rs, _offset) emit_imm(lvs, _rs, (_vt)&15, (_offset&-4) | ((_vt>>4)&3))
 #define emit_svs(_vt, _rs, _offset) emit_imm(svs, _rs, (_vt)&15, (_offset&-4) | ((_vt>>4)&3))
@@ -973,7 +975,8 @@ void emit_insn(psp_insn_t insn);
 #define emit_lvq(_vt, _rs, _offset) emit_imm(lvq, _rs, (_vt)&15, (_offset&-4) | ((_vt>>4)&1))
 #define emit_svq(_vt, _rs, _offset) emit_imm(svq, _rs, (_vt)&15, (_offset&-4) | ((_vt>>4)&1))
 
-#define emit_mtv(_rt, _vd) emit_itype(psp_cop2, 3, _rt, _vd)
+#define emit_mtv(_rt, _vd) emit_itype(psp_cop2, 7, _rt, _vd)
+#define emit_mfv(_rt, _vd) emit_itype(psp_cop2, 3, _rt, _vd)
 
 #define emit_vi2fs(_vs, _vd, _shift) emit_vtype_vd_vs_vt(psp_vfpu4, 5, 1, _vs,  (_shift&31), _vd)
 #define emit_vf2izs(_vs, _vd, _shift) emit_vtype_vd_vs_vt(psp_vfpu4, 4, 1, _vs,  64|(_shift&31), _vd)

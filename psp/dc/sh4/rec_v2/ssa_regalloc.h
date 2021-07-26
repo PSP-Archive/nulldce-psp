@@ -1,173 +1,227 @@
 /*
-    Created on: Jun 5, 2019
+	This file is part of libswirl
+*/
 
-	Copyright 2019 flyinghead
-
-	This file is part of reicast.
-
-    reicast is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
-
-    reicast is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with reicast.  If not, see <https://www.gnu.org/licenses/>.
- */
 #pragma once
-#include <map>
+
+#include <types.h>
+
+#include <set>
 #include <deque>
-#include "types.h"
 
-#define ssa_printf(...) //DEBUG_LOG(DYNAREC, __VA_ARGS__)
-
-template<typename nreg_t, typename nregf_t>
-class RegAlloc
+static inline bool operator < (const shil_param &lhs, const shil_param &rhs)
 {
-public:
-	RegAlloc() = default;
-	virtual ~RegAlloc() = default;
+	u32 rhsv=rhs.type + rhs._reg*32;
+	u32 lhsv=lhs.type + lhs._reg*32;
 
-	void DoAlloc(DecodedBlock* block, const nreg_t* regs_avail, const nregf_t* regsf_avail)
+	return rhsv < lhsv;
+}
+
+template<typename nreg_t,typename nregf_t,bool explode_spans=true>
+struct RegAlloc
+{
+	struct RegSpan;
+	RegSpan* spans[sh4_reg_count];
+
+	enum AccessMode
 	{
-		this->block = block;
-		
-		verify(host_gregs.empty());
-		while (*regs_avail != (nreg_t)-1)
-			host_gregs.push_back(*regs_avail++);
+		AM_NONE,
+		AM_READ,
+		AM_WRITE,
+		AM_READWRITE
+	};
 
-		verify(host_fregs.empty());
-		while (*regsf_avail != (nregf_t)-1)
-			host_fregs.push_back(*regsf_avail++);
-	}
-
-	void OpBegin(shil_opcode* op, int opid)
+	struct RegAccess
 	{
-		opnum = opid;
-		if (op->op == shop_ifb)
+		u32 pos;
+		AccessMode am;
+	};
+
+	struct RegSpan
+	{
+		u32 start; //load before start
+		u32 end;   //write after end
+
+		u32 regstart;
+		bool fpr;
+
+		bool preload;
+		bool writeback;
+
+		nreg_t nreg;
+		nregf_t nregf;
+
+		bool aliased;
+
+		vector<RegAccess> accesses;
+
+		RegSpan(const shil_param& prm,int pos, AccessMode mode)
 		{
-			FlushAllRegs(true);
+			start=pos;
+			end=pos;
+			writeback=preload=false;
+			regstart=prm._reg;
+			fpr=prm.is_r32f();
+			verify(prm.count()==1);
+
+			aliased=false;
+
+			if (mode&AM_WRITE)
+				writeback=true;
+			if (mode&AM_READ)
+				preload=true;
+
+			nreg=(nreg_t)-1;
+			nregf=(nregf_t)-1;
+			RegAccess ra={static_cast<u32>(pos),mode};
+			accesses.push_back(ra);
 		}
-		else if (op->op == shop_sync_sr)
+
+		void Flush()
 		{
-			//FlushReg(reg_sr_T, true);
-			FlushReg(reg_sr_status, true);
-			for (int i = reg_r0; i <= reg_r7; i++)
-				FlushReg((Sh4RegType)i, true);
-			for (int i = reg_r0_Bank; i <= reg_r7_Bank; i++)
-				FlushReg((Sh4RegType)i, true);
+			//nothing required ?
 		}
-		else if (op->op == shop_sync_fpscr)
+
+		void Kill()
 		{
-			FlushReg(reg_fpscr, true);
-			FlushReg(reg_old_fpscr, true);
-			for (int i = reg_fr_0; i <= reg_xf_15; i++)
-				FlushReg((Sh4RegType)i, true);
+			writeback=false;
 		}
-		// Flush regs used by vector ops
-		if (op->rs1.is_reg() && op->rs1.count() > 1)
+
+		void Access(int pos,AccessMode mode)
 		{
-			for (u32 i = 0; i < op->rs1.count(); i++)
-				FlushReg((Sh4RegType)(op->rs1._reg + i), false);
+			end=pos;
+			if (mode&AM_WRITE)
+				writeback=true;
+			RegAccess ra={static_cast<u32>(pos),mode};
+			accesses.push_back(ra);
 		}
-		if (op->rs2.is_reg() && op->rs2.count() > 1)
+
+		int pacc(int pos)
 		{
-			for (u32 i = 0; i < op->rs2.count(); i++)
-				FlushReg((Sh4RegType)(op->rs2._reg + i), false);
-		}
-		if (op->rs3.is_reg() && op->rs3.count() > 1)
-		{
-			for (u32 i = 0; i < op->rs3.count(); i++)
-				FlushReg((Sh4RegType)(op->rs3._reg + i), false);
-		}
-		if (op->op != shop_ifb)
-		{
-			AllocSourceReg(op->rs1);
-			AllocSourceReg(op->rs2);
-			AllocSourceReg(op->rs3);
-			// Hard flush vector ops destination regs
-			// Note that this is incorrect if a reg is both src (scalar) and dest (vec). However such an op doesn't exist.
-			if (op->rd.is_reg() && op->rd.count() > 1)
+			if (!contains(pos))
+				return -1;
+
+			for (int i=(int)accesses.size()-1;i>=0;i--)
 			{
-				for (u32 i = 0; i < op->rd.count(); i++)
-				{
-					verify(reg_alloced.count((Sh4RegType)(op->rd._reg + i)) == 0 || !reg_alloced[(Sh4RegType)(op->rd._reg + i)].write_back);
-					FlushReg((Sh4RegType)(op->rd._reg + i), true);
-				}
+				if (accesses[i].pos<(u32)pos)
+					return accesses[i].pos;
 			}
-			if (op->rd2.is_reg() && op->rd2.count() > 1)
+
+			return -1;
+		}
+
+		int nacc(int pos)
+		{
+			if (!contains(pos))
+				return -1;
+
+			for (size_t i=0;i<accesses.size();i++)
 			{
-				for (u32 i = 0; i < op->rd2.count(); i++)
-				{
-					verify(reg_alloced.count((Sh4RegType)(op->rd2._reg + i)) == 0 || !reg_alloced[(Sh4RegType)(op->rd2._reg + i)].write_back);
-					FlushReg((Sh4RegType)(op->rd2._reg + i), true);
-				}
+				if (accesses[i].pos>(u32)pos)
+					return accesses[i].pos;
 			}
-			AllocDestReg(op->rd);
-			AllocDestReg(op->rd2);
-		}
-		ssa_printf("%08x  %s gregs %zd fregs %zd", block->vaddr + op->guest_offs, op->dissasm().c_str(), host_gregs.size(), host_fregs.size());
-	}
 
-	void OpEnd(shil_opcode* op)
+			return -1;
+		}
+
+		int nacc_w(int pos)
+		{
+			if (!contains(pos))
+				return -1;
+
+			for (size_t i=0;i<accesses.size();i++)
+			{
+				if (accesses[i].pos>(u32)pos && accesses[i].am&AM_WRITE)
+					return accesses[i].pos;
+			}
+
+			return -1;
+		}
+
+		void trim_access()
+		{
+			for (size_t i=0;i<accesses.size();i++)
+			{
+				if (!contains(accesses[i].pos))
+					accesses.erase(accesses.begin()+i--);
+			}
+		}
+
+		bool cacc(int pos)
+		{
+			return cacc_am(pos)!=AM_NONE;
+		}
+
+		AccessMode cacc_am(int pos)
+		{
+			if (!contains(pos)) return AM_NONE;
+
+			for (size_t i=0; i<accesses.size(); i++)
+			{
+				if (accesses[i].pos==pos)
+					return accesses[i].am;
+			}
+
+			return AM_NONE;
+		}
+
+		bool NeedsWB()
+		{
+			for (size_t i=0; i<accesses.size(); i++)
+			{
+				if (accesses[i].am&AM_WRITE)
+					return true;
+			}
+			return false;
+		}
+
+		bool NeedsPL()
+		{
+			if (accesses[0].am&AM_READ)
+				return true;
+
+			return false;
+		}
+
+		bool begining(int pos)
+		{
+			return  pos==start;
+		}
+
+		bool ending(int pos)
+		{
+			return pos==end;
+		}
+
+
+		int contains(int pos)
+		{
+			return start<=(u32)pos && end>=(u32)pos;
+		}
+	};
+
+
+	vector<RegSpan*> all_spans;
+	u32 spills;
+
+	u32 current_opid;
+	u32 preload_fpu,preload_gpr;
+	u32 writeback_fpu,writeback_gpr;
+
+	bool IsAllocAny(Sh4RegType reg)
 	{
-		for (Sh4RegType reg : pending_flushes)
-		{
-			verify(!reg_alloced[reg].write_back);
-			reg_alloced.erase(reg);
-		}
-		pending_flushes.clear();
-
-		// Flush normally
-		for (auto const& reg : reg_alloced)
-		{
-			FlushReg(reg.first, false);
-		}
-
-		// Hard flush all dirty regs. Useful for troubleshooting
-//		while (!reg_alloced.empty())
-//		{
-//			auto it = reg_alloced.begin();
-//
-//			if (it->second.dirty)
-//				it->second.write_back = true;
-//			FlushReg(it->first, true);
-//		}
-
-		// Final writebacks
-		if (op >= &block->oplist.back())
-		{
-			FlushAllRegs(false);
-			final_opend = true;
-		}
-	}
-
-	void SetOpnum(int num)
-	{
-		fast_forwarding = true;
-		for (int i = 0; i < num; i++)
-		{
-			shil_opcode* op = &block->oplist[i];
-			OpBegin(op, i);
-			OpEnd(op);
-		}
-		OpBegin(&block->oplist[num], num);
-		fast_forwarding = false;
+		return IsAllocg(reg) || IsAllocf(reg);
 	}
 
 	bool IsAllocAny(const shil_param& prm)
 	{
 		if (prm.is_reg())
 		{
-			bool rv = IsAllocAny(prm._reg);
-			if (prm.count() != 1)
+			bool rv=IsAllocAny(prm._reg);
+			if (prm.count()!=1)
 			{
-				for (u32 i = 1;i < prm.count(); i++)
-					verify(IsAllocAny((Sh4RegType)(prm._reg + i)) == rv);
+				for (u32 i=1;i<prm.count();i++)
+					verify(IsAllocAny((Sh4RegType) (prm._reg+i))==rv);
 			}
 			return rv;
 		}
@@ -177,11 +231,22 @@ public:
 		}
 	}
 
+	bool IsAllocg(Sh4RegType reg)
+	{
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->regstart==(u32)reg && all_spans[sid]->contains(current_opid))
+				return !all_spans[sid]->fpr;
+		}
+
+		return false;
+	}
+
 	bool IsAllocg(const shil_param& prm)
 	{
 		if (prm.is_reg())
 		{
-			verify(prm.count() == 1);
+			verify(prm.count()==1);
 			return IsAllocg(prm._reg);
 		}
 		else
@@ -190,390 +255,928 @@ public:
 		}
 	}
 
+	bool IsAllocf(Sh4RegType reg)
+	{
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->regstart==(u32)reg && all_spans[sid]->contains(current_opid))
+				return all_spans[sid]->fpr;
+		}
+
+		return false;
+	}
+
+	bool IsAllocf(const shil_param& prm, u32 i)
+	{
+		verify(prm.count()>i);
+
+		return IsAllocf((Sh4RegType)(prm._reg+i));
+	}
+
 	bool IsAllocf(const shil_param& prm)
 	{
 		if (prm.is_reg())
 		{
-			verify(prm.count() == 1);
+			verify(prm.count()==1);
 			return IsAllocf(prm._reg);
 		}
 		else
-		{
 			return false;
+	}
+
+	nreg_t mapg(Sh4RegType reg)
+	{
+		verify(IsAllocg(reg));
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->regstart==(u32)reg && all_spans[sid]->contains(current_opid))
+			{
+				verify(!all_spans[sid]->fpr);
+				verify(all_spans[sid]->nreg!=-1);
+				return all_spans[sid]->nreg;
+			}
 		}
+
+		die("map must return value\n");
+		return (nreg_t)-1;
+	}
+
+	void ReplaceSpan(nreg_t regd,  nreg_t regS)
+	{
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->nreg==regd)
+			{
+				printf("1 REG : %d  %d\n", all_spans[sid]->nreg, regS);
+				all_spans[sid]->nreg = regS;
+				printf("2 REG : %d  %d\n", all_spans[sid]->nreg, regS);
+				return;
+			}
+		}
+
+		die("replace failed\n");
 	}
 
 	nreg_t mapg(const shil_param& prm)
 	{
 		verify(IsAllocg(prm));
-		verify(prm.count() == 1);
-		return mapg(prm._reg);
+
+		if (prm.is_reg())
+		{
+			verify(prm.count()==1);
+			return mapg(prm._reg);
+		}
+		else
+		{
+			printf("REG? %d\n", prm.is_reg());
+			die("map must return value\n");
+			return (nreg_t)-1;
+		}
+	}
+
+	nregf_t mapf(Sh4RegType reg)
+	{
+		verify(IsAllocf(reg));
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->regstart==(u32)reg && all_spans[sid]->contains(current_opid))
+			{
+				verify(all_spans[sid]->fpr);
+				verify(all_spans[sid]->nregf!=-1);
+				return all_spans[sid]->nregf;
+			}
+		}
+
+		die("map must return value\n");
+		return (nregf_t)-1;
 	}
 
 	nregf_t mapf(const shil_param& prm)
 	{
 		verify(IsAllocf(prm));
-		verify(prm.count() == 1);
-		return mapf(prm._reg);
-	}
 
-	bool reg_used(nreg_t host_reg)
-	{
-		for (auto const& reg : reg_alloced)
-			if ((nreg_t)reg.second.host_reg == host_reg && !IsFloat(reg.first))
-				return true;
-		return false;
-	}
-
-	bool regf_used(nregf_t host_reg)
-	{
-		for (auto const& reg : reg_alloced)
-			if ((nregf_t)reg.second.host_reg == host_reg && IsFloat(reg.first))
-				return true;
-		return false;
-	}
-
-	void Cleanup() {
-		verify(final_opend || block->oplist.empty());
-		final_opend = false;
-		FlushAllRegs(true);
-		verify(reg_alloced.empty());
-		verify(pending_flushes.empty());
-		block = NULL;
-		host_fregs.clear();
-		host_gregs.clear();
-	}
-
-	virtual void Preload(u32 reg, nreg_t nreg) = 0;
-	virtual void Writeback(u32 reg, nreg_t nreg) = 0;
-
-	virtual void Preload_FPU(u32 reg, nregf_t nreg) = 0;
-	virtual void Writeback_FPU(u32 reg, nregf_t nreg) = 0;
-
-private:
-	struct reg_alloc {
-		u32 host_reg;
-		u16 version;
-		bool write_back;
-		bool dirty;
-	};
-
-	bool IsFloat(Sh4RegType reg)
-	{
-		return reg >= reg_fr_0 && reg <= reg_xf_15;
-	}
-
-	nreg_t mapg(Sh4RegType reg)
-	{
-		verify(reg_alloced.count(reg));
-		return (nreg_t)reg_alloced[reg].host_reg;
-	}
-
-	nregf_t mapf(Sh4RegType reg)
-	{
-		verify(reg_alloced.count(reg));
-		return (nregf_t)reg_alloced[reg].host_reg;
-	}
-
-	bool IsAllocf(Sh4RegType reg)
-	{
-		if (!IsFloat(reg))
-			return false;
-		return reg_alloced.find(reg) != reg_alloced.end();
-	}
-
-	bool IsAllocg(Sh4RegType reg)
-	{
-		if (IsFloat(reg))
-			return false;
-		return reg_alloced.find(reg) != reg_alloced.end();
-	}
-
-	bool IsAllocAny(Sh4RegType reg)
-	{
-		return IsAllocg(reg) || IsAllocf(reg);
-	}
-
-	void WriteBackReg(Sh4RegType reg_num, struct reg_alloc& reg_alloc)
-	{
-		if (reg_alloc.write_back)
+		if (prm.is_reg())
 		{
-			if (!fast_forwarding)
-			{
-				ssa_printf("WB %s.%d <- %cx", name_reg(reg_num).c_str(), reg_alloc.version, 'a' + reg_alloc.host_reg);
-				if (IsFloat(reg_num))
-					Writeback_FPU(reg_num, (nregf_t)reg_alloc.host_reg);
-				else
-					Writeback(reg_num, (nreg_t)reg_alloc.host_reg);
-			}
-			reg_alloc.write_back = false;
-			reg_alloc.dirty = false;
-		}
-	}
-
-	void FlushReg(Sh4RegType reg_num, bool hard)
-	{
-		auto reg = reg_alloced.find(reg_num);
-		if (reg != reg_alloced.end())
-		{
-			WriteBackReg(reg->first, reg->second);
-			if (hard)
-			{
-				u32 host_reg = reg->second.host_reg;
-				reg_alloced.erase(reg);
-				if (IsFloat(reg_num))
-					host_fregs.push_front((nregf_t)host_reg);
-				else
-					host_gregs.push_front((nreg_t)host_reg);
-			}
-		}
-	}
-
-	void FlushAllRegs(bool hard)
-	{
-		if (hard)
-		{
-			while (!reg_alloced.empty())
-				FlushReg(reg_alloced.begin()->first, true);
+			verify(prm.count()==1);
+			return mapf(prm._reg);
 		}
 		else
 		{
-			for (auto const& reg : reg_alloced)
-				FlushReg(reg.first, false);
+			die("map must return value\n");
+			return (nregf_t)-1;
 		}
 	}
 
-	void AllocSourceReg(const shil_param& param)
+	nregf_t mapfv(const shil_param& prm,u32 i)
 	{
-		if (param.is_reg() && param.count() == 1)	// TODO EXPLODE_SPANS?
+		verify(IsAllocf(prm,i));
+
+		if (prm.is_reg())
 		{
-			auto it = reg_alloced.find(param._reg);
-			if (it == reg_alloced.end())
+			return mapf((Sh4RegType)(prm._reg+i));
+		}
+		else
+		{
+			die("map must return value\n");
+			return (nregf_t)-1;
+		}
+	}
+	
+
+	bool IsFlushOp(DecodedBlock* block, int opid)
+	{
+		verify(opid>=0 && opid<block->oplist.size());
+		shil_opcode* op=&block->oplist[opid];
+
+		return op->op == shop_sync_fpscr || op->op == shop_sync_sr || op->op == shop_ifb;
+	}
+
+	bool IsRegWallOp(DecodedBlock* block, int opid, bool is_fpr)
+	{
+		if (IsFlushOp(block,opid))
+			return true;
+
+		shil_opcode* op=&block->oplist[opid];
+
+		return is_fpr && (op->rd.count()>=2 || op->rd2.count()>=2 || op->rs1.count()>=2 ||  op->rs2.count()>=2 || op->rs3.count()>=2 );
+	}
+
+	void InsertRegs(set<shil_param>& l, const shil_param& regs)
+	{
+		if (!explode_spans || (regs.count()==1 || regs.count()>2))
+		{
+			l.insert(regs);
+		}
+		else
+		{
+			verify(regs.type==FMT_V4 || regs.type==FMT_V2 || regs.type==FMT_F64);
+
+			for (u32 i=0; i<regs.count(); i++)
 			{
-				u32 host_reg;
-				if (param.is_r32i())
+				shil_param p=regs;
+				p.type=FMT_F32;
+				p._reg=(Sh4RegType)(p._reg+i);
+
+				l.insert(p);
+			}
+		}
+	}
+
+	RegSpan* FindSpan(Sh4RegType reg, u32 opid)
+	{
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->regstart==(u32)reg && all_spans[sid]->contains(opid))
+			{
+				return all_spans[sid];
+			}
+		}
+		die("Failed to find span");
+		return NULL;
+	}
+
+	bool IsEnding(Sh4RegType reg, u32 opid){
+		RegSpan * span = FindSpan(reg, opid);
+		return span->ending(opid);
+	}
+
+	int ManualWriteBack(Sh4RegType reg, u32 opid){
+		RegSpan * span = FindSpan(reg, opid);
+		
+		if (!span->ending(opid)) return -1;
+
+		span->writeback =  false;
+		return (span->fpr) ? span->nregf : span->nreg; 
+	}
+
+	void flush_span(u32 sid)
+	{
+		if (spans[sid]) 
+		{
+			spans[sid]->Flush();
+			spans[sid]=0;
+		}
+	}
+	void DoAlloc(DecodedBlock* block,const nreg_t* nregs_avail,const nregf_t* nregsf_avail)
+	{
+		Cleanup();
+		shil_opcode* op;
+		for (size_t opid=0;opid<block->oplist.size();opid++)
+		{
+			op=&block->oplist[opid];
+
+			/*
+			if (op->op!=shop_readm && op->op!=shop_writem && ( op->rd.is_vector() ||op->rs1.is_vector()))
+			{
+			//	__asm int 3;
+			}*/
+
+			//if (op->op != shop_readm && op->op != shop_writem && op->op != shop_jcond && op->op != shop_jdyn && op->op != shop_mov32 && op->op != shop_mov64 && (op->op != shop_add || block->addr<=0x8c0DA0BA))
+			if (IsFlushOp(block,(int)opid))
+			{
+				bool fp=false,gpr_b=false,all=false;
+
+					#define GetN(str) ((str>>8) & 0xf)
+#define GetM(str) ((str>>4) & 0xf)
+#define Mask_n_m 0xF00F
+#define Mask_n_m_imm4 0xF000
+#define Mask_n 0xF0FF
+#define Mask_none 0xFFFF
+#define Mask_imm8 0xFF00
+#define Mask_imm12 0xF000
+#define Mask_n_imm8 0xF000
+#define Mask_n_ml3bit 0xF08F
+#define Mask_nh3bit 0xF1FF
+#define Mask_nh2bit 0xF3FF
+
+				if (op->op==shop_ifb)
 				{
-					if (host_gregs.empty())
+					flush_span(reg_r0);
+					flush_span(reg_sr_T);
+					flush_span(reg_sr_status);
+					flush_span(reg_fpscr);
+
+					for (int i=reg_gbr;i<=reg_fpul;i++)
+						flush_span(i);
+
+					switch(OpDesc[op->rs3._imm]->mask)
 					{
-						SpillReg(false, true);
-						verify(!host_gregs.empty());
+					case Mask_imm8:
+						break;
+
+
+
+					case Mask_n_m:
+					case Mask_n_m_imm4:
+					case Mask_n_ml3bit:
+						flush_span(GetN(op->rs3._imm));
+						flush_span(GetM(op->rs3._imm));
+						break;
+
+					default:
+						all=true;
+						break;
 					}
-					host_reg = host_gregs.back();
-					host_gregs.pop_back();
+
+					if (op->rs3._imm>=0xF000)
+						fp=true;
+
 				}
-				else
+				else if(op->op==shop_sync_sr)
 				{
-					if (host_fregs.empty())
+					gpr_b=true;
+				}
+				else if (op->op==shop_sync_fpscr)
+				{
+					fp=true;
+				}
+
+				if (all)
+				{
+					//flush
+					for (int sid=0;sid<sh4_reg_count;sid++)
 					{
-						SpillReg(true, true);
-						verify(!host_fregs.empty());
+						if (sid<reg_fr_0 || sid>reg_xf_15)
+							flush_span(sid);
 					}
-					host_reg = host_fregs.back();
-					host_fregs.pop_back();
 				}
-				reg_alloced[param._reg] = { host_reg, param.version[0], false, false };
-				if (!fast_forwarding)
+
+				if (fp)
 				{
-					ssa_printf("PL %s.%d -> %cx", name_reg(param._reg).c_str(), param.version[0], 'a' + host_reg);
-					if (IsFloat(param._reg))
-						Preload_FPU(param._reg, (nregf_t)host_reg);
+					//flush
+					flush_span(reg_fpscr);
+					flush_span(reg_old_fpscr);
+
+					for (int sid=0;sid<16;sid++)
+					{
+						flush_span(reg_fr_0+sid);
+						flush_span(reg_xf_0+sid);
+					}
+				}
+
+				if (gpr_b)
+				{
+					//flush
+					flush_span(reg_sr_status);
+					//flush_span(reg_old_sr_status);
+
+					for (int sid=0;sid<8;sid++)
+					{
+						flush_span(reg_r0+sid);
+						flush_span(reg_r0_Bank+sid);
+					}
+				}
+
+			}
+			else
+			{
+				set<shil_param> reg_wt;
+				set<shil_param> reg_rd;
+
+				//insert regs into sets ..
+				InsertRegs(reg_wt,op->rd);
+				
+				InsertRegs(reg_wt,op->rd2);
+
+				InsertRegs(reg_rd,op->rs1);
+				
+				InsertRegs(reg_rd,op->rs2);
+
+				InsertRegs(reg_rd,op->rs3);
+
+				set<shil_param>::iterator iter=reg_wt.begin();
+				while( iter != reg_wt.end() ) 
+				{
+					if (reg_rd.count(*iter))
+					{
+						reg_rd.erase(*iter);
+						{
+							if ((*iter).is_reg())
+							{
+								//r~w
+								if ((*iter).is_r32())
+								{
+									if (spans[(*iter)._reg]==0)
+									{
+										spans[(*iter)._reg] = new RegSpan((*iter),(int)opid,AM_READWRITE);
+										all_spans.push_back(spans[(*iter)._reg]);
+									}
+									else
+									{
+										spans[(*iter)._reg]->Access((int)opid,AM_READWRITE);
+									}
+								}
+								else
+								{
+									for (u32 i=0; i<(*iter).count(); i++)
+									{
+										if (spans[(*iter)._reg+i]!=0)
+											spans[(*iter)._reg+i]->Flush();
+
+										spans[(*iter)._reg+i]=0;
+									}
+								}
+							}
+						}
+					}
 					else
-						Preload(param._reg, (nreg_t)host_reg);
+					{
+						if ((*iter).is_reg())
+						{
+							for (u32 i=0; i<(*iter).count(); i++)
+							{
+								if (spans[(*iter)._reg+i]!=0)
+								{
+									//hack//
+									//this is a bug on the current reg alloc code, affects fipr.
+									//generally, vector registers aren't treated correctly
+									//as groups of phy registers. I really need a better model
+									//to accommodate for that on the reg alloc side of things ..
+									if ((*iter).count()==1 && iter->_reg==op->rs1._reg+3)
+										spans[(*iter)._reg+i]->Flush();
+									else
+										spans[(*iter)._reg+i]->Kill();
+								}
+								spans[(*iter)._reg+i]=0;
+							}
+
+							//w
+							if ((*iter).is_r32())
+							{
+								if (spans[(*iter)._reg]!=0)
+									spans[(*iter)._reg]->Kill();
+
+								spans[(*iter)._reg]= new RegSpan((*iter),(int)opid,AM_WRITE);
+								all_spans.push_back(spans[(*iter)._reg]);
+							}
+						}
+					}
+					++iter;
+				}
+
+				iter=reg_rd.begin();
+				while( iter != reg_rd.end() ) 
+				{
+					//r
+					if ((*iter).is_reg())
+					{
+						if ((*iter).is_r32())
+						{
+							if (spans[(*iter)._reg]==0)
+							{
+								spans[(*iter)._reg] = new RegSpan((*iter),(int)opid,AM_READ);
+								all_spans.push_back(spans[(*iter)._reg]);
+							}
+							else
+							{
+								spans[(*iter)._reg]->Access((int)opid,AM_READ);
+							}
+						}
+						else
+						{
+							for (u32 i=0; i<(*iter).count(); i++)
+							{
+								if (spans[(*iter)._reg+i]!=0)
+									spans[(*iter)._reg+i]->Flush();
+
+								spans[(*iter)._reg+i]=0;
+							}
+						}
+					}
+					++iter;
+				}
+			
+				/*
+				for (int sid=0;sid<sh4_reg_count;sid++)
+				{
+					if (spans[sid]) 
+					{
+						spans[sid]->Flush();
+						spans[sid]=0;
+					}
+				}
+				*/
+			}
+
+		}
+
+		// create register lists
+		deque<nreg_t> regs;
+		deque<nregf_t> regsf;
+
+		const nreg_t* nregs=nregs_avail;
+
+		while (*nregs!=-1)
+			regs.push_back(*nregs++);
+
+		u32 reg_cc_max_g=(u32)regs.size();
+
+		const nregf_t* nregsf=nregsf_avail;
+
+		while (*nregsf!=-1)
+			regsf.push_back(*nregsf++);
+
+		u32 reg_cc_max_f=(u32)regsf.size();
+
+		
+		//Trim span count to max reg count
+		for (size_t opid=0;opid<block->oplist.size();opid++)
+		{
+			u32 cc_g=0;
+			u32 cc_f=0;
+
+			for (u32 sid=0;sid<all_spans.size();sid++)
+			{
+				if (all_spans[sid]->contains((int)opid))
+				{
+					if (all_spans[sid]->fpr)
+						cc_f++;
+					else
+						cc_g++;
+				}
+			}
+
+			SplitSpans(cc_g,reg_cc_max_g,false,(u32)opid);
+
+			SplitSpans(cc_f,reg_cc_max_f,true,(u32)opid);
+
+			if (false)
+			{
+				printf("After reduction ..\n");
+				for (u32 sid=0;sid<all_spans.size();sid++)
+				{
+					RegSpan* spn=all_spans[sid];
+
+					if (spn->contains(opid))
+						printf("\t[%c]span: %d (r%d), [%d:%d],n: %d, p: %d\n",spn->cacc(opid)?'x':' ',sid,all_spans[sid]->regstart,all_spans[sid]->start,all_spans[sid]->end,all_spans[sid]->nacc(opid),all_spans[sid]->pacc(opid));
 				}
 			}
 		}
-	}
 
-	bool NeedsWriteBack(Sh4RegType reg, u32 version)
-	{
-		for (size_t i = opnum + 1; i < block->oplist.size(); i++)
+		//Allocate the registers to the spans !
+		for (size_t opid=0;opid<block->oplist.size();opid++)
 		{
-			shil_opcode* op = &block->oplist[i];
-			// if a subsequent op needs all or some regs flushed to mem
-			// TODO we could look at the ifb op to optimize what to flush
-			if (op->op == shop_ifb)
-				return true;
-			if (op->op == shop_sync_sr && (/*reg == reg_sr_T ||*/ reg == reg_sr_status || (reg >= reg_r0 && reg <= reg_r7)
-					|| (reg >= reg_r0_Bank && reg <= reg_r7_Bank)))
-				return true;
-			if (op->op == shop_sync_fpscr && (reg == reg_fpscr || reg == reg_old_fpscr || (reg >= reg_fr_0 && reg <= reg_xf_15)))
-				return true;
-			// if reg is used by a subsequent vector op that doesn't use reg allocation
-			if (UsesReg(op, reg, version, true))
-				return true;
-			// no writeback needed if redefined
-			if (DefsReg(op, reg, true))
-				return false;
-			if (DefsReg(op, reg, false))
-				return false;
+			bool alias_mov=false;
+
+			if (block->oplist[opid].op==shop_mov32 && 
+				( 
+				(block->oplist[opid].rd.is_r32i() && block->oplist[opid].rs1.is_r32i() ) || 
+				(block->oplist[opid].rd.is_r32f() && block->oplist[opid].rs1.is_r32f() )
+				))
+			{
+				//FindSpan(block->oplist[opid].rd._reg);
+				RegSpan* x=FindSpan(block->oplist[opid].rs1._reg,(u32)opid);
+				if (0 && x->nacc_w(opid)==-1 && (x->nreg!=-1 || x->nregf!=-1) && !x->aliased)
+				{
+					RegSpan* d=FindSpan(block->oplist[opid].rd._reg,opid);
+					int nwa=d->nacc_w(opid);
+
+					if (nwa==-1 || nwa>=x->end)
+					{
+
+						verify(d->fpr==x->fpr);
+						d->nreg=x->nreg;
+						d->nregf=x->nregf;
+						//x->aliased=true;
+
+						verify(d->begining(opid) && !d->preload);
+						//verify(d->end>=x->end);
+
+						if (d->end>=x->end)
+							x->aliased=true;
+						else
+							d->aliased=true;
+
+						//printf("[%08X] rALIA %d from %d\n",spn,spn->regstart,spn->nreg);
+						alias_mov=true;
+					}
+				}
+			}
+
+			if (!alias_mov)
+			{
+				for (u32 sid=0;sid<all_spans.size();sid++)
+				{
+					RegSpan* spn=all_spans[sid];
+
+					if (spn->begining((int)opid))
+					{
+						if (spn->fpr)
+						{
+							verify(regsf.size()>0);
+							spn->nregf=regsf.back();
+							regsf.pop_back();
+						}
+						else
+						{
+							verify(regs.size()>0);
+							spn->nreg=regs.back();
+							regs.pop_back();
+
+							//printf("rALOC %d from %d\n",spn->regstart,spn->nreg);
+						}
+					}
+				}
+			}
+			for (u32 sid=0;sid<all_spans.size();sid++)
+			{
+				RegSpan* spn=all_spans[sid];
+
+				if ( spn->ending((int)opid) && !spn->aliased)
+				{
+					if (spn->fpr)
+					{
+						verify(regsf.size()<reg_cc_max_f);
+						regsf.push_front(spn->nregf);
+					}
+					else
+					{
+						verify(regs.size()<reg_cc_max_g);
+						regs.push_front(spn->nreg);
+						//printf("rFREE %d from %d\n",spn->regstart,spn->nreg);
+					}
+				}
+			}
 		}
 
-		return true;
-	}
+		verify(regs.size()==reg_cc_max_g);
+		verify(regsf.size()==reg_cc_max_f);
 
-	void AllocDestReg(const shil_param& param)
-	{
-		if (param.is_reg() && param.count() == 1)	// TODO EXPLODE_SPANS?
+	//Pipeline optimisations
+
+#if 0
+	//move spans earlier for preloading !
+#if 1
+		for (u32 sid=0;sid<all_spans.size();sid++)
 		{
-			auto it = reg_alloced.find(param._reg);
-			if (it == reg_alloced.end())
+			RegSpan* spn=all_spans[sid];
+			
+			if (spn->start==0) continue; //can't move anyway ..
+
+			//try to move beginnings backwards
+			u32 opid;
+			for (opid=spn->start;opid-->0;)
 			{
-				u32 host_reg;
-				if (param.is_r32i())
+				if (!SpanRegIntr(opid,spn->regstart) &&  ( spn->fpr ? !SpanNRegfIntr(opid,spn->nregf) : !SpanNRegIntr(opid,spn->nreg)) && !IsRegWallOp(block,opid,spn->fpr))
+					continue;
+				else
+					break;
+			}
+			opid++;
+
+			//
+			//this can cause slowdowns on aggregation of load/stores
+			//we need some slack mechanism to distribute it !
+			//<< this will for now blindly avoid >2preload/op
+			//it still slows it down so disabled
+
+			if (spn->start>opid)
+			{
+				int opid_found=-1;
+				int opid_plc=60;
+
+				int slack=spn->start-opid;
+
+				while (spn->start>opid)
 				{
-					if (host_gregs.empty())
+					if (SpanPLD(opid)<opid_plc)
 					{
-						SpillReg(false, false);
-						verify(!host_gregs.empty());
+						opid_found=opid;
+						opid_plc=SpanPLD(opid);
 					}
-					host_reg = host_gregs.back();
-					host_gregs.pop_back();
+					if (opid_found!=-1 && (spn->start-opid)<=1 && opid_plc<2)
+						break;
+					
+					opid++;
+				}
+
+				bool do_move= false;
+				
+				if (opid_found!=-1)
+				{
+					do_move=true;
+					do_move &= opid_plc<3;
+				}
+
+				if ( do_move)
+				{
+					//printf("Span PLD is movable by %d, moved by %d w/ %d!!\n",slack,spn->start-opid_found,opid_plc);
+					spn->start=opid_found;
+				}
+				/*else
+				{
+					//printf("Span PLD is movable by %d but  %d -> not moved :(\n",slack,opid_plc);
+				}*/
+			}
+		}
+#endif
+
+	//move spans later for post-saving !
+#if 0
+		u32 blk_last=block->oplist.size()-1;
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			RegSpan* spn=all_spans[sid];
+			
+			if (spn->end==blk_last) continue; //can't move anyway ..
+
+			//try to move beginnings backwards
+			u32 opid;
+			for (opid=spn->end+1;opid<=blk_last;opid++)
+			{
+				if (!SpanRegIntr(opid,spn->regstart) &&  ( spn->fpr ? !SpanNRegfIntr(opid,spn->nregf) : !SpanNRegIntr(opid,spn->nreg)) && !IsRegWallOp(block,opid,spn->fpr))
+					continue;
+				else
+					break;
+			}
+			opid--;
+
+			//
+			//this can cause slowdowns on aggregation of load/stores
+			//we need some slack mechanism to distribute it !
+			//<< this will for now blindly avoid >1preload/op
+			//it still slows it down so disabled
+
+			if (spn->end<opid)
+			{
+				int opid_found=-1;
+				int opid_plc=60;
+
+				int slack=opid-spn->end;
+
+				while (spn->end<opid)
+				{
+					if (SpanWB(opid)<opid_plc)
+					{
+						opid_found=opid;
+						opid_plc=SpanWB(opid);
+					}
+
+					if (opid_found!=-1 && (opid-spn->end)<=1 && opid_plc<2)
+						break;
+					
+					opid--;
+				}
+
+				bool do_move= false;
+
+				if (opid_found!=-1)
+				{
+					do_move=true;
+					do_move &= opid_plc<3;
+				}
+
+				if ( do_move)
+				{
+					printf("Span WB is movable by %d, moved by %d w/ %d!!\n",slack,opid_found-spn->end,opid_plc);
+					spn->end=opid_found;
 				}
 				else
 				{
-					if (host_fregs.empty())
+					printf("Span WB is movable by %d but  %d -> not moved :(\n",slack,opid_plc);
+				}
+			}
+		}
+#endif
+
+#endif
+		//printf("%d spills\n",spills);
+	}
+
+
+	void SplitSpans(u32 cc,u32 reg_cc_max ,bool fpr,u32 opid)
+	{
+		bool was_large=false;	//this control prints
+
+		while (cc>reg_cc_max)
+		{
+			if (was_large)
+				printf("Opcode: %d, %d active spans\n",opid,cc);
+
+			RegSpan* last_pacc=0;
+			RegSpan* last_nacc=0;
+
+			for (u32 sid=0;sid<all_spans.size();sid++)
+			{
+				RegSpan* spn=all_spans[sid];
+
+				if (spn->contains(opid) && fpr==spn->fpr)
+				{
+					if (!spn->cacc(opid))
 					{
-						SpillReg(true, false);
-						verify(!host_fregs.empty());
+						if (!last_nacc || spn->nacc(opid)>last_nacc->nacc(opid))
+							last_nacc=spn;
+
+						if (!last_pacc || spn->pacc(opid)<last_pacc->pacc(opid))
+							last_pacc=spn;
 					}
-					host_reg = host_fregs.back();
-					host_fregs.pop_back();
-				}
-				reg_alloced[param._reg] = { host_reg, param.version[0], NeedsWriteBack(param._reg, param.version[0]), true };
-				ssa_printf("   %s.%d -> %cx %s", name_reg(param._reg).c_str(), param.version[0], 'a' + host_reg, reg_alloced[param._reg].write_back ? "(wb)" : "");
-			}
-			else
-			{
-				reg_alloc& reg = reg_alloced[param._reg];
-				verify(!reg.write_back);
-				reg.write_back = NeedsWriteBack(param._reg, param.version[0]);
-				reg.dirty = true;
-				reg.version = param.version[0];
-			}
-			verify(reg_alloced[param._reg].dirty);
-		}
-	}
-
-	void SpillReg(bool freg, bool source)
-	{
-		Sh4RegType spilled_reg = Sh4RegType::NoReg;
-		int latest_use = -1;
-
-		for (auto const& reg : reg_alloced)
-		{
-			if (IsFloat(reg.first) != freg)
-				continue;
-			// Don't spill already spilled regs
-			bool pending = false;
-			for (auto& pending_reg : pending_flushes)
-				if (pending_reg == reg.first)
-				{
-					pending = true;
-					break;
-				}
-			if (pending)
-				continue;
-
-			// Don't spill current op scalar dest regs
-			shil_opcode* op = &block->oplist[opnum];
-			if (DefsReg(op, reg.first, false))
-				continue;
-
-			// Find the first use, but ignore vec ops
-			int first_use = -1;
-			for (size_t i = opnum + (source ? 0 : 1); i < block->oplist.size(); i++)
-			{
-				op = &block->oplist[i];
-				// Vector ops don't use reg alloc
-				if (UsesReg(op, reg.first, reg.second.version, false))
-				{
-					first_use = i;
-					break;
+					if (was_large)
+						printf("\t[%c]span: %d (r%d), [%d:%d],n: %d, p: %d\n",spn->cacc(opid)?'x':' ',sid,all_spans[sid]->regstart,all_spans[sid]->start,all_spans[sid]->end,all_spans[sid]->nacc(opid),all_spans[sid]->pacc(opid));
 				}
 			}
-			if (first_use == -1)
-			{
-				latest_use = -1;
-				spilled_reg = reg.first;
-				break;
-			}
-			if (first_use > latest_use && first_use > opnum)
-			{
-				latest_use = first_use;
-				spilled_reg = reg.first;
-			}
-		}
-		if (latest_use != -1)
-		{
-			ssa_printf("RegAlloc: non optimal alloc? reg %s used in op %d", name_reg(spilled_reg).c_str(), latest_use);
+
+			//printf("Last pacc: %d, vlen %d | reg r%d\n",last_pacc->nacc(opid)-opid,last_pacc->nacc(opid)-last_pacc->pacc(opid),last_pacc->regstart);
+			//printf("Last nacc: %d, vlen %d | reg r%d\n",last_nacc->nacc(opid)-opid,last_nacc->nacc(opid)-last_nacc->pacc(opid),last_nacc->regstart);
+
+			RegSpan* spn= new RegSpan(*last_nacc);
+			spn->start=last_nacc->nacc(opid);
+			last_nacc->end=last_nacc->pacc(opid);
+
+			//trim the access arrays as required ..
+			spn->trim_access();
+			last_nacc->trim_access();
+
+			spn->preload=spn->NeedsPL();
+			last_nacc->writeback=last_nacc->NeedsWB();
+
+			//add it to the span list !
+			all_spans.push_back(spn);
 			spills++;
-			// need to write-back if dirty so reload works
-			if (reg_alloced[spilled_reg].dirty)
-				reg_alloced[spilled_reg].write_back = true;
+			cc--;
 		}
-		verify(spilled_reg != Sh4RegType::NoReg);
+	}
 
-		if (source)
-			FlushReg(spilled_reg, true);
-		else
+	int SpanRegIntr(int opid,u32 reg)
+	{
+		verify(reg!=-1);
+		int cc=0;
+		for (u32 sid=0;sid<all_spans.size();sid++)
 		{
-			// Delay the eviction of spilled regs from the map due to dest register allocation.
-			// It's possible that the same host reg is allocated to a source operand
-			// and to the (future) dest operand. In this case we want to keep both mappings
-			// until the current op is done.
-			WriteBackReg(spilled_reg, reg_alloced[spilled_reg]);
-			u32 host_reg = reg_alloced[spilled_reg].host_reg;
-			if (IsFloat(spilled_reg))
-				host_fregs.push_front((nregf_t)host_reg);
-			else
-				host_gregs.push_front((nreg_t)host_reg);
-			pending_flushes.push_back(spilled_reg);
+			if (all_spans[sid]->regstart==reg && all_spans[sid]->contains(opid))
+				cc++;
+		}
+		return cc;
+	}
+
+	int SpanNRegIntr(int opid,nreg_t nreg)
+	{
+		verify(nreg!=-1);
+		int cc=0;
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->nreg==nreg && all_spans[sid]->contains(opid))
+				cc++;
+		}
+		return cc;
+	}
+
+	int SpanNRegfIntr(int opid,nregf_t nregf)
+	{
+		verify(nregf!=-1);
+		int cc=0;
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			if (all_spans[sid]->nregf==nregf && all_spans[sid]->contains(opid))
+				cc++;
+		}
+		return cc;
+	}
+
+	int SpanPLD(int opid)
+	{
+		int rv=0;
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			RegSpan* spn=all_spans[sid];
+
+			if (spn->preload && spn->begining(opid))
+				rv++;
+		}
+
+		return rv;
+	}
+
+	int SpanWB(int opid)
+	{
+		int rv=0;
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			RegSpan* spn=all_spans[sid];
+
+			if (spn->writeback && spn->ending(opid))
+				rv++;
+		}
+
+		return rv;
+	}
+
+	void OpBegin(shil_opcode* op,int opid)
+	{
+		current_opid=opid;
+
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			RegSpan* spn=all_spans[sid];
+
+			if (spn->begining(current_opid) && spn->preload)
+			{
+				if (spn->fpr)
+				{
+					//printf("Op %d: Preloading f%d to %d\n",current_opid,spn->regstart,spn->nregf);
+					preload_fpu++;
+					Preload_FPU(spn->regstart,spn->nregf);
+				}
+				else
+				{
+				    //printf("Op %d: Preloading r%d to %d\n",current_opid,spn->regstart,spn->nreg);
+					preload_gpr++;
+					Preload(spn->regstart,spn->nreg);
+				}
+			}
 		}
 	}
 
-	bool IsVectorOp(shil_opcode* op)
+	void OpEnd(shil_opcode* op)
 	{
-		return op->rs1.count() > 1 || op->rs2.count() > 1 || op->rs3.count() > 1 || op->rd.count() > 1 || op->rd2.count() > 1;
+		for (u32 sid=0;sid<all_spans.size();sid++)
+		{
+			RegSpan* spn=all_spans[sid];
+
+			if (spn->ending(current_opid) && spn->writeback)
+			{
+				if (spn->fpr)
+				{
+					//printf("Op %d: Writing back f%d from %d\n",current_opid,spn->regstart,spn->nregf);
+					writeback_fpu++;
+					Writeback_FPU(spn->regstart,spn->nregf);
+				}
+				else
+				{
+					//printf("Op %d: Writing back r%d from %d\n",current_opid,spn->regstart,spn->nreg);
+					writeback_gpr++;
+					Writeback(spn->regstart,spn->nreg);
+				}
+			}
+		}
 	}
 
-	bool UsesReg(shil_opcode* op, Sh4RegType reg, u32 version, bool vector)
+	void Cleanup()
 	{
-		if (op->rs1.is_reg() && reg >= op->rs1._reg && reg < (Sh4RegType)(op->rs1._reg + op->rs1.count())
-				&& version == op->rs1.version[reg - op->rs1._reg]
-				&& vector == (op->rs1.count() > 1))
-			return true;
-		if (op->rs2.is_reg() && reg >= op->rs2._reg && reg < (Sh4RegType)(op->rs2._reg + op->rs2.count())
-				&& version == op->rs2.version[reg - op->rs2._reg]
-				&& vector == (op->rs2.count() > 1))
-			return true;
-		if (op->rs3.is_reg() && reg >= op->rs3._reg && reg < (Sh4RegType)(op->rs3._reg + op->rs3.count())
-				&& version == op->rs3.version[reg - op->rs3._reg]
-				&& vector == (op->rs3.count() > 1))
-			return true;
+		writeback_gpr=writeback_fpu=0;
+		preload_gpr=preload_fpu=0;
 
-		return false;
+		for (int sid=0;sid<sh4_reg_count;sid++)
+		{
+			if (spans[sid]) 
+				spans[sid]=0;
+		}
+
+		for (size_t sid=0;sid<all_spans.size();sid++)
+			delete all_spans[sid];
+
+		all_spans.clear();
 	}
 
-	bool DefsReg(shil_opcode* op, Sh4RegType reg, bool vector)
-	{
-		if (op->rd.is_reg() && reg >= op->rd._reg && reg < (Sh4RegType)(op->rd._reg + op->rd.count())
-				&& vector == (op->rd.count() > 1))
-			return true;
-		if (op->rd2.is_reg() && reg >= op->rd2._reg && reg < (Sh4RegType)(op->rd2._reg + op->rd2.count())
-				&& vector == (op->rd2.count() > 1))
-			return true;
-		return false;
-	}
+	virtual nregf_t FpuMap(u32 reg) { return (nregf_t)-1; }
 
-	DecodedBlock* block;
-	std::deque<nreg_t> host_gregs;
-	std::deque<nregf_t> host_fregs;
-	std::vector<Sh4RegType> pending_flushes;
-	std::map<Sh4RegType, reg_alloc> reg_alloced;
-	int opnum = 0;
+	virtual void Preload(u32 reg,nreg_t nreg)=0;
+	virtual void Writeback(u32 reg,nreg_t nreg)=0;
 
-	bool final_opend = false;
-	bool fast_forwarding = false;
-public:
-	u32 spills = 0;
+	virtual void Preload_FPU(u32 reg,nregf_t nreg)=0;
+	virtual void Writeback_FPU(u32 reg,nregf_t nreg)=0;
 };

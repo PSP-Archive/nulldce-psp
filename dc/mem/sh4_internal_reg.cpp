@@ -1,5 +1,6 @@
 #include "types.h"
 #include "sh4_internal_reg.h"
+#include "../sh4/sh4_registers.h"
 
 #include "dc/mem/sh4_mem.h"
 #include "dc/aica/aica_if.h"
@@ -19,9 +20,6 @@
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
-
-//64bytes of sq
-ALIGN(64) u64 sq_buffer[64/8];
 
 //i know , its because of templates :)
 #pragma warning( disable : 4127 /*4244*/)
@@ -158,7 +156,6 @@ T FASTCALL ReadMem_P4(u32 addr)
 	case 0xE3:
 		printf("Unhandled p4 read [Store queue] 0x%x\n",addr);
 		return 0;
-		break;
 
 	case 0xF0:
 		//printf("Unhandled p4 read [Instruction cache address array] 0x%x\n",addr);
@@ -171,36 +168,26 @@ T FASTCALL ReadMem_P4(u32 addr)
 		break;
 
 	case 0xF2:
-		//printf("Unhandled p4 read [Instruction TLB address array] 0x%x\n",addr);
 		{
 			u32 entry=(addr>>8)&3;
 			return ITLB[entry].Address.reg_data | (ITLB[entry].Data.V<<8);
 		}
-		break;
 
 	case 0xF3:
-		//printf("Unhandled p4 read [Instruction TLB data arrays 1 and 2] 0x%x\n",addr);
 		{
 			u32 entry=(addr>>8)&3;
 			return ITLB[entry].Data.reg_data;
 		}
-		break;
 
 	case 0xF4:
 		{
-			//int W,Set,A;
-			//W=(addr>>14)&1;
-			//A=(addr>>3)&1;
-			//Set=(addr>>5)&0xFF;
 			//printf("Unhandled p4 read [Operand cache address array] %d:%d,%d  0x%x\n",Set,W,A,addr);
 			return 0;
 		}
-		break;
 
 	case 0xF5:
 		//printf("Unhandled p4 read [Operand cache data array] 0x%x",addr);
 		return 0;
-		break;
 
 	case 0xF6:
 		//printf("Unhandled p4 read [Unified TLB address array] 0x%x\n",addr);
@@ -521,16 +508,16 @@ T FASTCALL ReadMem_area7(u32 addr)
 template <u32 sz,class T>
 void FASTCALL WriteMem_area7(u32 addr,T data)
 {
-	/*if (likely(addr==0xFF000038))
+	if (likely(addr==0xFF000038))
 	{
-		CCN_QACR_write<0>(addr& 0xFF,data);
-		//return;
+		CCN_QACR_write<0>(data);
+		return;
 	}
 	else if (likely(addr==0xFF00003C))
 	{
-		CCN_QACR_write<1>(addr& 0xFF,data);
-		//return;
-	}	*/
+		CCN_QACR_write<1>(data);
+		return;
+	}
 
 	addr&=0x1FFFFFFF;
 	u32 map_base=addr>>16;
@@ -696,48 +683,21 @@ void FASTCALL WriteMem_area7(u32 addr,T data)
 template <u32 sz,class T>
 T FASTCALL ReadMem_area7_OCR_T(u32 addr)
 {
-	if (CCN_CCR.ORA)
-	{
-		if (sz==1)
-			return (T)OnChipRAM[addr&OnChipRAM_MASK];
-		else if (sz==2)
-			return (T)*(u16*)&OnChipRAM[addr&OnChipRAM_MASK];
-		else if (sz==4)
-			return (T)*(u32*)&OnChipRAM[addr&OnChipRAM_MASK];
-		else
-		{
-			printf("ReadMem_area7_OCR_T: template SZ is wrong = %d\n",sz);
-			return 0xDE;
-		}
-	}
-	else
-	{
-		printf("On Chip Ram Read ; but OCR is disabled\n");
-		return 0xDE;
-	}
+	if (CCN_CCR.ORA == 1)
+		return *(T *)&OnChipRAM[addr & OnChipRAM_MASK];
+
+	//INFO_LOG(SH4, "On Chip Ram Read, but OCR is disabled. addr %x", addr);
+	return 0;
 }
 
 //Write OCR
 template <u32 sz,class T>
 void FASTCALL WriteMem_area7_OCR_T(u32 addr,T data)
 {
-	if (CCN_CCR.ORA)
-	{
-		if (sz==1)
-			OnChipRAM[addr&OnChipRAM_MASK]=(u8)data;
-		else if (sz==2)
-			*(u16*)&OnChipRAM[addr&OnChipRAM_MASK]=(u16)data;
-		else if (sz==4)
-			*(u32*)&OnChipRAM[addr&OnChipRAM_MASK]=data;
-		else
-		{
-			printf("WriteMem_area7_OCR_T: template SZ is wrong = %d\n",sz);
-		}
-	}
-	else
-	{
-		printf("On Chip Ram Write ; but OCR is disabled\n");
-	}
+	if (CCN_CCR.ORA == 1)
+		*(T *)&OnChipRAM[addr & OnChipRAM_MASK] = data;
+	/*else
+		INFO_LOG(SH4, "On Chip Ram Write, but OCR is disabled. addr %x", addr);*/
 }
 
 

@@ -39,6 +39,8 @@ public:
 	void Setup(u32 rpc);
 
 	bool contains_fpu_op = false;
+	bool contains_writeMem = false;
+	bool contains_readMem = false;
 
 	u32 start;	//entry point, the block may be non-linear in memory
 	u32 cycles;
@@ -49,7 +51,7 @@ public:
 
 	u32 sh4_code_size;
 
-	u8 _regUsed[8] {255};
+	bool UseSRA = false;
 
 	BlockEndType BlockType;
 	vector<shil_opcode> oplist;

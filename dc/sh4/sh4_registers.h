@@ -10,7 +10,7 @@ struct Sh4Context
 
 	u32 r_bank[8];
 
-	u32  mem_lut[255];
+	ALIGN(64) u64 sq_buffer[64/8];
 
 	u32 gbr,ssr,spc,sgr,dbr,vbr;
 	u32 pr,fpul;
@@ -69,6 +69,8 @@ extern ALIGN(64) Sh4Context Sh4cntx;
 #define xf_hex ((u32*)xf)
 #define dr_hex ((u64*)fr)
 #define xd_hex ((u64*)xf)
+
+#define sq_both ((u8*)Sh4cntx.sq_buffer)
 
 
 

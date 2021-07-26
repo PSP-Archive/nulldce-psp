@@ -192,6 +192,7 @@ void constprop(DecodedBlock* blk)
 void sq_pref(DecodedBlock* blk, int i, Sh4RegType rt, bool mark)
 {
 	u32 data=0;
+
 	for (int c=i-1;c>0;c--)
 	{
 		if (blk->oplist[c].op==shop_writem && blk->oplist[c].rs1._reg==rt)
@@ -199,10 +200,15 @@ void sq_pref(DecodedBlock* blk, int i, Sh4RegType rt, bool mark)
 			if (blk->oplist[c].rs2.is_r32i() ||  blk->oplist[c].rs2.is_r32f() || blk->oplist[c].rs2.is_r64f() || blk->oplist[c].rs2.is_r32fv())
 			{
 				data+=blk->oplist[c].flags;
+				if (mark){
+					blk->oplist[c].flags2=0x1337;
+				}
 			}
-			else
+			else{
 				break;
+			}
 		}
+
 
 		if (blk->oplist[c].op==shop_pref || (blk->oplist[c].rd.is_reg() && blk->oplist[c].rd._reg==rt && blk->oplist[c].op!= shop_sub))
 		{
@@ -231,7 +237,7 @@ void sq_pref(DecodedBlock* blk)
 {
 	for (int i=0;i<blk->oplist.size();i++)
 	{
-		//blk->oplist[i].flags2=0;
+		blk->oplist[i].flags2=0;
 		if (blk->oplist[i].op==shop_pref)
 			sq_pref(blk,i,blk->oplist[i].rs1._reg,false);
 	}
@@ -351,13 +357,20 @@ void ConstPropPass(DecodedBlock* block)
 			shil_opcode& op = block->oplist[opnum];
 
 			/*if (op.op == shop_add){
-				if(CheckConst(op.rs1) && (CheckConst(op.rs2))){
-					u32 val1 = constprop_values.find(RegValue(op.rs1))->second;
-					u32 val2 = constprop_values.find(RegValue(op.rs2))->second;
+				if(CheckConst(op.rd) && (CheckConst(op.rs2))){
+					auto val1 = constprop_values.find(RegValue(op.rd))->second;
+					auto val2 = constprop_values.find(RegValue(op.rs2))->second;
 
-					ReplaceByMov32(op,val1 + val2);
-					printf("HJKHKJHKHKHK\n");
-				}*/
+					if (is_s16(val1) && is_s16(val2)){
+
+						printf("val1: %d val2: %d\n",val1,val2);
+
+						ReplaceByMov32(op,(val1 + val2));
+						printf("HJKHKJHKHKHK\n");
+					}
+					//die("suca");
+				}
+			}*/
 
 			// TODO do shop_sub and others
 			/*if (op.op != shop_setab && op.op != shop_setae && op.op != shop_setgt && op.op != shop_setge && op.op != shop_sub && op.op != shop_fsetgt
@@ -368,7 +381,7 @@ void ConstPropPass(DecodedBlock* block)
 			if (op.op != shop_fmac && op.op != shop_adc)
 				ConstPropOperand(op.rs3);*/
 				
-			if (op.op == shop_ifb)
+			/*if (op.op == shop_ifb)
 			{
 				constprop_values.clear();
 			}
@@ -395,7 +408,7 @@ void ConstPropPass(DecodedBlock* block)
 						it++;
 				}
 			}
-			else if (op.op == shop_readm || op.op == shop_writem)
+			else */if (op.op == shop_readm || op.op == shop_writem)
 			{
 				if (op.rs1.is_imm())
 				{
@@ -612,7 +625,7 @@ void DOPT(DecodedBlock* blk)
 	printf("\nBlock: %d affecter regs %d c\n",REMOVED_OPS,blk->cycles);
 }
 
-u8 reg[16] {0};
+/*u8 reg[16] {0};
 u8 otherReg = 0;
 void UpdateRegStatus(u32 _reg){
 	if (_reg >= 0 && _reg < 16){
@@ -628,7 +641,7 @@ void PrintRegStatus(){
 	}
 	printf("Other reg: %d\n",otherReg);
 	otherReg = 0;
-}
+}*/
 
 
 
@@ -660,6 +673,7 @@ void makeDirty(u8 _reg){
 }
 
 bool reg_optimizzation = false;
+bool _SRA = true;
 
 //Simplistic Write after Write without read pass to remove (a few) dead opcodes
 //Seems to be working
@@ -667,12 +681,11 @@ void AnalyseBlock(DecodedBlock* blk)
 {
 	sq_pref(blk);
 
-	if (!reg_optimizzation || blk->oplist.size() < 2) return;
+	blk->UseSRA = _SRA;
 
 	constprop(blk);
 	
 	memset(reg_versions, 0, sizeof(reg_versions));
-	//memset(dirtyMipsRegs, 0, sizeof(dirtyMipsRegs));
 
 	for (shil_opcode& op : blk->oplist)
 	{
@@ -685,113 +698,98 @@ void AnalyseBlock(DecodedBlock* blk)
 	
 	ConstPropPass(blk);
 
-	//SimplifyExpressionPass(blk);
-
 	srt_waw(blk);
 
 
 	int regnum = 0;
-	#if 0
-	//Register optimizer
-	for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++){
-		shil_opcode& op = blk->oplist[opnum];
 
-		UsedStaticRegister = false;
-
-		//check if we can use caller free register instead of callee
-		if (op.rs1.is_reg()) op.psp_rs1 = MapRegister(blk, op.rs1._reg, psp_a0);
-		if (op.rs2.is_reg()) op.psp_rs2 = MapRegister(blk, op.rs2._reg, psp_a1);
-		if (op.rs3.is_reg()) op.psp_rs3 = MapRegister(blk, op.rs3._reg, psp_a2);
-
-		if (op.rd.is_reg())  op.psp_rd  = MapRegister(blk, op.rd._reg,  255);
-		if (op.rd2.is_reg()) op.psp_rd2 = MapRegister(blk, op.rd2._reg, 255);
-
-		//Functions specific optimization
-		/* ..... TODO ...... */
-		//if (op.rd._reg == next_op.rs1._reg) 
-	}
-	#endif
 	#if 1
 
 	//Special case
 
-	//printf("BEFORE: %d\n", (int)blk->oplist.size());
 
-	for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
-	{
-		shil_opcode& op = blk->oplist[opnum];
-		shil_opcode& next_op = blk->oplist[opnum + 1];
+	/*for (int zz = 0; zz < 2; zz++)*/ {
 
-		//printf("%d :: %d -> %d\n", op.op , next_op.op, opnum);
+		//printf("BEFORE: %d\n", (int)blk->oplist.size());
 
-		if (op.op == shop_shl && next_op.op == shop_shl) {
-			if (op.rd._reg == next_op.rs1._reg){
-				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-				op.rd._reg = next_op.rd._reg;
-				blk->oplist.erase(blk->oplist.begin()+opnum+1);
-				opnum--;
+		for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
+		{
+			shil_opcode& op = blk->oplist[opnum];
+			shil_opcode& next_op = blk->oplist[opnum + 1];
+
+			//printf("%d :: %d -> %d\n", op.op , next_op.op, opnum);
+
+			if (op.op == shop_shl && next_op.op == shop_shl) {
+				if (op.rd._reg == next_op.rs1._reg){
+					op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
+					op.rd._reg = next_op.rd._reg;
+					blk->oplist.erase(blk->oplist.begin()+opnum+1);
+					opnum--;
+				}
+				continue;
 			}
-			continue;
-		}
 
-		if (op.op == shop_shr && next_op.op == shop_shr) {
-			if (op.rd._reg == next_op.rs1._reg){
-				op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-				op.rd._reg = next_op.rd._reg;
-				blk->oplist.erase(blk->oplist.begin()+opnum+1); 
-				opnum--;
+			if (op.op == shop_shr && next_op.op == shop_shr) {
+				if (op.rd._reg == next_op.rs1._reg){
+					op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
+					op.rd._reg = next_op.rd._reg;
+					blk->oplist.erase(blk->oplist.begin()+opnum+1); 
+					opnum--;
+				}
+				continue;
 			}
-			continue;
-		}
 
-		if (op.op == shop_mov32  && next_op.op == shop_mov32 && op.rd._reg == next_op.rd._reg && !(op.rs1._reg == next_op.rs1._reg)){
-			blk->oplist.erase(blk->oplist.begin()+opnum); 
-			opnum--;
-			continue;
-		}
-
-		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_sub && op.rd._reg == next_op.rs1._reg){
-			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm - next_op.rs2._imm);
-			next_op.op = shop_mov32;
-			blk->oplist.erase(blk->oplist.begin()+opnum); 
-			opnum--;
-			continue;
-		}
-
-		if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_shl && op.rd._reg == next_op.rs1._reg){
-			next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm << next_op.rs2._imm);
-			next_op.op = shop_mov32;
-			blk->oplist.erase(blk->oplist.begin()+opnum); 
-			opnum--;
-			continue;
-		}
-
-		if (op.op == shop_mov32  && next_op.op == shop_readm)
-			if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm() && op.rd._reg == next_op.rd._reg){
-				next_op.rs1._reg = op.rs1._reg;
+			if (op.op == shop_mov32  && next_op.op == shop_mov32 && op.rd._reg == next_op.rd._reg){
 				blk->oplist.erase(blk->oplist.begin()+opnum); 
 				opnum--;
 				continue;
 			}
 
-		if (op.op == shop_mov32  && supportednoSave(next_op))
-			if (op.rd._reg == next_op.rs1._reg && op.rd._reg == next_op.rd._reg && !op.rs1.is_imm()){
-				next_op.rs1._reg = op.rs1._reg;
+			if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_sub && op.rd._reg == next_op.rs1._reg){
+				next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm - next_op.rs2._imm);
+				next_op.op = shop_mov32;
 				blk->oplist.erase(blk->oplist.begin()+opnum); 
 				opnum--;
 				continue;
 			}
 
-		if (op.op == shop_mov32  && next_op.op == shop_writem)
-			if (!next_op.rs3.is_imm() && next_op.rs3._reg == op.rd._reg && !op.rs1.is_imm()){
-				next_op.rs3._reg = op.rs1._reg;
+			if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_shl && op.rd._reg == next_op.rs1._reg){
+				next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm << next_op.rs2._imm);
+				next_op.op = shop_mov32;
 				blk->oplist.erase(blk->oplist.begin()+opnum); 
 				opnum--;
 				continue;
 			}
+
+			if (op.op == shop_mov32  && next_op.op == shop_readm)
+				if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm() && op.rd._reg == next_op.rd._reg){
+					next_op.rs1._reg = op.rs1._reg;
+					blk->oplist.erase(blk->oplist.begin()+opnum); 
+					opnum--;
+					continue;
+				}
+
+			if (op.op == shop_mov32  && supportednoSave(next_op))
+				if (op.rd._reg == next_op.rs1._reg && op.rd._reg == next_op.rd._reg && !op.rs1.is_imm()){
+					next_op.rs1._reg = op.rs1._reg;
+					blk->oplist.erase(blk->oplist.begin()+opnum); 
+					opnum--;
+					continue;
+				}
+
+			if (op.op == shop_mov32  && next_op.op == shop_writem)
+				if (!next_op.rs3.is_imm() && next_op.rs3._reg == op.rd._reg && !op.rs1.is_imm()){
+					next_op.rs3._reg = op.rs1._reg;
+					blk->oplist.erase(blk->oplist.begin()+opnum); 
+					opnum--;
+					continue;
+				}
+		}
+
+		//printf("After: %d\n", (int)blk->oplist.size());
 	}
 
-	//printf("After: %d\n", (int)blk->oplist.size());
+	if (blk->UseSRA || !reg_optimizzation) return;
 
 	/*for (int opnum = 0; opnum < (int)blk->oplist.size() - 2; opnum++)
 	{
@@ -850,12 +848,9 @@ void AnalyseBlock(DecodedBlock* blk)
 
 		if (fpu_op) { continue; }
 
-		if (op.op == shop_mov32  && next_op.op == shop_mov32){
+		
 
-			if (op.rs1._reg == next_op.rs1._reg && op.loadReg == false){
-				next_op.loadReg = false;
-				continue;
-			}
+		if (op.op == shop_mov32  && next_op.op == shop_mov32){
 
 			if (blk->oplist[opnum + 2].op == shop_mov32){  
 				if (op.rd._reg == blk->oplist[opnum + 2].rs1._reg && !blk->oplist[opnum + 2].rs1.is_imm() && !op.rs1.is_imm()){
@@ -872,6 +867,14 @@ void AnalyseBlock(DecodedBlock* blk)
 					opnum+=2;
 					continue;
 				}
+			}
+
+			if (op.rd._reg == next_op.rs1._reg && op.loadReg == false){
+				next_op.loadReg = false;
+			}
+
+			if (op.rs1._reg == next_op.rs1._reg && op.loadReg == false){
+				next_op.loadReg = false;
 			}
 
 			if (!op.UseCustomReg){

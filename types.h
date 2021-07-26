@@ -172,14 +172,14 @@ using namespace std;
 
 #define VER_EMUNAME		"nullDC|Reicast/" VER_TARGET
 
-#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " beta 2 (built " __DATE__ "@" __TIME__ ")"
+#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " beta 3 (built " __DATE__ "@" __TIME__ ")"
 #define VER_SHORTNAME	VER_EMUNAME " " PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) "p1"
 
 #define dbgbreak {__debugbreak(); for(;;);}
 #define _T(x) x
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
-#define verify(x) if(/*unlikely((x)==false)*/0){ msgboxf(_T("Verify Failed  : ") #x "\n in %s -> %s : %d \n",MBX_ICONERROR,_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
+#define verify(x) //if(/*unlikely((x)==false)*/0){ msgboxf(_T("Verify Failed  : ") #x "\n in %s -> %s : %d \n",MBX_ICONERROR,_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
 #define die(reason) { msgboxf(_T("Fatal error : %s\n in %s -> %s : %d \n"),MBX_ICONERROR,_T(reason),_T(__FUNCTION__),_T(__FILE__),__LINE__); dbgbreak;}
 #define fverify verify
 

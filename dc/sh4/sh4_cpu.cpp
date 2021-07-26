@@ -6,11 +6,12 @@
 //All non fpu opcodes :)
 #include "types.h"
 
+#include "sh4_registers.h"
+
 
 #include "dc/pvr/pvr_if.h"
 #include "sh4_interpreter.h"
 #include "dc/mem/sh4_mem.h"
-#include "dc/mem/sh4_internal_reg.h"
 #include "sh4_registers.h"
 #include "sh4_interpreter.h"
 #include "ccn.h"

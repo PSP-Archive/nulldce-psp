@@ -18,7 +18,7 @@ void ME_End();
 void InitFunction(fun _fun, int arg);
 void StartFunction();
 
-void MeDcacheWritebackInvalidateAll();
+void MeDcacheWritebackInvalidateAll(bool sync);
 
 struct me_struct* mei;
 

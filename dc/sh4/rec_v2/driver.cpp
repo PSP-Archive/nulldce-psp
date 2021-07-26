@@ -276,7 +276,7 @@ void recSh4_Init()
 
 #endif
 
-	#define ADDR_8BIT(psp_base_addr, sh4_base_addr, sh_size,sz) ((addr % sz) >> 21) & 255
+	/*#define ADDR_8BIT(psp_base_addr, sh4_base_addr, sh_size,sz) ((addr % sz) >> 21) & 255
 	#define ADDR_32BIT(psp_base_addr, sh4_base_addr, sh_size,sz) psp_base_addr + ((sh4_base_addr - sh_size) % sz)
 
 	for (int i = 0x00000000; i < 0x00800000; i+= 0x200000) Sh4cntx.mem_lut[i/0x200000] =  ADDR_32BIT(0x0B800000, i, 0, ARAM_SIZE);
@@ -292,7 +292,7 @@ void recSh4_Init()
 	for (int i = 0; i < 256; i++){
 		fprintf(f,"SH addr: %x --> PSP Mapped: %x\n", (i * 0x200000),Sh4cntx.mem_lut[i]);
 	}
-	fclose(f);
+	fclose(f);*/
 
 	/*#define Unused_ADDR 0x0B800000
 	#define ARAM_ADDR   0x0B800000

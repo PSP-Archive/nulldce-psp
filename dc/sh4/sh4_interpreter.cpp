@@ -201,19 +201,32 @@ extern void aica_periodical(u32 cycl);
 //448 Cycles (fixed)
 int FASTCALL UpdateSystem()
 {
-	/*__asm__ 
+	/*
+	__asm__
 	(
-		"LW             $16, 0(%1)			\n"
-		"ANDI			$5, $16, 0x7		\n"
-		"BLTZ			$5, _NoMUpdate		\n"
-		"ADDIU			$5, $0, 448			\n"
-		"JAL			MediumUpdate		\n"
-		"NOP								\n"
-		"_NoMUpdate:						\n"
-		"NOP								\n"
-		: "+m"(update_cnt)
-		: "r"(late_hack), "r"(Sh4cntx.interrupt_pend)
-	);*/
+		".set noat							\n"  
+		".set	  noreorder					\n"
+
+		"LW             $2,  %0				\n"
+		"ADDIU          $2, $2, -448		\n"
+		"BGTZ			$2, _NoTICK			\n"
+		"SW				$2,  %0				\n"
+		
+		"ADDIU          $29, $29, -4		\n"
+		"SW				$31, $29			\n"
+		"JAL			sh4_sched_tick		\n"
+		"ADDIU			$4, $0, 448			\n"
+		"ADDIU          $29, $29, 4			\n"
+		"LW             $31, $29			\n"
+
+		"_NoTICK:							\n"
+		"JR             $31					\n"
+		"LW             $1, %1				\n"
+
+		: "+m"(Sh4cntx.sh4_sched_next)
+		: "m"(Sh4cntx.interrupt_pend)
+	);
+	*/
 
 	Sh4cntx.sh4_sched_next -= SH4_TIMESLICE;
     if (Sh4cntx.sh4_sched_next < 0)

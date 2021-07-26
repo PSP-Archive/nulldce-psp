@@ -37,11 +37,7 @@ void do_pvr_dma()
 		printf("\n!\tDMAC: DMAOR has invalid settings (%X) !\n", dmaor);
 		return;
 	}
-	if(unlikely(len & 0x1F)) 
-	{
-		printf("\n!\tDMAC: SB_C2DLEN has invalid size (%X) !\n", len);
-		return;
-	}
+
 
 	if (SB_PDDIR)
 	{
@@ -54,11 +50,11 @@ void do_pvr_dma()
       WriteMemBlock_nommu_dma(dst,src,len);
 	}
 
-	DMAC_SAR[0] = (src + len);
-	DMAC_CHCR[0].full &= 0xFFFFFFFE;
-	DMAC_DMATCR[0] = 0x00000000;
+	DMAC_SAR[0] = src + len;
+	DMAC_CHCR[0].TE = 1;
+	DMAC_DMATCR[0] = 0x0;
 
-	SB_PDST = 0x00000000;
+	SB_PDST = 0x0;
 
 	//TODO : *CHECKME* is that ok here ? (i think it is, fixes shuffle)
 	asic_RaiseInterrupt(holly_PVR_DMA);
@@ -97,29 +93,28 @@ void pvr_do_sort_dma()
 {
 
 	SB_SDDIV=0;//index is 0 now :)
-	u32 link_addr=calculate_start_link_addr();
-	u32 link_base_addr = SB_SDBAAW & ~31;
+	u32 link_addr = calculate_start_link_addr();
 
-	while (link_addr!=1)
+	while (link_addr != 2)
 	{
-		if (SB_SDLAS==1)
-			link_addr*=32;
+		if (SB_SDLAS == 1)
+			link_addr *= 32;
+		else
+			link_addr &= ~31;
 
-		u32 ea=(link_base_addr+link_addr) & RAM_MASK;
-		u32* ea_ptr=(u32*)&mem_b[ea];
+		u32 ea = (SB_SDBAAW + link_addr) & RAM_MASK;
+		u32* ea_ptr = (u32 *)&mem_b[ea];
 
-		link_addr=ea_ptr[0x1C>>2];//Next link
+		link_addr = ea_ptr[0x1C >> 2];//Next link
 		//transfer global param
-		libPvr_TaDMA(ea_ptr,ea_ptr[0x18>>2]);
-		if (link_addr==2)
-		{
-			link_addr=calculate_start_link_addr();
-		}
+		libPvr_TaDMA(ea_ptr, ea_ptr[0x18 >> 2]);
+		if (link_addr == 1)
+			link_addr = calculate_start_link_addr();
 	}
 
-	//end of dma :)
-	SB_SDST=0;
-	//SB_SDSTAW += 32;
+	// End of DMA
+	SB_SDST = 0;
+	SB_SDSTAW += 32;
 	asic_RaiseInterrupt(holly_PVR_SortDMA);
 }
 

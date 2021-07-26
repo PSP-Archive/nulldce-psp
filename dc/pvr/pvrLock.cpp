@@ -47,6 +47,28 @@ u32 vramlock_ConvOffset64toOffset32(u32 offset64)
  
 		return t;
 }
+
+//Convert offset32 to offset64
+u32 vramlock_ConvOffset32toOffset64(u32 offset32)
+{
+	//64b wide bus is archevied by interleaving the banks every 32 bits
+	//so bank is Address<<3
+	//bits <4 are <<1 to create space for bank num
+	//bank 0 is mapped at 400000 (32b offset) and after
+	const u32 bank_bit=VRAM_MASK-(VRAM_MASK/2);
+	const u32 static_bits=(VRAM_MASK-(bank_bit*2)+1)|3;
+	const u32 moved_bits=VRAM_MASK-static_bits-bank_bit;
+
+	u32 bank=(offset32&bank_bit)/bank_bit*4;//bank will be used as uper offset too
+	u32 lv=offset32&static_bits; //these will survive
+	offset32&=moved_bits;
+	offset32<<=1;
+	//       |inbank offset    |       bank id        | lower 2 bits (not changed)
+	u32 rv=  offset32 + bank                  + lv;
+
+	return rv;
+}
+
 //Convert Sh4 address to vram_64 offset
 u32 vramlock_ConvAddrtoOffset64(u32 Address)
 {
@@ -56,17 +78,7 @@ u32 vramlock_ConvAddrtoOffset64(u32 Address)
 	}
 	else
 	{
-		//64b wide bus is archevied by interleaving the banks every 32 bits
-		//so bank is Address<<3
-		//bits <4 are <<1 to create space for bank num
-		//bank 0 is mapped at 400000 (32b offset) and after
-		u32 bank=((Address>>22)&0x1)<<2;//bank will be used as uper offset too
-		u32 lv=Address&0x3; //these will survive
-		Address<<=1;
-		//       |inbank offset    |       bank id        | lower 2 bits (not changed)
-		u32 rv=  (Address&(VRAM_MASK-7))|bank                  | lv;
- 
-		return rv;
+		return vramlock_ConvOffset32toOffset64(Address);
 	}
 }
 //Convert offset32 to offset64
@@ -85,21 +97,6 @@ u32 vramlock_ConvOffset32toOffset642(u32 offset32)
 		
 		//       upper_value | inbank offset| bank id | lower 2 bits (not changed)
 		u32 rv=  uv			 |(mv<<1)		| bank    | lv;
- 
-		return rv;
-}
-
-u32 vramlock_ConvOffset32toOffset64(u32 offset32)
-{
-		//64b wide bus is archevied by interleaving the banks every 32 bits
-		//so bank is Address<<3
-		//bits <4 are <<1 to create space for bank num
-		//bank 0 is mapped at 400000 (32b offset) and after
-		u32 bank=((offset32>>22)&0x1)<<2;//bank will be used as uper offset too
-		u32 lv=offset32&0x3; //these will survive
-		offset32<<=1;
-		//       |inbank offset    |       bank id        | lower 2 bits (not changed)
-		u32 rv=  (offset32&(VRAM_MASK-7))|bank                  | lv;
  
 		return rv;
 }

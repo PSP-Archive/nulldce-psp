@@ -9,7 +9,7 @@
 #include "blockmanager.h"
 
 
-#define CODE_SIZE   (8*1024*1024)
+#define CODE_SIZE   (6*1024*1024)
 
 
 #if HOST_OS==OS_LINUX

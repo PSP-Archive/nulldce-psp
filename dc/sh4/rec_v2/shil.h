@@ -142,12 +142,10 @@ struct shil_param
 
 struct shil_opcode
 {
-	u8  psp_rd = 0,  psp_rd2 = 0;
-	u8  psp_rs1 = 0, psp_rs2 = 0, psp_rs3 = 0;
-
 	shilop op;
 	u32 Flow;
 	u32 flags;
+	u32 flags2;
 
 	bool loadReg = true;
 	bool SwapReg = false;

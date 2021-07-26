@@ -182,31 +182,28 @@ void term_mem()
 //00803000~00807FFF @DSP_DATA 
 
 //Force alignment for read/writes to mem
-#define ACCESS_MASK (ARAM_SIZE-(sz))
+#define ACCESS_MASK (ARAM_SIZE-(1))
 
 template<int sz,typename T>
 T ReadMemArm(u32 addr)
 {
-
-	T rv;
-
 	addr&=0x00FFFFFF;
 	if (addr<0x800000)
 	{
-		rv = *(T*)&aica_ram.data[addr&ACCESS_MASK];
-	}
-	else
-	{
-		rv = arm_ReadReg<sz,T>(addr);
-	}
+		T rv=*(T*)&aica_ram[addr&(ARAM_MASK-(sz-1))];
 		
-	if (unlikely(sz == 4 && addr & 3))
-	{
-		u32 sf = (addr & 3) * 8;
-		return (rv >> sf) | (rv << (32 - sf));
+		if (unlikely(sz==4 && addr&3))
+		{
+			u32 sf=(addr&3)*8;
+			return (rv>>sf) | (rv<<(32-sf));
+		}
+		else
+			return rv;
 	}
 	else
-		return rv;
+	{
+		return arm_ReadReg<sz,T>(addr);
+	}
 }
 
 template<int sz,typename T>
@@ -215,7 +212,7 @@ void WriteMemArm(u32 addr,T data)
 	addr&=0x00FFFFFF;
 	if (addr<0x800000)
 	{
-		*(T*)&aica_ram.data[addr&ACCESS_MASK]=data;
+		*(T*)&aica_ram[addr&(ARAM_MASK-(sz-1))]=data;
 	}
 	else
 	{
