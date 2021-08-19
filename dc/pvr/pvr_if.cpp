@@ -6,13 +6,27 @@
 #include "dc/mem/sh4_mem.h"
 #include "dc/sh4/sh4_registers.h"
 
-#include "plugs/drkPvr/threaded.h"
+#include "plugs/drkPvr/regs.h"
 
 //TODO : move code later to a plugin
 //TODO : Fix registers arrays , they must be smaller now doe to the way SB registers are handled
 #include "plugins/plugin_manager.h"
 #include "dc/asic/asic.h"
 
+u32 fb1_watch_addr_start;
+u32 fb1_watch_addr_end;
+u32 fb2_watch_addr_start;
+u32 fb2_watch_addr_end;
+bool fb_dirty;
+
+void pvr_update_framebuffer_watches()
+{
+    u32 fb_size = (FB_R_SIZE.fb_y_size + 1) * (FB_R_SIZE.fb_x_size + FB_R_SIZE.fb_modulus) * 4;
+    fb1_watch_addr_start = FB_R_SOF1 & VRAM_MASK;
+    fb1_watch_addr_end = fb1_watch_addr_start + fb_size;
+    fb2_watch_addr_start = FB_R_SOF2 & VRAM_MASK;
+    fb2_watch_addr_end = fb2_watch_addr_start + fb_size;
+}
 
  
 //YUV converter code :)
@@ -44,18 +58,18 @@ void YUV_init()
 
 	YUV_dest=pvr_readreg_TA(0x5F8148,4)&VRAM_MASK;//TODO : add the masking needed
 	YUV_doneblocks=0;
-	u32 TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
-	YUV_blockcount=(((TA_YUV_TEX_CTRL>>0)&0x3F)+1)*(((TA_YUV_TEX_CTRL>>8)&0x3F)+1);
+	u32 _TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
+	YUV_blockcount=(((_TA_YUV_TEX_CTRL>>0)&0x3F)+1)*(((_TA_YUV_TEX_CTRL>>8)&0x3F)+1);
 
-	if ((TA_YUV_TEX_CTRL>>16 )&1)
+	if ((_TA_YUV_TEX_CTRL>>16 )&1)
 	{	//w00t ?
 		YUV_x_size=16;
 		YUV_y_size=16;
 	}
 	else
 	{	//yesh!!!
-		YUV_x_size=(((TA_YUV_TEX_CTRL>>0)&0x3F)+1)*16;
-		YUV_y_size=(((TA_YUV_TEX_CTRL>>8)&0x3F)+1)*16;
+		YUV_x_size=(((_TA_YUV_TEX_CTRL>>0)&0x3F)+1)*16;
+		YUV_y_size=(((_TA_YUV_TEX_CTRL>>8)&0x3F)+1)*16;
 	}
 }
 
@@ -86,13 +100,13 @@ INLINE u8 GetUV420(int x, int y,u8* base)
 }
 INLINE void YUV_ConvertMacroBlock(u8* datap)
 {
-	u32 TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
+	u32 _TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
 
 	//do shit
 	YUV_doneblocks++;
 	YUV_index=0;
 
-	int block_size=(TA_YUV_TEX_CTRL & (1<<24))==0?384:512;
+	int block_size=(_TA_YUV_TEX_CTRL & (1<<24))==0?384:512;
 
 	//YUYV
 	if (block_size==384)
@@ -148,11 +162,11 @@ void YUV_data(u32* data , u32 count)
 		YUV_init();
 	}
 	//u32 TA_YUV_TEX_BASE=pvr_readreg_TA(0x5F8148,4);
-	u32 TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
+	u32 _TA_YUV_TEX_CTRL=pvr_readreg_TA(0x5F814C,4);
 
 
 	//YUV420 is 384 bytes , YUV422 is 512 bytes
-	u32 block_size=(TA_YUV_TEX_CTRL & (1<<24))==0?384:512;
+	u32 block_size=(_TA_YUV_TEX_CTRL & (1<<24))==0?384:512;
 	
 	count*=32;
 	while(count>0)
@@ -204,30 +218,6 @@ void pvr_writereg_TA(u32 addr,u32 data,u32 sz)
 
 //vram 32-64b
 
-//read
-u8 FASTCALL pvr_read_area1_8(u32 addr)
-{
-	printf("8 bit vram reads are not possible\n");
-	return 0;
-}
-
-u16 FASTCALL pvr_read_area1_16(u32 addr)
-{
-	addr =vramlock_ConvOffset32toOffset64(addr);
-	return *host_ptr_xor((u16*)&vram[addr]);
-}
-u32 FASTCALL pvr_read_area1_32(u32 addr)
-{
-	addr =vramlock_ConvOffset32toOffset64(addr);
-	return *(u32*)&vram[addr];
-}
-
-//write
-void FASTCALL pvr_write_area1_8(u32 addr,u8 data)
-{
-	printf("8 bit vram writes are not possible\n");
-}
-
 #define VRAM_BANK_BIT 0x400000
 
 u32 pvr_map32(u32 offset32)
@@ -248,22 +238,64 @@ u32 pvr_map32(u32 offset32)
 	return rv;
 }
 
+//read
+u8 FASTCALL pvr_read_area1_8(u32 addr)
+{
+	printf("8 bit vram reads are not possible\n");
+	return 0;
+}
+
+u16 FASTCALL pvr_read_area1_16(u32 addr)
+{
+	return *(u16*)&vram[pvr_map32(addr)];
+}
+u32 FASTCALL pvr_read_area1_32(u32 addr)
+{
+	return *(u32*)&vram[pvr_map32(addr)];
+}
+
+//write
+void FASTCALL pvr_write_area1_8(u32 addr,u8 data)
+{
+	printf("8 bit vram writes are not possible\n");
+}
+
 void FASTCALL pvr_write_area1_16(u32 addr,u16 data)
 {
+	u32 vaddr = addr & VRAM_MASK;
+	if (!fb_dirty
+        && ((vaddr >= fb1_watch_addr_start && vaddr < fb1_watch_addr_end)
+            || (vaddr >= fb2_watch_addr_start && vaddr < fb2_watch_addr_end)))
+    {
+        fb_dirty = true;
+		printf("FB dirty set\n");
+    }
+
 	*(u16*)&vram.data[pvr_map32(addr)]=data;
 }
 void FASTCALL pvr_write_area1_32(u32 addr,u32 data)
 {
+	u32 vaddr = addr & VRAM_MASK;
+	if (!fb_dirty
+        && ((vaddr >= fb1_watch_addr_start && vaddr < fb1_watch_addr_end)
+            || (vaddr >= fb2_watch_addr_start && vaddr < fb2_watch_addr_end)))
+    {
+        fb_dirty = true;
+    }
+
 	*(u32*)&vram.data[pvr_map32(addr)] = data;
 }
 
+
+void ta_vtx_data32(void* data);
+void ta_vtx_data(u32* data, u32 size);
 
 
 void FASTCALL TAWrite(u32 address,u32* data,u32 count)
 {
 	if ((address & 0x800000) == 0)
 		// TA poly
-		libPvr_TaDMA(data, count);
+		ta_vtx_data(data, count);
 	else
 		// YUV Converter
 		YUV_data(data, count);
@@ -271,12 +303,12 @@ void FASTCALL TAWrite(u32 address,u32* data,u32 count)
 
 void FASTCALL TAWriteSQ(u32 address,u8* sqb)
 {
-	u32 address_w=address&0x1FFFFFF;//correct ?
+	u32 address_w=address&0x1FFFFE0;//correct ?
 	u8* sq=&sqb[address&0x20];
 
 	if (likely(address_w<0x800000))//TA poly
 	{
-		libPvr_TaSQ((u32*)sq);
+		ta_vtx_data32((u32*)sq);
 	}
 	else if(likely(address_w<0x1000000)) //Yuv Converter
 	{
@@ -308,7 +340,7 @@ void FASTCALL TAWriteSQ_nommu(u32 address)
 
 	if (likely(address_w<0x800000))//TA poly
 	{
-		libPvr_TaSQ((u32*)sq);
+		ta_vtx_data32((u32*)sq);
 	}
 	else if(likely(address_w<0x1000000)) //Yuv Converter
 	{
@@ -327,11 +359,11 @@ void FASTCALL TAWriteSQ_nommu(u32 address)
 //Init/Term , global
 void pvr_Init()
 {
-	threaded_init();
+	//threaded_init();
 }
 void pvr_Term()
 {
-	threaded_term();
+	//threaded_term();
 }
 //Reset -> Reset - Initialise to defualt values
 void pvr_Reset(bool Manual)

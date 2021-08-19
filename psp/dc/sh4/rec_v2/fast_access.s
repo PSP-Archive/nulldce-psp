@@ -154,4 +154,25 @@ asm_read32:
         ADDU    $1, $6, $4  	
         JR 		$31				
         LW    	$2, 0($1)
-  	   
+
+.align 4					
+.global  test_and_set 		
+.set	  noreorder			
+
+test_and_set: 
+     LL     $t1, 0($a0)
+     ADDIU  $t1, $zero, 1       
+     SC     $t1, 0($a0)          
+     BEQZ   $t1, test_and_set    
+     NOP                        
+     JR 		$31	
+     NOP
+     
+.align 4					
+.global  unlock_mutx 		
+.set	  noreorder			
+
+unlock_mutx: 
+     JR 		$31	
+     SW $zero, 0($a0)
+     

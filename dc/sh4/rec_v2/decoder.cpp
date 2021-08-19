@@ -470,7 +470,7 @@ sh4dec(i0100_nnnn_0000_1110)
 
 	dec_write_sr((Sh4RegType)(reg_r0+n));
 	block.Emit(shop_sync_sr);
-	//dec_End(0xFFFFFFFF,BET_StaticIntr,false);
+	dec_End(0xFFFFFFFF,BET_StaticIntr,false);
 }
 
 //rotcl
@@ -1084,7 +1084,6 @@ _end:
 	block.BranchBlock=state.JumpAddr;
 	block.BlockType=state.BlockType;
 	block.contains_writeMem = state.info.has_writem;
-	block.contains_readMem = state.info.has_readm;
 
 	if (strstr(idle_hash, block.hash()))
 	{
@@ -1139,4 +1138,3 @@ void dec_Cleanup()
 {
 	block.oplist.clear();
 }
-

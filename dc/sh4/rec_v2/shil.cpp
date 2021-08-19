@@ -6,6 +6,7 @@
 #include "shil.h"
 #include "decoder.h"
 #include <map>
+#include <set>
 
 u32 RegisterWrite[sh4_reg_count];
 u32 RegisterRead[sh4_reg_count];
@@ -39,7 +40,7 @@ void RegWriteInfo(shil_opcode* ops, shil_param p,size_t ord)
 void ReplaceByMov32(shil_opcode& op)
 {
 	//verify(op.rd2.is_null());
-	op.op = shop_nop;
+	op.op = shop_mov32;
 	op.rs2.type = FMT_NULL;
 	op.rs3.type = FMT_NULL;
 }
@@ -51,6 +52,8 @@ void ReplaceByMov32(shil_opcode& op, u32 v)
 	op.rs1 = shil_param(FMT_IMM, v);
 	op.rs2.type = FMT_NULL;
 	op.rs3.type = FMT_NULL;
+
+	//printf("val: %d\n", v);
 }
 
 
@@ -233,6 +236,11 @@ void sq_pref(DecodedBlock* blk, int i, Sh4RegType rt, bool mark)
 	}
 }
 
+bool istype_float(shil_opcode* op)
+{
+	return (op->rs2.is_r32f() || op->rd.is_r32f());
+}
+
 void sq_pref(DecodedBlock* blk)
 {
 	for (int i=0;i<blk->oplist.size();i++)
@@ -350,65 +358,399 @@ bool CheckConst(shil_param& p1)
 		return false;
 	}
 
+void ConstantMovePass(DecodedBlock* blk)
+{
+	for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
+	{
+		shil_opcode&      op = blk->oplist[opnum + 0];
+		shil_opcode& next_op = blk->oplist[opnum + 1];
+
+		if (op.op == shop_mov32 && op.rs1.is_imm() && op.rd._reg == next_op.rs1._reg && next_op.rs2.is_imm()){
+			switch (next_op.op)
+			{
+				case shop_add:
+					ReplaceByMov32(next_op, op.rs1._imm + next_op.rs2._imm);
+					op.op = shop_nop;
+				break;
+
+				case shop_sub:
+					ReplaceByMov32(next_op, op.rs1._imm - next_op.rs2._imm);
+					op.op = shop_nop;
+				break;
+
+				case shop_and:
+					ReplaceByMov32(next_op, op.rs1._imm & next_op.rs2._imm);
+					op.op = shop_nop;
+				break;
+
+				case shop_or:
+					ReplaceByMov32(next_op, op.rs1._imm | next_op.rs2._imm);
+					op.op = shop_nop;
+				break;
+
+				case shop_xor:
+					ReplaceByMov32(next_op, op.rs1._imm ^ next_op.rs2._imm);
+					op.op = shop_nop;
+				break;
+				
+				default:
+				//printf("OP: %d\n", (int)next_op.op);
+				break;
+				
+			}	
+		}
+	}
+}
+
+
+
+bool reg_optimizzation = false;
+bool _SRA = true;
+
+bool DefinesHigherVersion(const shil_param& param, RegValue reg_ver)
+{
+	return param.is_reg()
+			&& reg_ver.get_reg() >= param._reg
+			&& reg_ver.get_reg() < (Sh4RegType)(param._reg + param.count())
+			&& param.version[reg_ver.get_reg() - param._reg] > reg_ver.get_version();
+}
+
+bool UsesRegValue(const shil_param& param, RegValue reg_ver)
+{
+	return param.is_reg()
+			&& reg_ver.get_reg() >= param._reg
+			&& reg_ver.get_reg() < (Sh4RegType)(param._reg + param.count())
+			&& param.version[reg_ver.get_reg() - param._reg] == reg_ver.get_version();
+}
+
+void ReplaceByAlias(shil_param& param, const RegValue& from, const RegValue& to)
+{
+	if (param.is_r32() && param._reg == from.get_reg())
+	{
+		verify(param.version[0] == from.get_version());
+		param._reg = to.get_reg();
+		param.version[0] = to.get_version();
+		//printf("DeadRegisterPass replacing %s.%d by %s.%d\n", name_reg(from.get_reg()).c_str(), from.get_version(),
+		//		name_reg(to.get_reg()).c_str(), to.get_version());
+	}
+}
+
+std::set<RegValue> writeback_values;
+
+void DeadCodeRemovalPass(DecodedBlock* block)
+{
+	u32 last_versions[sh4_reg_count];
+	std::set<RegValue> uses;
+
+	memset(last_versions, -1, sizeof(last_versions));
+	for (int opnum = block->oplist.size() - 1; opnum >= 0; opnum--)
+	{
+		shil_opcode& op = block->oplist[opnum];
+		bool dead_code = false;
+
+		if (op.op == shop_ifb)
+		{
+			// if mmu enabled, mem accesses can throw an exception
+			// so last_versions must be reset so the regs are correctly saved beforehand
+			memset(last_versions, -1, sizeof(last_versions));
+			continue;
+		}
+		if (op.op == shop_pref)
+		{
+			if (op.rs1.is_imm() && (op.rs1._imm & 0xFC000000) != 0xE0000000)
+				dead_code = true;
+		}
+		if (op.op == shop_sync_sr)
+		{
+			last_versions[reg_sr_T] = -1;
+			last_versions[reg_sr_status] = -1;
+			last_versions[reg_old_sr_status] = -1;
+			for (int i = reg_r0; i <= reg_r7; i++)
+				last_versions[i] = -1;
+			for (int i = reg_r0_Bank; i <= reg_r7_Bank; i++)
+				last_versions[i] = -1;
+			continue;
+		}
+		if (op.op == shop_sync_fpscr)
+		{
+			last_versions[reg_fpscr] = -1;
+			last_versions[reg_old_fpscr] = -1;
+			for (int i = reg_fr_0; i <= reg_xf_15; i++)
+				last_versions[i] = -1;
+			continue;
+		}
+
+		if (op.rd.is_reg())
+		{
+			bool unused_rd = true;
+			for (u32 i = 0; i < op.rd.count(); i++)
+			{
+				if (last_versions[op.rd._reg + i] == (u32)-1)
+				{
+					last_versions[op.rd._reg + i] = op.rd.version[i];
+					unused_rd = false;
+					writeback_values.insert(RegValue(op.rd, i));
+				}
+				else
+				{
+					verify(op.rd.version[i] < last_versions[op.rd._reg + i]);
+					if (uses.find(RegValue(op.rd, i)) != uses.end())
+					{
+						unused_rd = false;
+					}
+				}
+			}
+			dead_code = dead_code || unused_rd;
+		}
+		if (op.rd2.is_reg())
+		{
+			bool unused_rd = true;
+			for (u32 i = 0; i < op.rd2.count(); i++)
+			{
+				if (last_versions[op.rd2._reg + i] == (u32)-1)
+				{
+					last_versions[op.rd2._reg + i] = op.rd2.version[i];
+					unused_rd = false;
+					writeback_values.insert(RegValue(op.rd2, i));
+				}
+				else
+				{
+					verify(op.rd2.version[i] < last_versions[op.rd2._reg + i]);
+					if (uses.find(RegValue(op.rd2, i)) != uses.end())
+					{
+						unused_rd = false;
+					}
+				}
+			}
+			dead_code = dead_code && unused_rd;
+		}
+		if (dead_code && op.op != shop_readm)	// memory read on registers can have side effects
+		{
+			//printf("%08x DEAD %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+			block->oplist.erase(block->oplist.begin() + opnum);
+		}
+		else
+		{
+			if (op.rs1.is_reg())
+			{
+				for (u32 i = 0; i < op.rs1.count(); i++)
+					uses.insert(RegValue(op.rs1, i));
+			}
+			if (op.rs2.is_reg())
+			{
+				for (u32 i = 0; i < op.rs2.count(); i++)
+					uses.insert(RegValue(op.rs2, i));
+			}
+			if (op.rs3.is_reg())
+			{
+				for (u32 i = 0; i < op.rs3.count(); i++)
+					uses.insert(RegValue(op.rs3, i));
+			}
+		}
+	}
+}
+
+void DeadRegisterPass(DecodedBlock* block)
+{
+	std::map<RegValue, RegValue> aliases;		// (dest reg, version) -> (source reg, version)
+
+	// Find aliases
+	for (shil_opcode& op : block->oplist)
+	{
+		// ignore moves from/to int regs to/from fpu regs
+		if (op.op == shop_mov32 && op.rs1.is_reg() && op.rd.is_r32i() == op.rs1.is_r32i())
+		{
+			RegValue dest_reg(op.rd);
+			RegValue src_reg(op.rs1);
+			auto it = aliases.find(src_reg);
+			if (it != aliases.end())
+				// use the final value if the src is itself aliased
+				aliases[dest_reg] = it->second;
+			else
+				aliases[dest_reg] = src_reg;
+		}
+	}
+
+	// Attempt to eliminate them
+	for (auto& alias : aliases)
+	{
+		if (writeback_values.count(alias.first) > 0)
+			continue;
+
+		// Do a first pass to check that we can replace the value
+		size_t defnum = -1;
+		size_t usenum = -1;
+		size_t aliasdef = -1;
+		for (size_t opnum = 0; opnum < block->oplist.size(); opnum++)
+		{
+			shil_opcode* op = &block->oplist[opnum];
+			// find def
+			if (op->rd.is_r32() && RegValue(op->rd) == alias.first)
+				defnum = opnum;
+			else if (op->rd2.is_r32() && RegValue(op->rd2) == alias.first)
+				defnum = opnum;
+
+			// find alias redef
+			if (DefinesHigherVersion(op->rd, alias.second) && aliasdef == (size_t)-1)
+				aliasdef = opnum;
+			else if (DefinesHigherVersion(op->rd2, alias.second) && aliasdef == (size_t)-1)
+				aliasdef = opnum;
+
+			// find last use
+			if (UsesRegValue(op->rs1, alias.first))
+			{
+				if (op->rs1.count() == 1)
+					usenum = opnum;
+				else
+				{
+					usenum = 0xFFFF;	// Can't alias values used by vectors cuz they need adjacent regs
+					aliasdef = 0;
+					break;
+				}
+			}
+			else if (UsesRegValue(op->rs2, alias.first))
+			{
+				if (op->rs2.count() == 1)
+					usenum = opnum;
+				else
+				{
+					usenum = 0xFFFF;
+					aliasdef = 0;
+					break;
+				}
+			}
+			else if (UsesRegValue(op->rs3, alias.first))
+			{
+				if (op->rs3.count() == 1)
+					usenum = opnum;
+				else
+				{
+					usenum = 0xFFFF;
+					aliasdef = 0;
+					break;
+				}
+			}
+		}
+		verify(defnum != (size_t)-1);
+		// If the alias is redefined before any use we can't use it
+		if (aliasdef != (size_t)-1 && usenum != (size_t)-1 && aliasdef < usenum)
+			continue;
+
+		for (size_t opnum = defnum + 1; opnum <= usenum && usenum != (size_t)-1; opnum++)
+		{
+			shil_opcode* op = &block->oplist[opnum];
+			ReplaceByAlias(op->rs1, alias.first, alias.second);
+			ReplaceByAlias(op->rs2, alias.first, alias.second);
+			ReplaceByAlias(op->rs3, alias.first, alias.second);
+		}
+		//printf("%08x DREG %s\n", block->vaddr + block->oplist[defnum].guest_offs, block->oplist[defnum].dissasm().c_str());
+		block->oplist.erase(block->oplist.begin() + defnum);
+	}
+}
+
+void SimplifyExpressionPass(DecodedBlock* block)
+{
+	for (size_t opnum = 0; opnum < block->oplist.size(); opnum++)
+	{
+		shil_opcode& op = block->oplist[opnum];
+		if (op.rs2.is_imm())
+		{
+			if (op.rs2._imm == 0)
+			{
+				// a & 0 == 0
+				// a * 0 == 0
+				// Not true for FPU ops because of Inf and NaN
+				if (op.op == shop_and || op.op == shop_mul_i32 || op.op == shop_mul_s16 || op.op == shop_mul_u16)
+				{
+					//printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+					ReplaceByMov32(op, 0);
+				}
+				// a * 0 == 0
+				/* TODO 64-bit result
+				else if (op.op == shop_mul_u64 || op.op == shop_mul_s64)
+				{
+					printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+					ReplaceByMov32(op, 0);
+				}
+				*/
+				// a + 0 == a
+				// a - 0 == a
+				// a | 0 == a
+				// a ^ 0 == a
+				// a >> 0 == a
+				// a << 0 == a
+				// Not true for FPU ops because of Inf and NaN
+				else if (op.op == shop_shl || op.op == shop_shr || op.op == shop_sar || op.op == shop_shad || op.op == shop_shld)
+				{
+					//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+					ReplaceByMov32(op);
+				}
+			}
+			// a * 1 == a
+			else if (op.rs2._imm == 1
+					&& (op.op == shop_mul_i32 || op.op == shop_mul_s16 || op.op == shop_mul_u16))
+			{
+				//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+				ReplaceByMov32(op);
+
+				continue;
+			}
+		}
+		// Not sure it's worth the trouble, except for the 'and' and 'xor'
+		else if (op.rs1.is_r32i() && op.rs1._reg == op.rs2._reg)
+		{
+			// a + a == a * 2 == a << 1
+			if (op.op == shop_add)
+			{
+				// There's quite a few of these
+				//printf("%08x +t<< %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+				op.op = shop_shl;
+				op.rs2 = shil_param(FMT_IMM, 1);
+			}
+			// a ^ a == 0
+			// a - a == 0
+			else if (op.op == shop_xor || op.op == shop_sub)
+			{
+				//printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+				ReplaceByMov32(op, 0);
+			}
+		
+			// a & a == a
+			// a | a == a
+			else if (op.op == shop_and || op.op == shop_or)
+			{
+				//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
+				ReplaceByMov32(op);
+			}
+		}
+	}
+} 
+
+int _opnum = 0;
+
+bool ExecuteConstOp(DecodedBlock* block, shil_opcode* op);
+
 void ConstPropPass(DecodedBlock* block)
 	{
-		for (int opnum = 0; opnum < (int)block->oplist.size(); opnum++)
+		for (_opnum = 0; _opnum < (int)block->oplist.size(); _opnum++)
 		{
-			shil_opcode& op = block->oplist[opnum];
+			shil_opcode& op = block->oplist[_opnum];
 
-			/*if (op.op == shop_add){
-				if(CheckConst(op.rd) && (CheckConst(op.rs2))){
-					auto val1 = constprop_values.find(RegValue(op.rd))->second;
-					auto val2 = constprop_values.find(RegValue(op.rs2))->second;
-
-					if (is_s16(val1) && is_s16(val2)){
-
-						printf("val1: %d val2: %d\n",val1,val2);
-
-						ReplaceByMov32(op,(val1 + val2));
-						printf("HJKHKJHKHKHK\n");
-					}
-					//die("suca");
-				}
-			}*/
+			if (op.op == shop_nop) continue; 
 
 			// TODO do shop_sub and others
-			/*if (op.op != shop_setab && op.op != shop_setae && op.op != shop_setgt && op.op != shop_setge && op.op != shop_sub && op.op != shop_fsetgt
-					 && op.op != shop_fseteq && op.op != shop_fdiv && op.op != shop_fsub && op.op != shop_fmac)
+			/*if (op.op == shop_fadd )
 				ConstPropOperand(op.rs1);
-			if (op.op != shop_rocr && op.op != shop_rocl && op.op != shop_fsetgt && op.op != shop_fseteq && op.op != shop_fmac)
+			if (op.op == shop_fadd )
 				ConstPropOperand(op.rs2);
-			if (op.op != shop_fmac && op.op != shop_adc)
+			if (op.op == shop_fadd )
 				ConstPropOperand(op.rs3);*/
-				
-			/*if (op.op == shop_ifb)
+
+			if (op.op == shop_ifb)
 			{
 				constprop_values.clear();
 			}
-			else if (op.op == shop_sync_sr)
-			{
-				for (auto it = constprop_values.begin(); it != constprop_values.end(); )
-				{
-					Sh4RegType reg = it->first.get_reg();
-					if (reg == reg_sr_status  || (reg >= reg_r0 && reg <= reg_r7)
-							|| (reg >= reg_r0_Bank && reg <= reg_r7_Bank))
-						it = constprop_values.erase(it);
-					else
-						it++;
-				}
-			}
-			else if (op.op == shop_sync_fpscr)
-			{
-				for (auto it = constprop_values.begin(); it != constprop_values.end(); )
-				{
-					Sh4RegType reg = it->first.get_reg();
-					if (reg == reg_fpscr || reg == reg_old_fpscr || (reg >= reg_fr_0 && reg <= reg_xf_15))
-						it = constprop_values.erase(it);
-					else
-						it++;
-				}
-			}
-			else */if (op.op == shop_readm || op.op == shop_writem)
+			else if (op.op == shop_readm || op.op == shop_writem)
 			{
 				if (op.rs1.is_imm())
 				{
@@ -426,7 +768,7 @@ void ConstPropPass(DecodedBlock* block)
 						op.rs3 = t;
 					}
 
-					else if(op.rs1.is_imm() && op.op == shop_readm 
+					if(op.rs1.is_imm() && op.op == shop_readm 
 						&& (op.rs1._imm >> 12) >= (block->start >> 12)
 						&& (op.rs1._imm >> 12) <= ((block->start + block->sh4_code_size - 1) >> 12)
 						&& (op.flags & 0x7f) <= 4){
@@ -445,18 +787,44 @@ void ConstPropPass(DecodedBlock* block)
 										break;
 									case 4:
 										v = ReadMem32(op.rs1._imm);
+										ReplaceByMov32(op, v);
 										break;
 									default:
 										die("invalid size");
 										v = 0;
 										break;
 									}
-									//if ((op.flags&0x7f) == 4 && !is_s8(v)) continue;
-									
+
 									constprop_values[RegValue(op.rd)] = v;
 								}	
+							}	
 					}
+			}
+			/*else if (op.op == shop_sync_sr)
+			{
+				for (auto it = constprop_values.begin(); it != constprop_values.end(); )
+				{
+					Sh4RegType reg = it->first.get_reg();
+					if (reg == reg_sr_status || reg == reg_old_sr_status || (reg >= reg_r0 && reg <= reg_r7)
+							|| (reg >= reg_r0_Bank && reg <= reg_r7_Bank))
+						it = constprop_values.erase(it);
+					else
+						it++;
 				}
+			}
+			else if (op.op == shop_sync_fpscr)
+			{
+				for (auto it = constprop_values.begin(); it != constprop_values.end(); )
+				{
+					Sh4RegType reg = it->first.get_reg();
+					if (reg == reg_fpscr || reg == reg_old_fpscr || (reg >= reg_fr_0 && reg <= reg_xf_15))
+						it = constprop_values.erase(it);
+					else
+						it++;
+				}
+			}
+			else if (ExecuteConstOp(block, &op))
+			{
 			}
 			else if (op.op == shop_and || op.op == shop_or || op.op == shop_xor || op.op == shop_add || op.op == shop_mul_s16 || op.op == shop_mul_u16
 					  || op.op == shop_mul_i32 || op.op == shop_test || op.op == shop_seteq || op.op == shop_fseteq || op.op == shop_fadd || op.op == shop_fmul
@@ -469,575 +837,170 @@ void ConstPropPass(DecodedBlock* block)
 					op.rs1 = op.rs2;
 					op.rs2 = t;
 				}
-			}
-			else if ((op.op == shop_shld || op.op == shop_shad) && op.rs2.is_imm())
-			{
-				// Replace shld/shad with shl/shr/sar
-				u32 r2 = op.rs2._imm;
-				if ((r2 & 0x80000000) == 0)
-				{
-					// rd = r1 << (r2 & 0x1F)
-					op.op = shop_shl;
-					op.rs2._imm = r2 & 0x1F;
-				}
-				else if ((r2 & 0x1F) == 0)
-				{
-					if (op.op == shop_shl)
-						// rd = 0
-						ReplaceByMov32(op, 0);
-					else
-					{
-						// rd = r1 >> 31;
-						op.op = shop_sar;
-						op.rs2._imm = 31;
-					}
-				}
-				else
-				{
-					// rd = r1 >> ((~r2 & 0x1F) + 1)
-					op.op = op.op == shop_shad ? shop_sar : shop_shr;
-					op.rs2._imm = (~r2 & 0x1F) + 1;
-				}
-			}
+			}*/
 		}
 	}
 
-void SimplifyExpressionPass(DecodedBlock* blk)
+#define GetImm12(str) ((str>>0) & 0xfff)
+#define GetSImm12(str) (((short)((GetImm12(str))<<4))>>4)
+
+void dec_updateBlockCycles(DecodedBlock *block, u16 op)
 {
-	for (int opnum = 0; opnum < blk->oplist.size(); opnum++)
+	if (op < 0xF000)
+		block->cycles++;
+}
+
+bool skipSingleBranchTarget(DecodedBlock *block, u32& addr, bool updateCycles)
+{
+	if (addr == 0xFFFFFFFF)
+		return false;
+	bool success = false;
+	const u32 start_page = block->start >> 12;
+	const u32 end_page = (block->start + (block->opcodes - 1) * 2) >> 12;
+	while (true)
 	{
-		shil_opcode& op = blk->oplist[opnum];
+		if ((addr >> 12) < start_page || ((addr + 2) >> 12) > end_page)
+			break;
 
+		u32 op = IReadMem16(addr);
+		// Axxx: bra <bdisp12>
+		if ((op & 0xF000) != 0xA000)
+			break;
 
-		if (op.rs2.is_imm())
+		u16 delayOp = IReadMem16(addr + 2);
+		if (delayOp != 0x0000 && delayOp != 0x0009)	// nop
+			break;
+
+		int disp = GetSImm12(op) * 2 + 4;
+		if (disp == 0)
+			// infiniloop
+			break;
+		addr += disp;
+		if (updateCycles)
 		{
-			if (op.rs2._imm == 0)
-			{
-				// a & 0 == 0
-				// a * 0 == 0
-				// Not true for FPU ops because of Inf and NaN
-				if (op.op == shop_and || op.op == shop_mul_i32 || op.op == shop_mul_s16 || op.op == shop_mul_u16)
-				{
-					//printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-					ReplaceByMov32(op, 0);
-				}
-				
-				// a + 0 == a
-				// a - 0 == a
-				// a | 0 == a
-				// a ^ 0 == a
-				// a >> 0 == a
-				// a << 0 == a
-				// Not true for FPU ops because of Inf and NaN
-				else if (op.op == shop_add || op.op == shop_sub || op.op == shop_or || op.op == shop_xor
-						|| op.op == shop_shl || op.op == shop_shr || op.op == shop_sar || op.op == shop_shad || op.op == shop_shld)
-				{
-					//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-					ReplaceByMov32(op);
-				}
-			}
-			// a * 1 == a
-			else if (op.rs2._imm == 1
-					&& (op.op == shop_mul_i32 || op.op == shop_mul_s16 || op.op == shop_mul_u16))
-			{
-				//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-				ReplaceByMov32(op);
-				continue;
-			}
+			dec_updateBlockCycles(block, op);
+			dec_updateBlockCycles(block, delayOp);
 		}
-		// Not sure it's worth the trouble, except for the 'and' and 'xor'
-		else if (op.rs1.is_r32i() && op.rs1._reg == op.rs2._reg)
-		{
-			
-			// a + a == a * 2 == a << 1
-			if (op.op == shop_add)
-			{
-				// There's quite a few of these
-				//printf("%08x +t<< %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-				op.op = shop_shl;
-				op.rs2 = shil_param(FMT_IMM, 1);
-			}
-			// a ^ a == 0
-			// a - a == 0
-			else if (op.op == shop_xor || op.op == shop_sub)
-			{
-				//printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-				ReplaceByMov32(op, 0);
-			}
-			// SBC a, a == SBC 0,0
-			else if (op.op == shop_sbc)
-			{
-				//printf("%08x ZERO %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-				op.rs1 = shil_param(FMT_IMM, 0);
-				op.rs2 = shil_param(FMT_IMM, 0);
-			}
-			// a & a == a
-			// a | a == a
-			else if (op.op == shop_and || op.op == shop_or)
-			{
-				//printf("%08x IDEN %s\n", block->vaddr + op.guest_offs, op.dissasm().c_str());
-				ReplaceByMov32(op);
-			}
-		}
+		success = true;
+	}
+	return success;
+}
+
+void SingleBranchTargetPass(DecodedBlock *block)
+{
+	if (block->read_only)
+	{
+		bool updateCycles = !skipSingleBranchTarget(block, block->BranchBlock, true);
+		skipSingleBranchTarget(block, block->NextBlock, updateCycles);
 	}
 }
 
-
-void DOPT(DecodedBlock* blk)
+//"links" consts to each other
+void constlink(DecodedBlock* blk)
 {
-	if (blk->contains_fpu_op) return;
-	
-	memset(RegisterWrite,-1,sizeof(RegisterWrite));
-	memset(RegisterRead,-1,sizeof(RegisterRead));
-
-	total_blocks++;
-	for (size_t i=0;i<blk->oplist.size();i++)
-	{
-		shil_opcode* op=&blk->oplist[i];
-		op->Flow=0;
-
-		if (op->op==shop_ifb)
-		{
-			fallback_blocks++;
-			return;
-		}
-
-		RegReadInfo(op->rs1,i);
-		RegReadInfo(op->rs2,i);
-		RegReadInfo(op->rs3,i);
-
-		RegWriteInfo(&blk->oplist[0],op->rd,i);
-		RegWriteInfo(&blk->oplist[0],op->rd2,i);
-	}
+	Sh4RegType def=NoReg;
+	s32 val=0;
 
 	for (size_t i=0;i<blk->oplist.size();i++)
 	{
-		if (blk->oplist[i].Flow)
+		shil_opcode& op= blk->oplist[i];
+
+		if (op.op!=shop_mov32)
+			def=NoReg;
+		else
 		{
-			blk->oplist.erase(blk->oplist.begin()+i);
-			REMOVED_OPS++;
-			i--;
+
+			if (def!=NoReg && op.rs1.is_imm() && op.rs1._imm==val)
+			{
+				op.rs1=shil_param(def);
+			}
+			else if (def==NoReg && op.rs1.is_imm() && op.rs1._imm==0)
+			{
+				def=op.rd._reg;
+				val=op.rs1._imm;
+			}
 		}
+
+		if (op.op == shop_readm || op.op == shop_writem)
+		{
+			if (op.rs1.is_imm())
+			{
+				if (op.rs3.is_imm())
+				{
+					// Merge base addr and offset
+					op.rs1._imm += op.rs3._imm;
+					op.rs3.type = FMT_NULL;
+				}
+				else if (op.rs3.is_reg())
+				{
+					// Swap rs1 and rs3 so that rs1 is never an immediate operand
+					shil_param t = op.rs1;
+					op.rs1 = op.rs3;
+					op.rs3 = t;
+				}
+
+				if(op.rs1.is_imm() && op.op == shop_readm 
+					&& (op.rs1._imm >> 12) >= (blk->start >> 12)
+					&& (op.rs1._imm >> 12) <= ((blk->start + blk->sh4_code_size - 1) >> 12)
+					&& (op.flags & 0x7f) <= 4){
+							if (IsOnRam(op.rs1._imm))
+							{
+								u32 v;
+								switch (op.flags & 0x7f)
+								{
+								case 1:
+									v = (s32)(::s8)ReadMem8(op.rs1._imm);
+									ReplaceByMov32(op, v);
+									break;
+								case 2:
+									v = (s32)(::s16)ReadMem16(op.rs1._imm);
+									ReplaceByMov32(op, v);
+									break;
+								case 4:
+									v = ReadMem32(op.rs1._imm);
+									break;
+								default:
+									die("invalid size");
+									v = 0;
+									break;
+								}
+							}	
+						}	
+				}
+			}
 	}
-	//printf("<> %d\n",affregs);
-
-	//printf("%d FB, %d native, %.2f%% || %d removed ops!\n",fallback_blocks,total_blocks-fallback_blocks,fallback_blocks*100.f/total_blocks,REMOVED_OPS);
-	printf("\nBlock: %d affecter regs %d c\n",REMOVED_OPS,blk->cycles);
 }
 
-/*u8 reg[16] {0};
-u8 otherReg = 0;
-void UpdateRegStatus(u32 _reg){
-	if (_reg >= 0 && _reg < 16){
-		reg[_reg]++;
-	}else otherReg++;
-}
 
-void PrintRegStatus(){
-	printf("REG Usage:\n");
-	for (int i = 0; i < 16; i++){
-		printf("R%d: %d\n",i,reg[i]);
-		reg[i] = 0;
-	}
-	printf("Other reg: %d\n",otherReg);
-	otherReg = 0;
-}*/
-
-
-
-bool UsedStaticRegister = false;
-u8   regs_used = 0;
-
-u8 GetmappedReg(u8 _reg)
-{
-	if (sh4_mapped_reg[_reg]){
-		UsedStaticRegister = true;
-		return sh4_mapped_reg[_reg];
-	}
-
-	return 0;
-}
-
-bool MapRegister(DecodedBlock* blk, u32 sh4_reg){
-
-	if (sh4_reg   > 15) return 0;
-	if (regs_used >= 9) return 0;
-
-	sh4_mapped_reg[sh4_reg]  = mips_reg[regs_used];
-
-	return GetmappedReg(sh4_reg) != 0;
-}
-
-void makeDirty(u8 _reg){
-
-}
-
-bool reg_optimizzation = false;
-bool _SRA = true;
-
-//Simplistic Write after Write without read pass to remove (a few) dead opcodes
-//Seems to be working
 void AnalyseBlock(DecodedBlock* blk)
 {
-	sq_pref(blk);
-
-	blk->UseSRA = _SRA;
-
-	constprop(blk);
-	
 	memset(reg_versions, 0, sizeof(reg_versions));
 
 	for (shil_opcode& op : blk->oplist)
-	{
+	{ 
 		AddVersionToOperand(op.rs1, false);
 		AddVersionToOperand(op.rs2, false);
 		AddVersionToOperand(op.rs3, false);
 		AddVersionToOperand(op.rd, true);
 		AddVersionToOperand(op.rd2, true);
 	}
-	
-	ConstPropPass(blk);
+
+	DeadCodeRemovalPass(blk);
+
+	sq_pref(blk);
+
+	//ConstPropPass(blk);
+	ConstantMovePass(blk);
+
+	constlink(blk);
+
+	SimplifyExpressionPass(blk);
+
+	DeadRegisterPass(blk);
 
 	srt_waw(blk);
 
-
-	int regnum = 0;
-
-	#if 1
-
-	//Special case
-
-
-	/*for (int zz = 0; zz < 2; zz++)*/ {
-
-		//printf("BEFORE: %d\n", (int)blk->oplist.size());
-
-		for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
-		{
-			shil_opcode& op = blk->oplist[opnum];
-			shil_opcode& next_op = blk->oplist[opnum + 1];
-
-			//printf("%d :: %d -> %d\n", op.op , next_op.op, opnum);
-
-			if (op.op == shop_shl && next_op.op == shop_shl) {
-				if (op.rd._reg == next_op.rs1._reg){
-					op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-					op.rd._reg = next_op.rd._reg;
-					blk->oplist.erase(blk->oplist.begin()+opnum+1);
-					opnum--;
-				}
-				continue;
-			}
-
-			if (op.op == shop_shr && next_op.op == shop_shr) {
-				if (op.rd._reg == next_op.rs1._reg){
-					op.rs2._imm = op.rs2._imm + next_op.rs2._imm;
-					op.rd._reg = next_op.rd._reg;
-					blk->oplist.erase(blk->oplist.begin()+opnum+1); 
-					opnum--;
-				}
-				continue;
-			}
-
-			if (op.op == shop_mov32  && next_op.op == shop_mov32 && op.rd._reg == next_op.rd._reg){
-				blk->oplist.erase(blk->oplist.begin()+opnum); 
-				opnum--;
-				continue;
-			}
-
-			if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_sub && op.rd._reg == next_op.rs1._reg){
-				next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm - next_op.rs2._imm);
-				next_op.op = shop_mov32;
-				blk->oplist.erase(blk->oplist.begin()+opnum); 
-				opnum--;
-				continue;
-			}
-
-			if (op.op == shop_mov32 && op.rs1.is_imm() && next_op.rs2.is_imm() && next_op.op == shop_shl && op.rd._reg == next_op.rs1._reg){
-				next_op.rs1 = shil_param(FMT_IMM, op.rs1._imm << next_op.rs2._imm);
-				next_op.op = shop_mov32;
-				blk->oplist.erase(blk->oplist.begin()+opnum); 
-				opnum--;
-				continue;
-			}
-
-			if (op.op == shop_mov32  && next_op.op == shop_readm)
-				if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm() && op.rd._reg == next_op.rd._reg){
-					next_op.rs1._reg = op.rs1._reg;
-					blk->oplist.erase(blk->oplist.begin()+opnum); 
-					opnum--;
-					continue;
-				}
-
-			if (op.op == shop_mov32  && supportednoSave(next_op))
-				if (op.rd._reg == next_op.rs1._reg && op.rd._reg == next_op.rd._reg && !op.rs1.is_imm()){
-					next_op.rs1._reg = op.rs1._reg;
-					blk->oplist.erase(blk->oplist.begin()+opnum); 
-					opnum--;
-					continue;
-				}
-
-			if (op.op == shop_mov32  && next_op.op == shop_writem)
-				if (!next_op.rs3.is_imm() && next_op.rs3._reg == op.rd._reg && !op.rs1.is_imm()){
-					next_op.rs3._reg = op.rs1._reg;
-					blk->oplist.erase(blk->oplist.begin()+opnum); 
-					opnum--;
-					continue;
-				}
-		}
-
-		//printf("After: %d\n", (int)blk->oplist.size());
-	}
-
-	if (blk->UseSRA || !reg_optimizzation) return;
-
-	/*for (int opnum = 0; opnum < (int)blk->oplist.size() - 2; opnum++)
-	{
-		shil_opcode& op = blk->oplist[opnum];
-		shil_opcode& next_op = blk->oplist[opnum + 1];
-
-		if ((op.rd._reg == blk->oplist[opnum + 2].rs1._reg) && supportedOP(blk->oplist[opnum + 2])){
-			
-				if (   next_op.rs1._reg != op.rd._reg 
-				    && !op.rs1.is_imm() && !next_op.rs1.is_imm() 
-					&& supportednoSave(op) && supportednoSave(next_op)){
-						printf("CHI BBOI %d\n", opnum);
-	//If the current op isn't important for the next one, swap them and try to optmize it later
-						shil_opcode tmp_op = blk->oplist[opnum];
-						op = next_op;
-						next_op = tmp_op;
-
-						opnum+= 2;
-
-					}
-			}
-	}*/
-
-	//Experimental register optimizer (OLD)
-	for (int opnum = 0; opnum < (int)blk->oplist.size() - 1; opnum++)
-	{
-		shil_opcode& op = blk->oplist[opnum];
-		shil_opcode& next_op = blk->oplist[opnum + 1];
-
-		const bool fpu_op = supportedFPU_OP(op);
-
-		if(fpu_op && supportedFPU_OP(next_op)){
-			if (op.rd._reg == next_op.rs1._reg) next_op.loadReg = false;
-			if (op.rs2._reg == next_op.rs2._reg) { next_op.SkipLoadReg2 = true; }
-			if (op.rd._reg == next_op.rs2._reg) { next_op.SkipLoadReg2 = true; op.SwapSaveReg = true; }
-			if (op.rd._reg == next_op.rd._reg)  op.SaveReg = false;
-			continue;
-		}
-
-		if (next_op.op == shop_mov32  && fpu_op){
-			if (op.rd._reg == next_op.rs1._reg && !next_op.rs1.is_imm()){
-				next_op.op = shop_mov32f;
-				next_op.loadReg = false;
-			}
-			continue;
-		}
-
-		if (op.op == shop_mov32  && (next_op.op == shop_fmac || next_op.op == shop_fabs || next_op.op == shop_fneg || next_op.op == shop_fsqrt)){
-			if (op.rd._reg == next_op.rs1._reg && !op.rs1.is_imm()){
-					op.op = shop_mov32f;
-					next_op.loadReg = false;
-					if (op.rd._reg == next_op.rd._reg && next_op.op != shop_fmac) op.SaveReg = false;
-			}
-			continue;
-		}
-
-		if (fpu_op) { continue; }
-
-		
-
-		if (op.op == shop_mov32  && next_op.op == shop_mov32){
-
-			if (blk->oplist[opnum + 2].op == shop_mov32){  
-				if (op.rd._reg == blk->oplist[opnum + 2].rs1._reg && !blk->oplist[opnum + 2].rs1.is_imm() && !op.rs1.is_imm()){
-					op.UseCustomReg = true;
-					op.customReg = psp_a1;
-					blk->oplist[opnum + 2].UseCustomReg = true;
-					blk->oplist[opnum + 2].customReg	= psp_a1;
-					blk->oplist[opnum + 2].loadReg 		= false;
-					if (op.rd._reg == next_op.rs1._reg) {
-						next_op.loadReg = false;
-						next_op.UseCustomReg = true;
-						next_op.customReg = psp_a1;
-					}
-					opnum+=2;
-					continue;
-				}
-			}
-
-			if (op.rd._reg == next_op.rs1._reg && op.loadReg == false){
-				next_op.loadReg = false;
-			}
-
-			if (op.rs1._reg == next_op.rs1._reg && op.loadReg == false){
-				next_op.loadReg = false;
-			}
-
-			if (!op.UseCustomReg){
-				op.UseCustomReg = true;
-				op.customReg = psp_a1;
-				next_op.UseCustomReg = true;
-				next_op.customReg = psp_a2;
-				opnum++;
-			}
-
-			continue; 
-		}
-
-		const bool nextop_SUP = supportednoSave(next_op);
-
-		if (op.op == shop_mov32  && nextop_SUP){
-						
-			if (!next_op.rs2.is_imm() && next_op.rs2._reg == op.rd._reg && op.rs1.is_imm() && op.rs1._imm != 0){
-				if (supportedSwapRs2(next_op)){
-					op.SwapSaveReg = true;
-					next_op.SkipLoadReg2 = true;
-				}
-				if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-			}
-
-			if (op.rd._reg == next_op.rs1._reg && op.rs1._imm!=0){
-				next_op.loadReg = false;
-				if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-			}
-
-			continue;
-		}
-
-		if (op.op == shop_add  && next_op.op == shop_writem){
-
-			if (op.rd._reg == next_op.rs3._reg && next_op.rs3.is_reg()){
-				op.UseCustomReg = true;
-				op.customReg = 0x7;
-				next_op.SkipLoadReg2 = true;
-				continue;
-			}
-			
-		}
-
-	
-		if (op.op == shop_mov32  && next_op.op == shop_readm){
-			if (op.rd._reg == next_op.rs1._reg && op.rs1._imm != 0){
-				next_op.loadReg = false;
-				if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-			}
-			
-			if (next_op.rs3._reg == op.rd._reg){
-				if(op.rs1.is_imm()){
-					op.UseMemReg2 = true;
-					next_op.SkipLoadReg2 = true;
-					if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-				}
-			}
-			continue;
-		}
-
-		if (op.op == shop_mov32  && next_op.op == shop_writem){
-
-			if (!next_op.rs3.is_imm() && next_op.rs3._reg == op.rd._reg){
-				
-				if(op.rs1.is_imm()){
-					op.UseMemReg2 = true;
-					next_op.SkipLoadReg2 = true;
-					if (op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-					continue;
-				}
-			}
-
-			if (next_op.rs2._reg == op.rd._reg && !op.rs1.is_imm() && next_op.flags != 8){
-				op.UseCustomReg = true;
-				next_op.UseCustomReg = true;
-				op.customReg = psp_a1;
-				continue;
-			}
-
-			if (op.rd._reg == next_op.rs1._reg && op.rs1._imm != 0){
-				next_op.loadReg = false;
-			}
-
-			continue;
-		}
-
-
-		if ((op.op == shop_shr || op.op == shop_shl) && next_op.op == shop_writem) {
-			if (op.rd._reg == next_op.rs2._reg){
-				op.SwapSaveReg = true;
-				next_op.UseCustomReg = true;
-			}	
-			continue;
-		}
-
-
-		if (op.op == shop_readm){
-			
-			if(next_op.op == shop_mov32 && op.rd._reg == next_op.rs1._reg){
-				op.SwapReg = true;
-				next_op.loadReg = false;
-			}
-
-			if (next_op.op == shop_writem && op.rd._reg == next_op.rs1._reg) {
-				next_op.loadReg = false;
-				op.SwapReg = true;
-			}
-			
-			if (!next_op.rd2.is_imm() && op.rd._reg == next_op.rs2._reg && supportedSwapRs2(next_op)){
-				op.SwapReg = true;
-				op.SwapSaveReg = true;
-				next_op.SkipLoadReg2 = true;
-				if(op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-			}
-
-			if (nextop_SUP && op.rd._reg == next_op.rs1._reg) {
-				next_op.loadReg = false;
-				op.SwapReg = true;
-				if(op.rd._reg == next_op.rd._reg) op.SaveReg = false;
-			}
-
-			continue;
-		}
-		
-
-		if (!next_op.rd2.is_imm() && op.rd._reg == next_op.rs2._reg && supportedSwapRs2(next_op) && supportedSwapRs2(op)){
-			
-			op.SwapSaveReg = true;
-			next_op.SkipLoadReg2 = true;
-			
-			if(op.rd._reg == next_op.rd._reg)
-				op.SaveReg = false;
-
-			continue;
-		}
-
-		if (!supportedOP(op)) continue;
-
-		if (next_op.op == shop_mov32){
-			if (op.rd._reg == next_op.rs1._reg && !next_op.rs1.is_imm()){
-				next_op.loadReg = false;
-			}
-			continue;
-		}
-
-		if (op.rd._reg == next_op.rs1._reg){
-			next_op.loadReg = false;
-			if (op.rd._reg == next_op.rd._reg && nextop_SUP) op.SaveReg = false;
-		}
-
-		if (op.rd._reg == next_op.rs2._reg && supportedSwapRs2(next_op)){
-			next_op.SkipLoadReg2 = true;
-			op.SwapSaveReg = true;
-			if (op.rd._reg == next_op.rd._reg ) op.SaveReg = false;
-		}
-		
-	}
-
-	//PrintRegStatus();
-
-	//if (regnum)	printf("Register skipped %d, BL Size: %d\n",regnum,blk->oplist.size());
-	#endif
+	//SingleBranchTargetPass(blk);
 }
 
 void FASTCALL do_sqw_mmu(u32 dst);
@@ -1048,13 +1011,11 @@ bool UpdateSR();
 #include "ngen.h"
 #include "dc/sh4/sh4_registers.h"
 
-
 #define SHIL_MODE 1
 #include "shil_canonical.h"
-
-//#define SHIL_MODE 2
-//#include "shil_canonical.h"
 
 #define SHIL_MODE 3
 #include "shil_canonical.h"
 
+#define SHIL_MODE 4 
+#include "shil_canonical.h"

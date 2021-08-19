@@ -313,6 +313,18 @@ union SCALER_CTL_type
 	u32 full;
 };
 
+union FB_R_SIZE_type
+{
+	struct
+	{
+		u32 fb_x_size  : 10; //0
+		u32 fb_y_size  : 10; //10
+		u32 fb_modulus : 10; //20
+		u32 fb_res     : 2; //30
+	};
+	u32 full;
+};
+
 union FB_X_CLIP_type
 {
 	struct
@@ -364,6 +376,22 @@ union VO_CONTROL_type
 		u32 res_1:7;			//9
 		u32 pclk_delay:6;		//16
 		u32 res_2:10;			//22
+	};
+	u32 full;
+};
+
+union TA_YUV_TEX_CTRL_type
+{
+	struct
+	{
+		u32 yuv_u_size	: 6;
+		u32 reserved1	: 2;
+		u32 yuv_v_size	: 6;
+		u32 reserved2	: 2;
+		u32 yuv_tex		: 1;
+		u32 reserved3	: 7;
+		u32 yuv_form	: 1;
+		u32 reserved4	: 7;
 	};
 	u32 full;
 };
@@ -428,7 +456,7 @@ union VO_CONTROL_type
 #define FB_R_SOF1			PvrReg(FB_R_SOF1_addr,u32)	//	RW	Read start address for field - 1/strip - 1	
 #define FB_R_SOF2			PvrReg(FB_R_SOF2_addr,u32)	//	RW	Read start address for field - 2/strip - 2	
 
-#define FB_R_SIZE			PvrReg(FB_R_SIZE_addr,u32)	//	RW	Frame buffer XY size	
+#define FB_R_SIZE			PvrReg(FB_R_SIZE_addr,FB_R_SIZE_type)	//	RW	Frame buffer XY size	
 #define FB_W_SOF1			PvrReg(FB_W_SOF1_addr,u32)	//	RW	Write start address for field - 1/strip - 1	
 #define FB_W_SOF2			PvrReg(FB_W_SOF2_addr,u32)	//	RW	Write start address for field - 2/strip - 2	
 #define FB_X_CLIP			PvrReg(FB_X_CLIP_addr,FB_X_CLIP_type)	//	RW	Pixel clip X coordinate	
@@ -487,7 +515,7 @@ union VO_CONTROL_type
 #define TA_ALLOC_CTRL		PvrReg(TA_ALLOC_CTRL_addr,u32)	//	RW	Object list control	
 #define TA_LIST_INIT		PvrReg(TA_LIST_INIT_addr,u32)	//	RW	TA initialization	
 #define TA_YUV_TEX_BASE		PvrReg(TA_YUV_TEX_BASE_addr,u32)	//	RW	YUV422 texture write start address	
-#define TA_YUV_TEX_CTRL		PvrReg(TA_YUV_TEX_CTRL_addr,u32)	//	RW	YUV converter control	
+#define TA_YUV_TEX_CTRL		PvrReg(TA_YUV_TEX_CTRL_addr,TA_YUV_TEX_CTRL_type)	//	RW	YUV converter control	
 #define TA_YUV_TEX_CNT		PvrReg(TA_YUV_TEX_CNT_addr,u32)	//	R	YUV converter macro block counter value	
 
 #define TA_LIST_CONT		PvrReg(TA_LIST_CONT_addr,u32)	//	RW	TA continuation processing	

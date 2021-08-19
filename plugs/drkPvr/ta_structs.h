@@ -1,5 +1,47 @@
 //structs were getting tooo many , so i moved em here !
 #pragma once
+
+struct  tad_context
+	{
+		u8* thd_data;
+		u8* thd_root;
+		u8* thd_old_data;
+		u8 *render_passes[15];
+		u32 render_pass_count;
+
+		void Clear()
+		{
+			thd_old_data = thd_data = thd_root;
+			render_pass_count = 0;
+		}
+
+		void ClearPartial()
+		{
+			thd_old_data = thd_data;
+			thd_data = thd_root;
+		}
+
+		void Continue()
+		{
+			render_passes[render_pass_count] = End();
+			if (render_pass_count < sizeof(render_passes) / sizeof(u8*) - 1)
+				render_pass_count++;
+			else printf("OUT\n");
+		}
+		
+		u8* End()
+		{
+			return thd_data == thd_root ? thd_old_data : thd_data;
+		}
+
+		void Reset(u8* ptr)
+		{
+			thd_data = thd_root = thd_old_data = ptr;
+			render_pass_count = 0;
+		}
+
+	};
+
 #pragma pack(push, 1)   // n = 1
 //	Global Param/misc structs
 //4B

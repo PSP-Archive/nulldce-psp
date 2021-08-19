@@ -53,7 +53,7 @@ void usrDebugProfilerClear(void)
 }
 
 
-double spg_last_vps=0;
+u64 spg_last_vps=0;
 #if HOST_OS == OS_PSP
 extern "C"
 {
@@ -133,10 +133,10 @@ void CalculateSync()
 	sh4_sched_request(vblank_schid, spg_LineSh4Cycles);
 }
 
-u32 last_fps=0;
+float last_fps=0;
 s32 render_end_pending_cycles;
 bool render_end_pending;
-char fpsStr[256];
+char fpsStr[1024];
 
 int elapse_time(int tag, int cycl, int jit)
 {
@@ -185,12 +185,36 @@ int spg_line_sched(int tag, int cycl, int jit)
 			
 			// This turned out to be HBlank btw , needs to be emulated ;(
 			params.RaiseInterrupt(holly_HBLank);
-				
+			
+
 			u64 tdiff;
 			sceRtcGetCurrentTick(&tdiff);
-			if (tdiff - spg_last_vps >= 1000000)
+			u64 ts = ((tdiff - spg_last_vps) / sceRtcGetTickResolution());
+
+			extern u32 dynarecIdle;
+
+			
+
+			/*if (spd_cpu < 20) dynarecIdle = 0;
+			else if (spd_cpu < 50) dynarecIdle = 16;
+			else if (spd_cpu < 150) dynarecIdle = 32;
+			else if (spd_cpu > 180) dynarecIdle = 48;*/
+
+			if (ts >= 1)
 			{
-				spg_last_vps=tdiff;
+				
+				//float ts = (tdiff/sceRtcGetTickResolution()) - (spg_last_vps/sceRtcGetTickResolution());
+
+				u32 spd_vbs = (spg_VblankCount);
+				u32 spd_cpu = spd_vbs * spg_FrameSh4Cycles;
+				spd_cpu /= 1000000;	//mrhz kthx
+
+				spd_cpu = spd_cpu * 100 / 200;
+
+				
+				//notify for vblank :)
+				rend_vblank();
+				
 
 				const char* mode=0;
 				const char* res=SPG_CONTROL.interlace?"480i":"240p";
@@ -210,10 +234,9 @@ int spg_line_sched(int tag, int cycl, int jit)
 					mode="VGA";
 				}
 
-				sprintf(fpsStr,"FPS GPU: %d VBLANK: %d MODE: %s RES: %s",
+				snprintf(fpsStr,256,"FPS: %d MODE: %s RES: %s MHz:%.3d DMhz: %d\0",
 					FrameCount,
-					spg_VblankCount,
-					mode,res);
+					mode,res,spd_cpu,dynarecIdle);
 
 				VertexCount=0;
 				FrameCount=0;
@@ -221,9 +244,7 @@ int spg_line_sched(int tag, int cycl, int jit)
 
 				rend_set_fps_text(fpsStr);
 
-				//notify for vblank :)
-				rend_vblank();
-
+				sceRtcGetCurrentTick(&spg_last_vps);
 			}
 		}
 	}

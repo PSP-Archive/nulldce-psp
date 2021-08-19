@@ -6,6 +6,10 @@
 u32 pvr_readreg_TA(u32 addr,u32 sz);
 void pvr_writereg_TA(u32 addr,u32 data,u32 sz);
 
+extern bool fb_dirty;
+
+void pvr_update_framebuffer_watches();
+
 //vram 32-64b
 extern VArray2 vram;
 //read

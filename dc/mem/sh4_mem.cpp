@@ -181,11 +181,6 @@ void mem_map_defualt()
 	map_area6_init();
 	map_area7_init();
 
-	/*for (int i=0x0;i<0xE;i+=0x2)
-		_vmem_map_block_mirror(aica_ram.data,0x0080|(i << 12),0x00FF|(i << 12),ARAM_SIZE);
-
-	printf("HHHHHHHHH\n");*/
-
 	//0x0-0xD : 7 times the normal memmap mirrors :)
 	//some areas can be customised :)
 	for (int i=0x0;i<0xE;i+=0x2)
@@ -447,7 +442,7 @@ void WriteMemBlock_nommu_sq(u32 dst,u32* src)
 	if (dst_ptr)
 	{
 		dst&=dst_msk;
-		memcpy_vfpu((u8*)dst_ptr+dst,src,32);
+		memcpy((u8*)dst_ptr+dst,src,32);
 	}
 	else
 	{

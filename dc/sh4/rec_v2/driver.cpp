@@ -33,7 +33,7 @@ extern volatile bool  sh4_int_bCpuRun;
 
 
 #if HOST_OS != OS_LINUX
-u8 CodeCache[CODE_SIZE];
+u8 CodeCache[CODE_SIZE]; 
 #elif HOST_OS == OS_LINUX
 u8 pMemBuff[CODE_SIZE+4095];
 u8 *CodeCache;
@@ -162,11 +162,27 @@ u32 dynarecIdle = 2;
 bool BETcondPatch = false;
 
 void AnalyseBlock(DecodedBlock* blk);
+
+
+void SetProtectedFlags(DecodedBlock* blk){
+	
+	u32 addr = blk->start;
+
+	if (!IsOnRam(addr) || (addr & 0x1FFF0000) == 0x0c000000)
+	{
+		blk->read_only = false;
+		return;
+	}
+
+	blk->read_only = true;
+}
+
 DynarecCodeEntry* rdv_CompileBlock(u32 bpc)
 {
 	DecodedBlock* blk=dec_DecodeBlock(bpc,fpscr,SH4_TIMESLICE/2);
+	SetProtectedFlags(blk);
 	AnalyseBlock(blk);
-	DynarecCodeEntry* rv=ngen_Compile(blk,DoCheck(blk->start,blk->sh4_code_size));
+	DynarecCodeEntry* rv=ngen_Compile(blk, DoCheck(blk->start,blk->sh4_code_size), ((blk->start&0x3FFFFFFF)>0x0C010100));
 	dec_Cleanup();
 	return rv;
 }

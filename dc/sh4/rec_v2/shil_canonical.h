@@ -42,7 +42,7 @@ extern "C" f32 fipr_asm(float* fn, float* fm);
 	#define shil_opc(name) struct shil_opcl_##name { 
 	#define shil_opc_end() };
 
-	#define shil_canonical(rv,name,args,code) static rv name args { code }
+	#define shil_canonical(rv,name,args,code) struct name { static rv impl args { code } };
 	
 	#define shil_cf_arg_u32(x) ngen_CC_Param(op,&op->x,CPT_u32);
 	#define shil_cf_arg_f32(x) ngen_CC_Param(op,&op->x,CPT_f32);
@@ -50,7 +50,8 @@ extern "C" f32 fipr_asm(float* fn, float* fm);
 	#define shil_cf_rv_u32(x) ngen_CC_Param(op,&op->x,CPT_u32rv);
 	#define shil_cf_rv_f32(x) ngen_CC_Param(op,&op->x,CPT_f32rv);
 	#define shil_cf_rv_u64(x) ngen_CC_Param(op,&op->rd,CPT_u64rvL); ngen_CC_Param(op,&op->rd2,CPT_u64rvH);
-	#define shil_cf(x) ngen_CC_Call(op,(void*)x);
+	#define shil_cf_ext(x) ngen_CC_Call(op,(void*)&x);
+	#define shil_cf(x) shil_cf_ext(x::impl)
 
 	#define shil_compile(code) static void compile(shil_opcode* op) { ngen_CC_Start(op); code ngen_CC_Finish(op); }
 #elif  SHIL_MODE==2
@@ -61,7 +62,7 @@ extern "C" f32 fipr_asm(float* fn, float* fm);
 	#define shil_opc(name) struct shil_opcl_##name { 
 	#define shil_opc_end() };
 
-	#define shil_canonical(rv,name,args,code) static rv cimpl_##name args;
+	#define shil_canonical(rv,name,args,code) struct name { static rv impl args; };
 	#define shil_compile(code) static void compile(shil_opcode* op);
 #elif  SHIL_MODE==3
 	//generate struct list ...
@@ -77,13 +78,23 @@ extern "C" f32 fipr_asm(float* fn, float* fm);
 
 	#define shil_canonical(rv,name,args,code)
 	#define shil_compile(code)
+#elif SHIL_MODE==4
+//generate name strings ..
+	#define SHIL_START const char* shilop_str[]={
+	#define SHIL_END };
+
+	#define shil_opc(name) #name,
+	#define shil_opc_end()
+
+	#define shil_canonical(rv,name,args,code)
+	#define shil_compile(code)
 #else
 #error Invalid SHIL_MODE
 #endif
 
 
 
-#if SHIL_MODE==1
+#if SHIL_MODE==1 || SHIL_MODE==2
 //only in structs we use the code :)
 #include <math.h>
 #include "types.h"
@@ -167,14 +178,6 @@ shil_opc(nop)
 shil_recimp()
 shil_opc_end()
 
-shil_opc(maddu)
-shil_recimp()
-shil_opc_end()
-
-shil_opc(msubu)
-shil_recimp()
-shil_opc_end()
-
 //shop_mov32
 shil_opc(mov32)
 shil_recimp()
@@ -217,7 +220,7 @@ shil_opc_end()
 shil_opc(sync_sr)
 shil_compile
 (
-	shil_cf(UpdateSR);
+	//shil_cf(UpdateSR);
 	//die();
 )
 shil_opc_end()
@@ -225,7 +228,7 @@ shil_opc_end()
 shil_opc(sync_fpscr)
 shil_compile
 (
-	shil_cf(UpdateFPSCR);
+	//shil_cf(UpdateFPSCR);
 	//die();
 )
 shil_opc_end()

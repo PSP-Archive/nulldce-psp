@@ -148,9 +148,8 @@ INLINE void FASTCALL do_sqw(u32 Dest)
 
 extern "C" void do_sqw_nommu_area_3_nonvmem(u32 dst)
 {
-	const u32 Address = CCN_QACR_TR[0]+(dst&~0x1f);
-	
-	if (((Address >> 26) & 0x7) == 4){
+	if (((CCN_QACR_TR[0] >> 26) & 0x7) == 4){
+		const u32 Address = CCN_QACR_TR[0]+(dst&~0x1f);
 		TAWriteSQ(Address,sq_both);
 		return;
 	}

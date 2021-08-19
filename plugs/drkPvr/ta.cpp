@@ -10,13 +10,13 @@ namespace TASplitter
 }
 using namespace TASplitter;
 
-void libPvr_TaSQ(u32* data)
+void ta_vtx_data32(void* data)
 {
 	verify(TaCmd!=0);
 	Ta_Dma* t=(Ta_Dma*)data; 
 	TaCmd(t,t);
 }
-void libPvr_TaDMA(u32* data,u32 size)
+void ta_vtx_data(u32* data, u32 size)
 {
 	verify(TaCmd!=0);
 	Ta_Dma* ta_data=(Ta_Dma*)data;

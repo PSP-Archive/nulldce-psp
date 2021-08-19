@@ -4,8 +4,10 @@
 
 #define C_CORE
 
+extern VArray2 aica_ram;
+
 //#define CPUReadHalfWordQuick(addr) arm_ReadMem16(addr & 0x7FFFFF)
-#define CPUReadMemoryQuick(addr) arm_ReadMem32(addr & ARAM_MASK)
+#define CPUReadMemoryQuick(addr) (*(u32*)&aica_ram[(addr) & ARAM_MASK])
 #define CPUReadByte arm_ReadMem8
 #define CPUReadMemory arm_ReadMem32
 #define CPUReadHalfWord arm_ReadMem16
@@ -395,13 +397,15 @@ void CPUFiq()
 	pin on arm7
 */
 
+static int clockTicks;
+
 void arm_Run(u32 CycleCount)
 {
   if (!Arm7Enabled)
 	 return;
 
-	u32 clockTicks=0;
-	while (clockTicks<CycleCount)
+	clockTicks -= CycleCount;
+	while (clockTicks < 0)
 	{
 		if (armFiqEnable && e68k_out)
 		{
@@ -411,6 +415,11 @@ void arm_Run(u32 CycleCount)
 		#include "arm-new.h"
 	}
 
+}
+
+void arm_avoidRaceCondition()
+{
+	clockTicks = std::min(clockTicks, -50);
 }
 
 void arm_SetEnabled(bool enabled)

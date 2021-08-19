@@ -80,8 +80,6 @@ int sched_tmu_cb(int ch, int sch_cycl, int jitter)
 
 		s64 tcnt64 = (s64)read_TMU_TCNTch64(ch);
 
-		u32 tcor = tmu_regs_COR[ch];
-
 		//u32 cycles = tcor << tmu_shift[ch];
 
 		//64 bit maths to differentiate big values from overflows
@@ -93,6 +91,7 @@ int sched_tmu_cb(int ch, int sch_cycl, int jitter)
 			//printf("Interrupt for %d, %d cycles\n", ch, sch_cycl);
 
 			//schedule next trigger by writing the TCNT register
+			u32 tcor = tmu_regs_COR[ch];
 			write_TMU_TCNTch(ch, tcor + tcnt);
 		}
 		else {

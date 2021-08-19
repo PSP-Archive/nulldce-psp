@@ -127,6 +127,8 @@ u32 HACK_libAICA_ReadMem_aica_ram(u32 addr,u32 size)
 	if (addr==0x80005C)
 		return 0x80000;
 
+	printf("ADDR: %d\n",addr);
+
 	/*if (addr == 0x880000){
 		*(u32*)&aica_ram[((0x880000-0x800000)&0x1FFFFF)]=*(u32*)&aica_ram[((0x880000-0x800000)&0x1FFFFF)]?0:3;
 		return 0x80000;

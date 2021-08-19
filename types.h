@@ -168,11 +168,11 @@ using namespace std;
 
 #define VER_MAJOR 1		//MAJOR changes (like completely rewriten stuff ;p)
 #define VER_MINOR 2		//less-major changes (like, new dynarec / gui / whatever)
-#define VER_FIXBUILD 0	//minnor changes, fixes and few features added
+#define VER_FIXBUILD 1	//minnor changes, fixes and few features added
 
-#define VER_EMUNAME		"nullDC|Reicast/" VER_TARGET
+#define VER_EMUNAME		"NullDC/" VER_TARGET
 
-#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " beta 3 (built " __DATE__ "@" __TIME__ ")"
+#define VER_FULLNAME	VER_EMUNAME " v" PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) " beta 1 (built " __DATE__ "@" __TIME__ ")"
 #define VER_SHORTNAME	VER_EMUNAME " " PPSTR(VER_MAJOR) "." PPSTR(VER_MINOR) "." PPSTR(VER_FIXBUILD) "p1"
 
 #define dbgbreak {__debugbreak(); for(;;);}
@@ -264,6 +264,12 @@ void SaveSettings();
 u32 GetRTC_now();
 
 int EmuMain(int argc, wchar* argv[]);
+
+struct OnLoad
+{
+	typedef void OnLoadFP();
+	OnLoad(OnLoadFP* fp) { fp(); }
+};
 
 inline bool is_s8(u32 v) { return (s8)v==(s32)v; }
 inline bool is_u8(u32 v) { return (u8)v==(s32)v; }

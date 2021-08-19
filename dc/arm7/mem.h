@@ -17,6 +17,12 @@ void WriteMemArm(u32 addr,T data);
 u32 FASTCALL sh4_ReadMem_reg(u32 addr,u32 size);
 void FASTCALL sh4_WriteMem_reg(u32 addr,u32 data,u32 size);
 
+extern bool aica_interr;
+extern u32 aica_reg_L;
+extern bool e68k_out;
+extern u32 e68k_reg_L;
+extern u32 e68k_reg_M;
+
 void init_mem();
 void term_mem();
 

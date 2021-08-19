@@ -23,7 +23,12 @@ u32 FASTCALL libPvr_ReadReg(u32 addr,u32 size)
 }
 
 void PrintfInfo();
+
 extern bool pal_needs_update;
+extern u32 pal_rev_256[4];
+extern u32 pal_rev_16[64];
+extern u32 _pal_rev_256[4];
+extern u32 _pal_rev_16[64];
 
 
 void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
@@ -95,21 +100,18 @@ void FASTCALL libPvr_WriteReg(u32 paddr,u32 data,u32 size)
 			}
 			return;
 		
+		case FB_R_SIZE_addr:
+            if (PvrReg(addr, u32) != data)
+            {
+                PvrReg(addr, u32) = data;
+                //fb_dirty = false;
+                pvr_update_framebuffer_watches();
+            }
+		return;
+		
 
 		default:
 		break;
-			/*if (addr>=PALETTE_RAM_START_addr)
-			{
-				if (PvrReg(addr,u32)!=data)
-				{
-					u32 pal=addr&1023;
-
-					//are palettes handled ?
-					//			pal_needs_update=true;
-					//			_pal_rev_256[pal>>8]++;
-					//			_pal_rev_16[pal>>4]++;
-				}
-			}*/
 	}
 
 	if (addr >= PALETTE_RAM_START_addr && PvrReg(addr, u32) != data)

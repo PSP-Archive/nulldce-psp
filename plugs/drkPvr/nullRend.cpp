@@ -11,13 +11,25 @@
 
 #include "dc/mem/sh4_mem.h"
 #include "dc/sh4/sh4_sched.h"
+#include "dc/sh4/rec_v2/xxhash/xxhash.h"
+#include "dc/pvr/pvr_if.h"
+
+#include "melib.h"
+#include "me.h"
+
+SceUID thid;
+int semaid;
+
+bool ispal_32bit = true;
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
 extern int render_end_schid;
+extern tad_context ta_tad;
 
 using namespace TASplitter;
+
 #if HOST_SYS == SYS_PSP
 #include <pspgu.h>
 #include <pspgum.h>
@@ -29,12 +41,9 @@ using namespace TASplitter;
 #include <pspsdk.h>
 
 #include "pspDmac.h"
-#include "me.h"
 
 
 static unsigned int staticOffset = 0;
-
-volatile bool FB_DIRTY;
 
 bool changed = true;
 
@@ -98,14 +107,16 @@ float PSP_DC_AR[][2] =
 static unsigned int ALIGN16 list[262144];
 bool PSP_720_480 = false;
 bool pal_needs_update=true;
+u32 palette16_ram[1024];
+u32 palette32_ram[1024];
+u32 pal_hash_256[4];
+u32 pal_hash_16[64];
+
 u32 BUF_WIDTH=512;
 u32 SCR_WIDTH=480;
 u32 SCR_HEIGHT=272;
 
 int palette_index = 0;
-
-u8   PaletteUpdate = 0;
-u8   _PaletteUpdate = 1;
 
 ScePspFMatrix4 curr_mtx;
 float dc_width,dc_height;
@@ -151,6 +162,8 @@ struct PolyParam
 
 	TSP tsp;
 	TCW tcw;
+
+	u32 palette_hash = 0;
 };
 
 const u32 PalFMT[4]=
@@ -175,12 +188,10 @@ bool global_regd;
 float vtx_min_Z;
 float vtx_max_Z;
 
-bool _doRender = true;
-
 //no rendering .. yay (?)
 namespace NORenderer
 {
-	char fps_text[512];
+	char fps_text[1024];
 
 	struct VertexDecoder;
 	FifoSplitter<VertexDecoder> TileAccel;
@@ -224,6 +235,10 @@ namespace NORenderer
 
 
 	u32 old_aspectRatio = 0;
+	void palette_update();
+
+	int ta_parse_cnt = 0;
+	bool _DoRender  	 = true; 
 
 	void VBlank()
 	{
@@ -233,9 +248,7 @@ namespace NORenderer
 
 			dc_width=PSP_DC_AR[settings.Enhancements.AspectRatioMode%PSP_DC_AR_COUNT][0];
 			dc_height=PSP_DC_AR[settings.Enhancements.AspectRatioMode%PSP_DC_AR_COUNT][1];
-		}
-
-		if (FB_R_CTRL.fb_enable && !VO_CONTROL.blank_video) _doRender = true;
+		}		
 	}
 
 	//pixel convertors !
@@ -356,7 +369,7 @@ namespace NORenderer
 	pixelcvt_next(convPAL4_TW,4,4)
 	{
 		u8* p_in=(u8*)data;
-		u32* pal=&palette_lut[palette_index];
+		u32* pal = ispal_32bit ? &palette16_ram[palette_index] : &palette32_ram[palette_index];
 
 		pb_prel(pb,pbw,0,0,pal[p_in[0]&0xF]);
 		pb_prel(pb,pbw,0,1,pal[(p_in[0]>>4)&0xF]);p_in++;
@@ -381,7 +394,7 @@ namespace NORenderer
 	pixelcvt_next(convPAL8_TW,2,4)
 	{
 		u8* p_in=(u8*)data;
-		u32* pal=&palette_lut[palette_index];
+		u32* pal = ispal_32bit ? &palette16_ram[palette_index] : &palette32_ram[palette_index];
 
 		pb_prel(pb,pbw,0,0,pal[p_in[0]]);p_in++;
 		pb_prel(pb,pbw,0,1,pal[p_in[0]]);p_in++;
@@ -763,6 +776,16 @@ void BuildTwiddleTables()
 			printf("\n");
 		}
 
+	int TexUV(u32 flip,u32 clamp)
+	{
+		if (clamp)
+			return 1;
+		else if (flip)
+			return -1;
+		else
+			return 1;
+	}
+
 	void SetupPaletteForTexture(u32 palette_index,u32 sz)
 	{
 		u32 fmtpal=PAL_RAM_CTRL&3;
@@ -770,7 +793,6 @@ void BuildTwiddleTables()
 		sceGuClutMode(PalFMT[fmtpal],0,0xFF,0);//or whatever
 		sceGuClutLoad(sz/8,&palette_lut[palette_index]);
 	}
-
 
 	inline bool is_fmt_supported(TSP tsp,TCW tcw) {
 			const s32 sw = (s32)((u32)(8<<tsp.TexU));
@@ -801,6 +823,18 @@ void BuildTwiddleTables()
 			}
 		return false;
 	}
+
+	enum PixelFormat
+	{
+		Pixel1555 = 0,
+		Pixel565 = 1,
+		Pixel4444 = 2,
+		PixelYUV = 3,
+		PixelBumpMap = 4,
+		PixelPal4 = 5,
+		PixelPal8 = 6,
+		PixelReserved = 7
+	};
 
 	static void SetTextureParams(PolyParam* mod)
 	{
@@ -833,11 +867,16 @@ void BuildTwiddleTables()
 
 		#define normPL_text(format) {\
 				u32 sr = w; \
-				if (mod->tcw.NO_PAL.StrideSel) sr=(TEXT_CONTROL&31)*32; \
-				if (mod->tcw.NO_PAL.StrideSel || *(u32*)&params.vram[sa-0]!=0xDEADC0DE)\
+				bool rc = (mod->tcw.PAL.PixelFmt == PixelPal4 && mod->palette_hash != pal_hash_16[mod->tcw.PAL.PalSelect]) \
+				|| (mod->tcw.PAL.PixelFmt == PixelPal8 && mod->palette_hash != pal_hash_256[mod->tcw.PAL.PalSelect >> 4]); \
+				if (/*rc || */*(u32*)&params.vram[sa-0]!=0xDEADC0DE)\
 				{ \
 					format((u8*)&params.vram[sa],sr,h); \
 					*(u32*)&params.vram[sa-0]=0xDEADC0DE;\
+					if (mod->tcw.PAL.PixelFmt == PixelPal4) \
+						mod->palette_hash = pal_hash_16[mod->tcw.PAL.PalSelect]; \
+					else \
+						mod->palette_hash = pal_hash_256[mod->tcw.PAL.PalSelect >> 4]; \
 				}\
 		}
 
@@ -938,53 +977,59 @@ void BuildTwiddleTables()
 		case 5:
 			//5	4 BPP Palette	Palette texture with 4 bits/pixel
 			verify(mod->tcw.PAL.VQ_Comp==0);
+
+			palette_update();
+
 			if (mod->tcw.NO_PAL.MipMapped)
 				sa+=MipPoint[mod->tsp.TexU]<<1;
 
+			ispal_32bit = PalFMT[PAL_RAM_CTRL&3] == GU_PSM_8888;
 
-			palette_index = mod->tcw.PAL.PalSelect<<4;
-
-			normPL_text(texture_TW<convPAL4_TW>)/*
-			
-			if (*(u32*)&params.vram[sa-0]!=0xDEADC0DE)	
-			{	
-				texture_TW<convPAL4_TW>((u8*)&params.vram[sa],w,h);
-				*(u32*)&params.vram[(sa&(~0x3))-0]=0xDEADC0DE;
-			}*/
+			normPL_text(texture_TW<convPAL4_TW>)
 
 			FMT=PalFMT[PAL_RAM_CTRL&3];
 
-			
+			/*SetupPaletteForTexture((mod->tcw.PAL.PalSelect<<4),16);
 
-			/*sceGuClutMode(GU_PSM_T16,1,0x3F,0);//or whatever
-			sceGuClutLoad(8,&palette_lut[palette_index]);
+			sceGuTexMode(GU_PSM_T4,0,0,0);
 
-			FMT=GU_PSM_T4;*/
-
+			Palette_setup_done =true;*/
 			break;
 		case 6:
 			{
 				//6	8 BPP Palette	Palette texture with 8 bits/pixel
 				verify(mod->tcw.PAL.VQ_Comp==0);
+
+				palette_update();
+
 				if (mod->tcw.NO_PAL.MipMapped)
 					sa+=MipPoint[mod->tsp.TexU]<<2;
 
+				ispal_32bit = PalFMT[PAL_RAM_CTRL&3] == GU_PSM_8888;
+
 				normPL_text(texture_TW<convPAL8_TW>)
 
-				//Palette_setup_done =true;
+				FMT=PalFMT[PAL_RAM_CTRL&3];//wha? the ? FUCK!
+
+				/*SetupPaletteForTexture((mod->tcw.PAL.PalSelect<<4)&(~0xFF),256);
+
+				sceGuTexMode(GU_PSM_T8,0,0,0);
+
+				Palette_setup_done =true;*/
 
 				//SetupPaletteForTexture(mod->tcw.PAL.PalSelect<<4,256);
 
-				FMT=PalFMT[PAL_RAM_CTRL&3];//wha? the ? FUCK!
+				
 			}
 			break;
 		default:
 		break;
 			//printf("Unhandled texture\n");
 			//memset(temp_tex_buffer,0xFFEFCFAF,w*h*4);
+			return;
 		}
 
-		if (texVQ && !Palette_setup_done)
+		if (texVQ)
 		{
 			sceGuClutMode(FMT,0,0xFF,0);
 			sceGuClutLoad(256/8,vq_codebook);
@@ -995,6 +1040,9 @@ void BuildTwiddleTables()
 
 		//sceGuTexScale(w, h);
 		sceGuTexMode(FMT,0,0,0);
+
+		sceGuTexScale(TexUV(mod->tsp.FlipU,mod->tsp.ClampU), TexUV(mod->tsp.FlipV,mod->tsp.ClampV));
+
 		sceGuTexImage(0, w>512?512:w, h>512?512:h, w,
 			params.vram + sa );
 
@@ -1090,12 +1138,12 @@ void BuildTwiddleTables()
 		//Color
 		u32 col=vri(ptr);ptr+=4;
 		cv->col=ABGR8888(col);
-		if (isp.Offset)
+		/*if (isp.Offset)
 		{
 			//Intesity color (can be missing too ;p)
 			u32 col=vri(ptr);ptr+=4;
 		//	vert_packed_color_(cv->spc,col);
-		}
+		}*/
 	}
 
 	void reset_vtx_state()
@@ -1127,88 +1175,74 @@ void BuildTwiddleTables()
 
 	#define VTX_TFX(x) (x)
 	#define VTX_TFY(y) (y)
-	
-	//480*(480/272)=847.0588 ~ 847, but we'l use 848.
-
-	const u32 unpack_1_to_8[2]={0,0xFF};
-
-	#define ARGB8888(a,r,g,b) \
-			(a|r|g|b)
-
-	#define ARGB1555_PL( word )	\
-		ARGB8888(unpack_1_to_8[(word>>15)&1],((word>>10) & 0x1F)<<3,	\
-		((word>>5) & 0x1F)<<3,(word&0x1F)<<3)
-
-	#define ARGB565_PL( word )		\
-		ARGB8888(0xFF,((word>>11) & 0x1F)<<3,	\
-		((word>>5) & 0x3F)<<2,(word&0x1F)<<3)
-
-	#define ARGB4444_PL( word )	\
-		ARGB8888( (word&0xF000)>>(12-4),(word&0xF00)>>(8-4),(word&0xF0)>>(4-4),(word&0xF)<<4 )
 
 
-	#define ARGB1555_TW( word )	 word
+	// Unpack to 16-bit word
 
-	#define ARGB565_TW( word )		\
-		ARGB8888(unpack_4_to_8_tw[(word&0xF000)>>(12)],unpack_5_to_8_tw[(word>>11) & 0x1F],	\
-		unpack_6_to_8_tw[(word>>5) & 0x3F],unpack_5_to_8_tw[word&0x1F])
-	
-	#define ARGB4444_TW( word )	\
-		ARGB8888( unpack_4_to_8_tw[(word&0xF000)>>(12)],unpack_4_to_8_tw[(word&0xF00)>>(8)],unpack_4_to_8_tw[(word&0xF0)>>(4)],unpack_4_to_8_tw[(word&0xF)] )
+	#define ARGB1555( word )	( ((word>>15)&1) | (((word>>10) & 0x1F)<<11)  | (((word>>5) & 0x1F)<<6)  | (((word>>0) & 0x1F)<<1) )
 
+	#define ARGB565( word )	( (((word>>0)&0x1F)<<0) | (((word>>5)&0x3F)<<5) | (((word>>11)&0x1F)<<11) )
+
+	#define ARGB4444( word ) ( (((word>>0)&0xF)<<4) | (((word>>4)&0xF)<<8) | (((word>>8)&0xF)<<12) | (((word>>12)&0xF)<<0) )
+
+	#define ARGB8888( word ) ( (((word>>4)&0xF)<<4) | (((word>>12)&0xF)<<8) | (((word>>20)&0xF)<<12) | (((word>>28)&0xF)<<0) )
+
+	// Unpack to 32-bit word
+
+	#define ARGB1555_32( word )    ( ((word & 0x8000) ? 0xFF000000 : 0) | (((word>>10) & 0x1F)<<3)  | (((word>>5) & 0x1F)<<11)  | (((word>>0) & 0x1F)<<19) )
+
+	#define ARGB565_32( word )     ( (((word>>11)&0x1F)<<3) | (((word>>5)&0x3F)<<10) | (((word>>0)&0x1F)<<19) | 0xFF000000 )
+
+	#define ARGB4444_32( word ) ( (((word>>12)&0xF)<<28) | (((word>>8)&0xF)<<4) | (((word>>4)&0xF)<<12) | (((word>>0)&0xF)<<20) )
+
+	#define ARGB8888_32( word ) ( ((word >> 0) & 0xFF000000) | (((word >> 16) & 0xFF) << 0) | (((word >> 8) & 0xFF) << 8) | ((word & 0xFF) << 16) )
 
 	void palette_update()
 	{
 	
 		if (pal_needs_update==false)
 			return;
-		
-		//if ((_PaletteUpdate<PaletteUpdate)){ _PaletteUpdate++; printf("SJIP\n"); return;}
-
-		_PaletteUpdate = 0;
 
 		pal_needs_update=false;
 		switch(PAL_RAM_CTRL&3)
 		{
-			case 0:
-			case 8:
-				memcpy_vfpu(palette_lut,PALETTE_RAM,1024 * sizeof(u32));
+		case 0:
+			for (int i=0;i<1024;i++)
+			{
+				palette16_ram[i] = ABGR1555(PALETTE_RAM[i]);
+				palette32_ram[i] = ABGR1555(PALETTE_RAM[i]);
+			}
 			break;
 
-			case 1:
-				for (int i=0;i<1024;i += 4)
-				{
-					/*void* dst = &palette_lut[i];
-					const u32* src = &PALETTE_RAM[i];
-					__asm__ 
-					(
-						"lv.q C000, %1			\n"
-						"vt5650.q C000, C000	\n"
-						"sv.q C000, %0			\n"
-						: "=m"(*palette_lut)
-						: "m"(*src)
-					);*/
-					palette_lut[i]=ARGB565_TW(PALETTE_RAM[i]);
-				}
+		case 1:
+			for (int i=0;i<1024;i++)
+			{
+				palette16_ram[i] = ABGR0565(PALETTE_RAM[i]);
+				palette32_ram[i] = ABGR0565(PALETTE_RAM[i]);
+			}
 			break;
 
-			case 2:
-				for (int i=0;i<1024;i += 4)
-				{
-					/*void* dst = &palette_lut[i];
-					const u32* src = &PALETTE_RAM[i];
-					__asm__ 
-					(
-						"lv.q C000, %1			\n"
-						"vt4444.q C000, C000	\n"
-						"sv.q C000, %0			\n"
-						: "=m"(*palette_lut)
-						: "m"(*src)
-					);*/
-					palette_lut[i]=ARGB4444_TW(PALETTE_RAM[i]);
-				}
+		case 2:
+			for (int i=0;i<1024;i++)
+			{
+				palette16_ram[i] = ABGR4444(PALETTE_RAM[i]);
+				palette32_ram[i] = ABGR4444(PALETTE_RAM[i]);
+			}
+			break;
+
+		case 3:
+			for (int i=0;i<1024;i++)
+			{
+				palette16_ram[i] = ABGR8888(PALETTE_RAM[i]);
+				palette32_ram[i] = ABGR8888(PALETTE_RAM[i]);
+			}
 			break;
 		}
+
+		for (int i = 0; i < 64; i++)
+			pal_hash_16[i] = XXH32(&palette32_ram[i << 4], 16 * 4, 7);
+		for (int i = 0; i < 4; i++)
+			pal_hash_256[i] = XXH32(&palette32_ram[i << 8], 256 * 4, 7);
 	}
 
 
@@ -1231,15 +1265,11 @@ void BuildTwiddleTables()
 		pspDebugScreenSetXY(0,0);
 		pspDebugScreenPrintf("%s",fps_text);
 
-		//if(!PSP_UC(draw)) return;
-
 		//wait for last frame to end
 		sceGuSync(GU_SYNC_FINISH,GU_SYNC_WHAT_DONE);
 
 		fbp0 = sceGuSwapBuffers();
-
-		palette_update();
-
+		
 		//--BG poly
 		u32 param_base=PARAM_BASE & 0xF00000;
 		_ISP_BACKGND_D_type bg_d;
@@ -1302,6 +1332,8 @@ void BuildTwiddleTables()
 			curr_mtx.z.w=1;
 			curr_mtx.y.z=0;
 
+			curr_mtx.z.z= 1.f;
+
 			//clear out other matrixes
 			sceGumMatrixMode(GU_VIEW);
 			sceGumLoadIdentity();
@@ -1315,32 +1347,13 @@ void BuildTwiddleTables()
 
 		if (unlikely(vtx_min_Z<=0.001))
 			vtx_min_Z=0.001;
-		if (unlikely(vtx_max_Z<0 || vtx_max_Z>128*1024))
-			vtx_max_Z=1;
-
-		/*if (vtx_max_Z != old_vtx_max_Z)
-		{
-			curr_mtx.z.z= ((1.f/(vtx_max_Z))* 1.004f);
-			old_vtx_max_Z = vtx_max_Z;
-		}*/
 
 		curr_mtx.z.z= ((1.f/(vtx_max_Z))* 1.004f);
 		curr_mtx.w.z= -vtx_min_Z;
-		//curr_mtx.z.w=1.1f;
-
-		/*float normal_max=vtx_max_Z;
-
-		float SCL=-2/(vtx_min_Z * vtx_max_Z);
-		curr_mtx.z.z=-((2.f/(vtx_max_Z))* SCL);
-		curr_mtx.w.z=SCL;*/
-
 		
-
 		//Load the matrix to gu
 		sceGumLoadMatrix(&curr_mtx);
 
-		//push it to the hardware :)
-		sceGumUpdateMatrix();
 
 		/*sceGuDisable(GU_SCISSOR_TEST);
 		sceGuScissor(0,0,512,271);
@@ -1389,10 +1402,12 @@ void BuildTwiddleTables()
 				count&=0x7FFF;
 			}
 
-			sceGuDrawArray(GU_TRIANGLE_STRIP,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_3D,count,0,drawVTX);
+			sceGumDrawArray(GU_TRIANGLE_STRIP,GU_TEXTURE_32BITF|GU_COLOR_8888|GU_VERTEX_32BITF|GU_TRANSFORM_3D,count,0,drawVTX);
 
 			drawVTX+=count;
 		}
+
+		//PSP_UC(_DoRender) = false;
 
 		reset_vtx_state();
 		sceGuFinish();
@@ -1406,16 +1421,11 @@ void BuildTwiddleTables()
 		
 		FrameCount++;
 
-		if (FB_W_SOF1 & 0x1000000)
-			return;
-
-		if (!_doRender) { return;}
-
-		render_end_pending_cycles = (VtxCnt * 60) + 500000 * 3;
+		render_end_pending_cycles = 500000 * 3;
 
 		sh4_sched_request(render_end_schid, render_end_pending_cycles);
 
-	    DoRender();
+		DoRender();
 	}
 	void EndRender()
 	{
@@ -1438,26 +1448,19 @@ void BuildTwiddleTables()
 
 		}
 
+		#define saturate01(x) (((s32&)x)<0?0:(s32&)x>0x3f800000?1:x)
 		static u32 FLCOL(float* col)
 		{
-			u32 A=col[0]*255;
-			u32 R=col[1]*255;
-			u32 G=col[2]*255;
-			u32 B=col[3]*255;
-			if (A>255)
-				A=255;
-			if (R>255)
-				R=255;
-			if (G>255)
-				G=255;
-			if (B>255)
-				B=255;
+			u32 A=u8(saturate01(col[0])*255);
+			u32 R=u8(saturate01(col[1])*255);
+			u32 G=u8(saturate01(col[2])*255);
+			u32 B=u8(saturate01(col[3])*255);
 
 			return (A<<24) | (B<<16) | (G<<8) | R;
 		}
 		static u32 INTESITY(float inte)
 		{
-			u32 C=inte*255;
+			u32 C=saturate01(inte)*255;
 			if (C>255)
 				C=255;
 			return (0xFF<<24) | (C<<16) | (C<<8) | (C);
@@ -1538,8 +1541,7 @@ void BuildTwiddleTables()
 		curVTX[dst].y=VTX_TFY(_y)*W; \
 		if (W<vtx_min_Z)	\
 			vtx_min_Z=W;	\
-		else if (W>vtx_max_Z)	\
-			vtx_max_Z=W;	\
+		else if ((s32&)vtx_max_Z<(s32&)W && (s32&)W<0x49800000) vtx_max_Z=W;\
 		curVTX[dst].z=W; /*Linearly scaled later*/
 
 		//Poly Vertex handlers
@@ -1854,6 +1856,7 @@ void BuildTwiddleTables()
 		{
 
 		}
+
 		//Misc
 		__forceinline
 		static void ListCont()
@@ -1891,8 +1894,6 @@ void BuildTwiddleTables()
 
 		printf("Init gu\n");
 
-		FB_DIRTY = false;
-
 		fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 		fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 		zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_4444);
@@ -1904,7 +1905,7 @@ void BuildTwiddleTables()
 		sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2));
 		sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT);
 		sceGuDepthRange(0xffff, 0);
-		sceGuScissor(0,0,SCR_WIDTH,SCR_HEIGHT);
+		sceGuScissor(0,0,512,512);
 		sceGuEnable(GU_SCISSOR_TEST);
 		sceGuEnable(GU_DEPTH_TEST);
 		sceGuEnable(GU_CLIP_PLANES);
@@ -1921,6 +1922,12 @@ void BuildTwiddleTables()
 		sceGuSync(0,0);
 
 		sceGuDisplay(1);
+
+		/*sceKernelDcacheWritebackInvalidateAll();
+
+		ME_Init();
+    	InitFunction(ta_parse_vdrc_Threaded, 0);
+    	StartFunction();*/
 
 		return TileAccel.Init();
 	}
@@ -1976,8 +1983,9 @@ using namespace NORenderer;
 #if HOST_SYS==SYS_PSP
 void pspguCrear()
 {
+	sceGuSync(GU_SYNC_FINISH,GU_SYNC_WHAT_DONE);
 	sceGuStart(GU_DIRECT,list);
-	sceGuClearColor(0);
+	sceGuClearColor(0x00682e00);
 	sceGuClearDepth(0);
 	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
 	sceGuFinish();

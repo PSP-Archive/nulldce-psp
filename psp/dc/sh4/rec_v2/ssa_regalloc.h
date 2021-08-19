@@ -308,9 +308,7 @@ struct RegAlloc
 		{
 			if (all_spans[sid]->nreg==regd)
 			{
-				printf("1 REG : %d  %d\n", all_spans[sid]->nreg, regS);
 				all_spans[sid]->nreg = regS;
-				printf("2 REG : %d  %d\n", all_spans[sid]->nreg, regS);
 				return;
 			}
 		}
@@ -329,7 +327,6 @@ struct RegAlloc
 		}
 		else
 		{
-			printf("REG? %d\n", prm.is_reg());
 			die("map must return value\n");
 			return (nreg_t)-1;
 		}

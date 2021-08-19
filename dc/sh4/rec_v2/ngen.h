@@ -47,7 +47,7 @@ extern volatile bool  sh4_int_bCpuRun;
 //Stuff to be implemented per dynarec core
 
 //Called to compile a block
-DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks);
+DynarecCodeEntry* ngen_Compile(DecodedBlock* block,bool force_checks, bool opt);
 //Called when blocks are reseted
 void ngen_ResetBlocks();
 //Value to be returned when the block manager failed to find a block,

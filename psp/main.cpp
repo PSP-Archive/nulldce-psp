@@ -13,6 +13,9 @@
 
 #include "plugs/drkPvr/threaded.h"
 
+
+#include "kubridge.h"
+
 #include <pspgu.h>
 #include <psprtc.h>
 
@@ -32,6 +35,12 @@ PSP_HEAP_SIZE_KB(-1024);
 extern "C"{
 	void VramSetSize(int kb);
 }
+
+struct _Settings {
+	const char * setting_name;
+	const char * setting_dscr;
+		  void * setting_value;
+};
 
 
 #ifdef NOPSPLINK
@@ -248,10 +257,26 @@ int main(int argc, wchar* argv[])
 	if (!freopen("host0:/ndcerrlog.txt","w",stderr))
 		freopen("ndcerrlog.txt","w",stderr);
 	setbuf(stderr,0);*/
+
+	if (!(kuKernelGetModel() > 0)) {
+
+		SceCtrlData pad;
+
+		pspDebugScreenInitEx((void*)0x4000000,GU_PSM_8888,1);
+		pspDebugScreenPrintf("Error: PSP phat not supported.\n Press O to exit");
+
+		while (true){
+
+			if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
+
+			if (pad.Buttons & PSP_CTRL_CIRCLE)
+			{
+				return false;
+			}
+		}
+	}
 	
 	scePowerSetClockFrequency(333,333,166);
-	
-	//if(LoadPRX("dvemgr.prx")) pspAllocExtraVram();
 
 	dynarecIdle = 5;
 
@@ -262,8 +287,6 @@ int main(int argc, wchar* argv[])
 	VramSetSize(4*1024);
 
 	printf("Vram Size: %i\n", sceGeEdramGetSize());
-
-	//Init_ME();
 
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -365,9 +388,8 @@ s32 ListFiles(vector<FileInfoS>& dirs,const char* dir)
 			if (strstr(temp,".cdi")!=0 || strstr(temp,".mds")!=0 || strstr(temp,".gdi")!=0 || strstr(temp,".nrg")!=0)
 			{
 				FileInfoS fies;
-				fies.name=dir;
 				//fies.name+="/";
-				fies.name+=ent->d_name;
+				fies.name=ent->d_name;
 				fies.path=dir;
 				//fies.path+="/";
 				fies.path+=ent->d_name;
@@ -399,50 +421,49 @@ void TryUSBHFS(vector<FileInfoS>& dirs)
 void pspguCrear();
 void pspguWaitVblank();
 
-const char * setting_txt[] {"  Dreamcast cpu Downclock", "  Enable unsafe optimizations", "  Enable Optimized Writing", "  Enable Optimized Reading", "  Underclock AICA", "  Sonic AICA HACK", "  USE SRA","  Run with interpreter (ONLY FOR DEBUGGING)" , " "};
-/*const char * dynaloop_txt[] {"  Perfect","  Light","  Medium", "  High"};
-const u8     dynaloop_val[] {0, 4, 12, 36};*/
-
-u16 overClockPVRval;
-
-extern bool reg_optimizzation;
 extern bool clc_fk;
-extern bool OptmizedReading;
-extern bool OptmizedWriting;
 extern bool sonicHax;
-extern bool _SRA;
 extern s8 	UnderclockAica;
+u8 jit = 1;
 
-void Settings(const char *rom){
+const _Settings setting[] {
+	{ "  Dreamcast cpu Downclock", "Downclock the dreamcast cpu to have a speedboost.", 	   	&clc_fk 		},
+	{ "  Underclock AICA", 		   "Downclock the dreamcast audio cpu to have a speedboost.", 	&UnderclockAica },
+	{ "  AICA HACK", 			   "Some games needs this enabled to work correctly", 			&sonicHax		},
+	{ "  Run with interpreter (ONLY FOR DEBUGGING)", "\0", 										&jit			}, 
+	{ " ", "\0", nullptr} 
+};
+
+bool Settings(const char *rom){
 
 	SceCtrlData pad, old;
 
 	u8 pad_index = 0;
 	u8 sel = 0;
 
-	u8 jit = 1;
-
 	char buff[256] {0};
 
 	dynarecIdle = 0;
 
+	pspDebugScreenEnableBackColor(0);
+
 	for (;;){
 
-		pspguCrear();
 		pspguWaitVblank();
+		pspguCrear();
 		pspDebugScreenSetXY(0,0);
-		pspDebugScreenSetTextColor(0x7F7F7F7F);
+		pspDebugScreenSetTextColor(0x00ffffff);
 
 		if (dynarecIdle < 0) dynarecIdle = 0;
 		if (UnderclockAica == 0) UnderclockAica = 1;
 
-		if (pad_index >= 8)  	  pad_index = 0;
+		if (pad_index >= 4)  	  pad_index = 0;
 		else if (pad_index < 0)   pad_index = 0;
 
-		pspDebugScreenPrintf("\nBUILD:%s\n\nROM: %s \n\n\nSETTINGS:\n\n",VER_FULLNAME,rom); 
+		pspDebugScreenPrintf("\n\nROM: %s \n\n\nSETTINGS:\n\n",rom); 
 
-		for (int i = 0; i < 8; i++){
-			strcpy(buff,setting_txt[i]);
+		for (int i = 0; i < 4; i++){
+			strcpy(buff,setting[i].setting_name);
 			/*if (i == 0) strcat(buff," = %s\n");
 			else*/	    strcat(buff," = %d\n");
 
@@ -451,15 +472,15 @@ void Settings(const char *rom){
 
 			switch(i){
 				case 0: pspDebugScreenPrintf(buff,dynarecIdle); 			break;
-				case 1: pspDebugScreenPrintf(buff,reg_optimizzation); 		break;
-				case 2: pspDebugScreenPrintf(buff,OptmizedWriting); 		break;
-				case 3: pspDebugScreenPrintf(buff,OptmizedReading); 		break;
-				case 4: pspDebugScreenPrintf(buff,UnderclockAica-1);		break;
-				case 5: pspDebugScreenPrintf(buff,sonicHax); 				break;
-				case 6: pspDebugScreenPrintf(buff,_SRA); 					break;
-				case 7: pspDebugScreenPrintf(buff,!jit); 					break;
+				case 1: pspDebugScreenPrintf(buff,UnderclockAica-1);		break;
+				case 2: pspDebugScreenPrintf(buff,sonicHax); 				break;
+				case 3: pspDebugScreenPrintf(buff,!jit); 					break;
 			} 	
 		}
+
+		pspDebugScreenSetXY(0,26);
+		pspDebugScreenSetTextColor(0x00ffffff);
+		pspDebugScreenPrintf("\n%s\n\nO: BACK | START: Start the game\n\n", setting[pad_index].setting_dscr); 
 
 		
 		if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
@@ -470,24 +491,16 @@ void Settings(const char *rom){
 
 		if (pad.Buttons & PSP_CTRL_LEFT)
 		{	if (pad_index == 0) dynarecIdle-= 16;
-			else if (pad_index == 1) reg_optimizzation = 0;
-			else if (pad_index == 2) OptmizedWriting = 0;
-			else if (pad_index == 3) OptmizedReading = 0;
-			else if (pad_index == 4) UnderclockAica--;
-			else if (pad_index == 5) sonicHax = 0;
-			else if (pad_index == 6) _SRA = 0;
+			else if (pad_index == 1) UnderclockAica--;
+			else if (pad_index == 2) sonicHax = 0;
 			else jit = 1;
 		}
 
 		if (pad.Buttons & PSP_CTRL_RIGHT)
 		{
 			if (pad_index == 0) dynarecIdle+= 16;
-			else if (pad_index == 1) reg_optimizzation = 1;
-			else if (pad_index == 2) OptmizedWriting = 1;
-			else if (pad_index == 3) OptmizedReading = 1;
-			else if (pad_index == 4) UnderclockAica++;
-			else if (pad_index == 5) sonicHax = 1;
-			else if (pad_index == 6) _SRA = 1;
+			else if (pad_index == 1) UnderclockAica++;
+			else if (pad_index == 2) sonicHax = 1;
 			else jit = 0;
 		}
 
@@ -505,17 +518,26 @@ void Settings(const char *rom){
 			break;
 		}
 
+		if (pad.Buttons & PSP_CTRL_CIRCLE)
+		{
+			return false;
+		}
+
 	}
 
 	CPUType(jit);
-
+	pspguWaitVblank();
 	pspguCrear();
 	pspguWaitVblank();
 	pspDebugScreenSetXY(0,0);
-	pspDebugScreenSetTextColor(0x7F7F7F7F);
+	pspDebugScreenSetTextColor(0x00ffffff);
 	pspDebugScreenPrintf("\n\n\n\n\tBOOTING: %s\n\n", rom);
 
-	return;
+	pspDebugScreenSetBackColor(0);
+	pspDebugScreenEnableBackColor(1);
+	pspDebugScreenSetTextColor(0x00bbbbbb);
+
+	return true;
 }
 
 int os_GetFile(char *szFileName, char *szParse,u32 flags)
@@ -538,76 +560,105 @@ int os_GetFile(char *szFileName, char *szParse,u32 flags)
 
 		return 0;
 	}
-	bool usb=true;
+
+	bool exit = false;
 	int selection=0;
 
-	SceCtrlData pad, old;
+	while (!exit) {
 
-	for(;;)
-	{
-		pspguCrear();
-		pspguWaitVblank();
-		pspDebugScreenSetXY(0,0);
+		SceCtrlData pad, old;
 
-		pspDebugScreenSetTextColor(0xFF4F6F9F);
+		pspDebugScreenSetBackColor(0x00a1470d);
 
-		if (selection< 0) selection = dirs.size() - 1;
-		else if (selection>=dirs.size()) selection=0;
+		pspDebugScreenClearLineDisable();
 
-		pspDebugScreenPrintf("\nSelect a file with up/dn/X, /\\ means no disc, HOME Exits to xmb\n\n");
-
-		u32 filec=0;
-		for (size_t i=0;i<dirs.size();i++)
+		for(;;)
 		{
-			if (selection==i)
-				pspDebugScreenSetTextColor(0xFFFFFFFF);
-			else
-				pspDebugScreenSetTextColor(0x7F7F7F7F);
+			pspguWaitVblank();
+			pspguCrear();
+			pspDebugScreenSetXY(0,0);
 
-			pspDebugScreenPrintf("%s\n",dirs[i].name.c_str());
-		}
+			pspDebugScreenSetTextColor(0x00ffffff);
 
+			if (selection< 0) selection = dirs.size() - 1;
+			else if (selection>=dirs.size()) selection=0;
 
+			const int maxRom = 20;
+			const int N_page = dirs.size() / maxRom;
+			const int curPage = selection / maxRom;
+
+			pspDebugScreenEnableBackColor(0);
+
+			pspDebugScreenPrintf("\n%s\n",VER_FULLNAME);
+			pspDebugScreenPrintf("\nPress TRIANGLE to boot the bios, HOME Exits to xmb");
+
+			pspDebugScreenSetXY(0,5);
+			
+
+			u32 filec=0;
+			for (u16 i = curPage * maxRom ;i < (curPage+1) * maxRom && i < dirs.size();i++)
+			{
+				if (selection==i){
+					pspDebugScreenEnableBackColor(1);
+					pspDebugScreenSetTextColor(0xFFFFFFFF);		
+				}else{
+					pspDebugScreenEnableBackColor(0);
+					pspDebugScreenSetTextColor(0x7F7F7F7F);
+				}
+
+				pspDebugScreenPrintf("\n   %.64s",dirs[i].name.c_str());
+			}
+
+			pspDebugScreenSetXY(0,27);
+			pspDebugScreenEnableBackColor(0);
+			pspDebugScreenSetTextColor(0x00ffffff);
+			pspDebugScreenPrintf("\n\n\nX: Select the game\n"); 
+			pspDebugScreenPrintf("\n\n\t\t=================== %.2d // %.2d ===================\t\n", curPage,N_page);
+
+ 
+			
+			if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
+			if (pad.Buttons == old.Buttons)			continue;
+
+			if (pad.Buttons & PSP_CTRL_CROSS)
+			{
+				break;
+			}
 		
-		if(!sceCtrlPeekBufferPositive(&pad, 1)) continue;
-		if (pad.Buttons == old.Buttons)			continue;
+			if (pad.Buttons & PSP_CTRL_TRIANGLE)
+			{
+				Settings("BIOS");
+				return 0;
+			}
+			
+			if (pad.Buttons & PSP_CTRL_HOME)
+			{
+				sceKernelExitGame();
+			}
+			if (pad.Buttons & PSP_CTRL_UP)
+			{
+				selection--;
+			}
+			if (pad.Buttons & PSP_CTRL_DOWN)
+			{
+				selection++;
+			}
 
-		if (pad.Buttons & PSP_CTRL_CROSS)
-		{
-			break;
-		}
-	
-		if (pad.Buttons & PSP_CTRL_TRIANGLE)
-		{
-			Settings("BIOS");
-			return 0;
-		}
-		
-		if (pad.Buttons & PSP_CTRL_HOME)
-		{
-			sceKernelExitGame();
-		}
-		if (pad.Buttons & PSP_CTRL_UP)
-		{
-			selection--;
-		}
-		if (pad.Buttons & PSP_CTRL_DOWN)
-		{
-			selection++;
+			old = pad;
+			
+			
 		}
 
-		old = pad;
-		sceKernelDelayThread(100);
-		
+		printf("Selected %d file\n",selection);
+		strcpy(szFileName,dirs[selection].path.c_str());
+		printf("Selected %s file\n",szFileName);
+
+		exit = Settings(dirs[selection].name.c_str());
 	}
-
-	printf("Selected %d file\n",selection);
-	strcpy(szFileName,dirs[selection].path.c_str());
-	printf("Selected %s file\n",szFileName);
-
-	Settings(dirs[selection].name.c_str());
 	
 	pspDebugScreenSetTextColor(0x7F7F7F7F);
+	pspDebugScreenSetBackColor(0);
+	pspDebugScreenEnableBackColor(1);
 	return 1;
 }
 

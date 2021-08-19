@@ -40,7 +40,8 @@ public:
 
 	bool contains_fpu_op = false;
 	bool contains_writeMem = false;
-	bool contains_readMem = false;
+	bool has_jcond = false;
+	bool read_only = false;
 
 	u32 start;	//entry point, the block may be non-linear in memory
 	u32 cycles;
@@ -50,8 +51,6 @@ public:
 	u32 NextBlock;		//*_CALL,COND_*: next block (by position)
 
 	u32 sh4_code_size;
-
-	bool UseSRA = false;
 
 	BlockEndType BlockType;
 	vector<shil_opcode> oplist;

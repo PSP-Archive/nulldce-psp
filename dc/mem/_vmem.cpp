@@ -200,9 +200,6 @@ void* _vmem_write_const(u32 addr,bool& ismem,u32 sz)
 
 		return &(((u8*)ptr)[addr]);
 	}
-	die("Invalid memory size");
-
-	return 0;
 }
 
 
@@ -600,14 +597,14 @@ bool _vmem_reserve()
 	mem_b.size=RAM_SIZE;
 	mem_b.data=ram_alloc;
 	ram_alloc+=RAM_SIZE;
-	
-	vram.size=VRAM_SIZE;
-	vram.data=ram_alloc;
-	ram_alloc+= VRAM_SIZE;
 
 	aica_ram.size=ARAM_SIZE;
 	aica_ram.data=ram_alloc;
 	ram_alloc+=ARAM_SIZE;
+	
+	vram.size=VRAM_SIZE;
+	vram.data=ram_alloc;
+	ram_alloc+= VRAM_SIZE;
 
 	return true;
 }

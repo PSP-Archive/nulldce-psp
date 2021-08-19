@@ -186,9 +186,12 @@ void WriteAicaReg(u32 reg,u32 data)
 	case MCIPD_addr:
 		if (data & (1<<5))
 		{
+			void arm_avoidRaceCondition();
+
 			verify(sz!=1);
 			MCIPD->SCPU=1;
 			UpdateSh4Ints();
+			arm_avoidRaceCondition();
 		}
 		//Read olny
 		return;

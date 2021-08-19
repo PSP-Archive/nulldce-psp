@@ -1,5 +1,5 @@
 
-PSP_EBOOT_TITLE = NULLDCPSP EXPERIMENTAL
+PSP_EBOOT_TITLE = NullDC/PSP
 TARGET = nullDCpsp
 OBJS = \
  ../cl/cl.o \
@@ -49,6 +49,7 @@ OBJS = \
  ../dc/sh4/rec_v2/driver.o \
  ../dc/sh4/rec_v2/decoder.o \
  ../dc/sh4/rec_v2/shil.o \
+ ../dc/sh4/rec_v2/ssa.o \
  ../dc/sh4/rec_v2/sinTable.o \
  ../dc/sh4/rec_v2/xxhash/xxhash.o \
  ../nullDC.o \
@@ -94,19 +95,13 @@ OBJS = \
  ../psp/dc/sh4/rec_v2/psp_driver.o \
  ../psp/dc/sh4/rec_v2/fast_access.o \
   ../psp/main.o \
- #../psp/plugs/drkPvr/pspDveManager.o \
-
 
 INCDIR = ../  ./include
-CFLAGS = -O3 -g #-G 0
-#CFLAGS += -g
+CFLAGS = -O3 -g 
 CFLAGS += -mno-gpopt
-#CFLAGS += -fcall-saved-t4 -fcall-saved-t5 -fcall-saved-t6 -fcall-saved-t7
-#CFLAGS += -fcall-saved-t8 -fcall-saved-t9
-#CFLAGS += -fcall-saved-k0 -fcall-saved-k1
 CFLAGS += -Wall -mno-check-zero-division
 CFLAGS +=  -fno-use-cxa-atexit -flive-range-shrinkage -fsplit-loops -funswitch-loops -funsafe-math-optimizations -fassociative-math -freorder-blocks-and-partition -fira-region=all -fivopts -frename-registers -fno-strict-aliasing -fsingle-precision-constant -fno-zero-initialized-in-bss -fmodulo-sched-allow-regmoves -fmodulo-sched -fgcse-sm -fomit-frame-pointer -fmerge-all-constants -ffast-math -funroll-loops 
-CFLAGS += -DRELEASE# -DNOPSPLINK
+CFLAGS += -DRELEASE
 #CFLAGS += -save-temps
 CXXFLAGS = -fno-exceptions -fno-rtti -D _PSP
 ASFLAGS = -c -x assembler-with-cpp
@@ -115,11 +110,9 @@ EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_ICON = ICON0.PNG
 
 LIBDIR = ./libs
-LIBS =  -lme -lzlib -lpspdmac -lpspgum -lpspgu -lpspaudio -lm -lstdc++ -lpsprtc -lpsppower -lpspusb
+LIBS =  -lme -lzlib -lpspdmac -lpspkubridge -lpspgum -lpspgu -lpspaudio -lm -lstdc++ -lpsprtc -lpsppower -lpspusb
 LDFLAGS =
 
-#PSP_FW_VERSION=390
-#BUILD_PRX=1
 PSP_LARGE_MEMORY=1
 
 PSPSDK=$(shell psp-config --pspsdk-path)

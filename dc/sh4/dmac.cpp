@@ -23,86 +23,66 @@ DMAC_DMAOR_type DMAC_DMAOR;
 
 void DMAC_Ch2St()
 {
-	//u32 chcr	= DMAC_CHCR[2].full,
-	u32 dmaor	= DMAC_DMAOR.full;//,
-		//dmatcr	= DMAC_DMATCR[2];
+	u32 dmaor = DMAC_DMAOR.full;
 
-	u32	src		= DMAC_SAR[2],
-		dst		= SB_C2DSTAT,
-		len		= SB_C2DLEN ;
+	u32 src = DMAC_SAR[2] & 0x1fffffe0;
+	u32 dst = SB_C2DSTAT & 0x01ffffe0;
+	u32 len = SB_C2DLEN;
 
 	if(unlikely(0x8201 != (dmaor &DMAOR_MASK))) {
 		printf("\n!\tDMAC: DMAOR has invalid settings (%X) !\n", dmaor);
 		return;
 	}
-	if(unlikely(len & 0x1F)) {
-		printf("\n!\tDMAC: SB_C2DLEN has invalid size (%X) !\n", len);
-		return;
-	}
-	/*if (unlikely(!ME_inited)){
-		ME_inited = true;
-		J_Init(false);
-		J_EXECUTE_ME_ONCE(&DMA_ME, 0);
-	}*/
-
-//	printf(">>\tDMAC: Ch2 DMA SRC=%X DST=%X LEN=%X\n", src, dst, len );
 
 	// Direct DList DMA (Ch2)
 
-	// Texture DMA 
-	if( (dst >= 0x10000000) && (dst <= 0x10FFFFFF) )
+	// TA FIFO - Polygon and YUV converter paths and mirror
+	// 10000000 - 10FFFFE0
+	// 12000000 - 12FFFFE0
+	if ((dst & 0x01000000) == 0)
 	{
 		u32 p_addr= src & RAM_MASK;
-		u32 new_len=RAM_SIZE-p_addr;
 
-		while(len)
+		if ((p_addr+len)>RAM_SIZE)
 		{
-			if ((p_addr+len)>RAM_SIZE)
-			{
-				u32 new_len =(new_len/32);
-				u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
-				TAWrite(dst,sys_buf,new_len);
-				len-=new_len;
-				src+=new_len;
-			}
-			else
-			{
-				u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
-				TAWrite(dst,sys_buf,(len/32));
-				src+=len;
-				break;
-			}
+			u32 new_len =(new_len/32);
+			u32 *sys_buf=(u32 *)GetMemPtr(src,len);
+			TAWrite(dst,sys_buf,new_len);
+			len-=new_len;
+			src+=new_len;
 		}
-	}
-	else	//	If SB_C2DSTAT reg is inrange from 0x11000000 to 0x11FFFFE0,	 set 1 in SB_LMMODE0 reg.
-	if( (dst >= 0x11000000) && (dst <= 0x11FFFFE0) )
-	{
-		SB_C2DSTAT += len;
 
-		if (SB_LMMODE0 == 0)
+		u32 *sys_buf=(u32 *)GetMemPtr(src,len);
+		TAWrite(dst,sys_buf,(len/32));
+		src+=len;
+	}
+	// Direct Texture path and mirror
+	// 11000000 - 11FFFFE0
+	// 13000000 - 13FFFFE0
+	else
+	{
+		bool path64b = SB_C2DSTAT & 0x02000000 ? SB_LMMODE1 == 0 : SB_LMMODE0 == 0;
+
+		if (path64b)
 		{
 			// 64-bit path
 			dst=(dst&0xFFFFFF) |0xa4000000;
 			u32 p_addr=src & RAM_MASK;
-			while(len)
+
+			if ((p_addr+len)>RAM_SIZE)
 			{
-				if ((p_addr+len)>RAM_SIZE)
-				{
-					u32 *sys_buf=(u32 *)GetMemPtr(src,len);
-					u32 new_len=RAM_SIZE-p_addr;
-					WriteMemBlock_nommu_ptr(dst,sys_buf,new_len);
-					len-=new_len;
-					src+=new_len;
-					dst+=new_len;
-				}
-				else
-				{
-					u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
-					WriteMemBlock_nommu_ptr(dst,sys_buf,len);
-					src+=len;
-					break;
-				}
+				u32 *sys_buf=(u32 *)GetMemPtr(src,len);
+				u32 new_len=RAM_SIZE-p_addr;
+				WriteMemBlock_nommu_ptr(dst,sys_buf,new_len);
+				len-=new_len;
+				src+=new_len;
+				dst+=new_len;
 			}
+
+			u32 *sys_buf=(u32 *)GetMemPtr(src,len);//(&mem_b[src&RAM_MASK]);
+			WriteMemBlock_nommu_ptr(dst,sys_buf,len);
+			src += len;
+			dst += len;
 		}
 		else
 		{
@@ -119,28 +99,14 @@ void DMAC_Ch2St()
 		}
 		SB_C2DSTAT = dst;
 	}
-	else	//	If SB_C2DSTAT reg is inrange from 0x13000000 to 0x13FFFFE0,	 set 1 in SB_LMMODE1 reg.
-	if( (dst >= 0x13000000) && (dst <= 0x13FFFFE0) )
-	{
-		src += len;
-	}
-	else 
-	{ 
-		printf("\n!\tDMAC: SB_C2DSTAT has invalid address (%X) !\n", dst); 
-		src+=len;
-	}
 
 
 	// Setup some of the regs so it thinks we've finished DMA
-
+	DMAC_CHCR[2].TE = 1;
+	DMAC_DMATCR[2] = 0;
 	
-	DMAC_CHCR[2].full &= 0xFFFFFFFE;
-	DMAC_DMATCR[2] = 0x00000000;
-	DMAC_SAR[2] = (src);
-	
-	SB_C2DSTAT = (src);
-	SB_C2DST = 0x00000000;
-	SB_C2DLEN = 0x00000000;
+	SB_C2DST = 0;
+	SB_C2DLEN = 0;
 
 	// The DMA end interrupt flag (SB_ISTNRM - bit 19: DTDE2INT) is set to "1."
 	//-> fixed , holly_PVR_DMA is for diferent use now (fixed the interrupts enum too)

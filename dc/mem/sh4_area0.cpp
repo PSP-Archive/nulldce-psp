@@ -272,19 +272,6 @@ void map_area0(u32 base)
 {
 	verify(base<0xE0);
 
-/*	{
-		base <<= 8;
-		u32 block_size=(ARAM_SIZE)>>16;
-		for (u32 _maip=(0x0080|base), _raddr = (0x0080|base);_maip<(0x00FF|base);_maip+=block_size, _raddr+=block_size) {
-			_vmem_map_block(aica_ram.data,_raddr,_raddr+block_size-1,ARAM_SIZE-1);
-			printf(":: %d :: _maip -> %d :: %x -- %x\n", block_size, _raddr, (0x0080|base)+1, (0x00FF|base));
-		}
-
-		base >>= 8;
-	}
-*/
-	
-
 	//_vmem_map_handler(area0_handler,start,end);
 	//0x0000-0x001f
 	_vmem_map_handler(area0_handler,0x00|base,0x01|base);

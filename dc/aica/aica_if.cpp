@@ -14,7 +14,6 @@
 #include "dc/arm7/arm7.h"
 #include "plugs/nullAICA/sgc_if.h"
 
-#include "melib.h"
 #include "me.h"
 
 //arm 7 is emulated within the aica implementation
@@ -369,7 +368,7 @@ volatile u8   sh4IntReq = 1;
 
 int ME_function(int arg){
 
-	while(true){
+	/*while(true){
 
 		if (PSP_UC(start))
 		{
@@ -394,12 +393,13 @@ int ME_function(int arg){
 			PSP_UC(start) = false;
 		}
 
-	}
+	}*/
 
 	return 0;
 }
 
 bool sonicHax = false;
+extern bool Arm7Enabled;
 int AicaUpdate(int tag, int c, int j)
 {
 	//gpc_counter=0;
@@ -410,9 +410,11 @@ int AicaUpdate(int tag, int c, int j)
 
 	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
 
-	static const u16 Cycles = 512 / (UnderclockAica + 1);
+	 if (!Arm7Enabled) return AICA_TICK<<2;
+
+	const u16 Cycles = 512 / (UnderclockAica + 1);
 	{
-		for (int i = UnderclockAica-1; i < 32; i++)
+		for (int i = 0; i < 32-UnderclockAica; i++)
 		{
 			arm_Run(Cycles);
 			libAICA_TimeStep();
@@ -444,6 +446,8 @@ int AicaUpdateHack(int tag, int c, int j)
 	//aica_sample_cycles+=14336*AICA_SAMPLE_GCM;
 
 	//if (aica_sample_cycles>=AICA_SAMPLE_CYCLES)
+
+	if (!Arm7Enabled) return AICA_TICK<<2;
 
 	static const u16 Cycles = 512 * 2;
 	{
@@ -496,13 +500,9 @@ void aica_sb_Init()
 
 	//aica_schid = sh4_sched_register(0, AicaUpdateME);
 
-	if (UnderclockAica == -1){
-		sh4_sched_request(aica_schid, AICA_TICK*100);
-		printf("Little AICA mode\n");
-	}else
-    	sh4_sched_request(aica_schid, AICA_TICK*UnderclockAica);
+	AICA_TICK *= UnderclockAica;
 
-	AICA_TICK = AICA_TICK*UnderclockAica;
+    sh4_sched_request(aica_schid, AICA_TICK);
 
 	printf("Underclock AICA TICK: %d\n", UnderclockAica);
 

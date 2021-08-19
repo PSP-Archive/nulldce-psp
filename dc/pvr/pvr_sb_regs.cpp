@@ -6,9 +6,12 @@
 #include "dc/mem/sh4_mem.h"
 #include "pvr_sb_regs.h"
 #include "plugins/plugin_manager.h"
+#include "plugs/drkPvr/threaded.h"
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
+
+void ta_vtx_data(u32* data, u32 size);
 
 u32 pvr_sb_readreg_Pvr(u32 addr,u32 sz);
 void pvr_sb_writereg_Pvr(u32 addr,u32 data,u32 sz);
@@ -107,7 +110,7 @@ void pvr_do_sort_dma()
 
 		link_addr = ea_ptr[0x1C >> 2];//Next link
 		//transfer global param
-		libPvr_TaDMA(ea_ptr, ea_ptr[0x18 >> 2]);
+		ta_vtx_data(ea_ptr, ea_ptr[0x18 >> 2]);
 		if (link_addr == 1)
 			link_addr = calculate_start_link_addr();
 	}
