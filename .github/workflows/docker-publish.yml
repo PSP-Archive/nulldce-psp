@@ -28,7 +28,7 @@ jobs:
 
     - name: Compile project
       run: |
-        make -f ./psp/Makefile clean build
+        make -f ./psp/Makefile
 
     - name: Get short SHA
       id: slug
