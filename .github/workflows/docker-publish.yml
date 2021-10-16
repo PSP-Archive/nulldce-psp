@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - '*'
+    tags:
+      - v*
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker_tag: [fjtrujy/pspdev]
+
+    container: ${{ matrix.docker_tag }}:latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        apk add build-base git bash cmake
+    
+
+    - name: Compile project
+      run: |
+        ./psp/make clean build
+
+    - name: Get short SHA
+      id: slug
+      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+    
+    - name: Sanitized Docker Tag
+      id: docker_tag
+      run: echo "::set-output name=sha8::$(echo ${{matrix.docker_tag}} | sed s:/:__:g)"
+
+    - name: Upload artifacts
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: hello-${{ steps.slug.outputs.sha8 }}-${{ steps.docker_tag.outputs.sha8 }}
+        path: |
+          ./psp/EBOOT.PBP
